@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background (full for maskable) -->
+  <rect width="512" height="512" fill="#D4AF37"/>
+
+  <!-- Wedding Rings (smaller for safe zone) -->
+  <g transform="translate(256, 256) scale(0.7)">
+    <!-- Left Ring -->
+    <circle cx="-50" cy="0" r="90" fill="none" stroke="#FFFFF0" stroke-width="24"/>
+    <circle cx="-50" cy="0" r="90" fill="none" stroke="#FFFFF0" stroke-width="16" opacity="0.5"/>
+
+    <!-- Right Ring (interlocked) -->
+    <circle cx="50" cy="0" r="90" fill="none" stroke="#FFFFF0" stroke-width="24"/>
+    <circle cx="50" cy="0" r="90" fill="none" stroke="#FFFFF0" stroke-width="16" opacity="0.5"/>
+
+    <!-- Diamond on left ring -->
+    <polygon points="-50,-105 -35,-85 -65,-85" fill="#FFFFF0"/>
+    <polygon points="-50,-85 -35,-85 -50,-70 -65,-85" fill="#FFFFF0" opacity="0.7"/>
+  </g>
+</svg>

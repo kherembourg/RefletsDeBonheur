@@ -1,0 +1,124 @@
+---
+import '../styles/global.css';
+import InstallPrompt from '../components/pwa/InstallPrompt';
+import LanguageDetector from '../components/layout/LanguageDetector.astro';
+import { getLangFromUrl, getHtmlLang } from '../i18n/utils';
+
+interface Props {
+  title: string;
+  description?: string;
+  showHeader?: boolean;
+}
+
+const {
+  title,
+  description = "Share the magic of your wedding with elegance",
+  showHeader = true
+} = Astro.props;
+
+// Get current language from URL
+const currentLang = getLangFromUrl(Astro.url);
+const htmlLang = getHtmlLang(currentLang);
+---
+
+<!DOCTYPE html>
+<html lang={htmlLang}>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Language Detection - Redirects based on browser language on first visit -->
+    <LanguageDetector />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Reflets de Bonheur</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#ae1725" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Reflets" />
+
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
+
+    <!-- Android/Chrome -->
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Microsoft -->
+    <meta name="msapplication-TileColor" content="#ae1725" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+
+    <!-- Preconnect for fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Google Fonts - Elegant French-inspired typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Montserrat:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet" />
+  </head>
+  <body class="min-h-screen bg-cream text-charcoal font-sans">
+    {showHeader && (
+      <slot name="header" />
+    )}
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <slot name="footer" />
+
+    <!-- PWA Install Prompt -->
+    <InstallPrompt client:load />
+
+    <!-- Service Worker Registration -->
+    <script is:inline>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {
+              console.log('[SW] Service Worker registered:', registration);
+
+              // Check for updates every hour
+              setInterval(() => {
+                registration.update();
+              }, 60 * 60 * 1000);
+
+              // Listen for updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // New version available
+                      console.log('[SW] New version available');
+
+                      // Optionally notify user about update
+                      if (confirm('A new version is available. Refresh now?')) {
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        window.location.reload();
+                      }
+                    }
+                  });
+                }
+              });
+            })
+            .catch((error) => {
+              console.error('[SW] Registration failed:', error);
+            });
+
+          // Handle controller change (new SW activated)
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('[SW] Controller changed, reloading page');
+            window.location.reload();
+          });
+        });
+      } else {
+        console.log('[SW] Service Worker not supported');
+      }
+    </script>
+  </body>
+</html>

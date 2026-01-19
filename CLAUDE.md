@@ -1,0 +1,523 @@
+# Reflets de Bonheur - Claude AI Context File
+
+## Project Overview
+
+**Reflets de Bonheur** (*"Reflections of Happiness"*) is an elegant wedding photo and video sharing platform built with Astro 5 and React, featuring multi-language support, PWA capabilities, and a sophisticated design system.
+
+**Tagline**: *"Où chaque instant devient éternel"* (Where every moment becomes eternal)
+
+### Status: Production-Ready with Supabase Integration
+
+The application is fully functional with:
+- Complete UI implementation
+- Multi-language support (EN, FR, ES)
+- PWA with offline support
+- Demo mode with mock data (for `/demo_*` pages)
+- **Supabase integration complete** - all components use DataService abstraction
+- Supabase Auth + profiles power client accounts
+- Client wedding pages (`/[slug]/*`) connect to Supabase when configured
+
+**Last Updated:** January 19, 2026
+
+---
+
+## Quick Reference
+
+### Project Location
+```
+/Users/kevin/Development/WeddingPictures/reflets-de-bonheur/
+```
+
+### Demo Access
+- **Demo Gallery**: `/demo_gallery`
+- **Demo Guestbook**: `/demo_livre-or`
+- **Login Page**: `/connexion`
+
+### Key Commands
+```bash
+npm run dev      # Development server at http://localhost:4321
+npm run build    # Production build
+npm run preview  # Preview production build
+```
+
+---
+
+## Technology Stack
+
+### Frontend
+- **Astro 5.16+**: Static site generation with islands architecture
+- **React 18**: Interactive components (islands only)
+- **TypeScript 5.3+**: Type safety throughout
+- **Tailwind CSS 3.4**: Utility-first styling with custom brand tokens
+- **Lucide React**: Icon system
+
+### Infrastructure
+- **Supabase**: Database and authentication (configured)
+- **PWA**: Service Worker with offline caching
+- **i18n**: Multi-language support (EN, FR, ES)
+
+### Key Libraries
+- `@supabase/supabase-js`: Database client
+- `lucide-react`: Icons
+- `qrcode`: QR code generation for sharing
+
+---
+
+## Brand Identity
+
+### Color Palette (Current)
+```css
+/* Primary */
+--burgundy: #ae1725          /* Primary CTA, accents */
+--burgundy-light: #c92a38    /* Hover states */
+--burgundy-dark: #8a121d     /* Dark variant */
+
+/* Neutral */
+--cream: #F5F0E8             /* Backgrounds */
+--charcoal: #333333          /* Text */
+--charcoal-light: #555555    /* Secondary text */
+
+/* Accent */
+--olive: #4A5D4A             /* Secondary accents */
+--sage: #8B9D83              /* Success states */
+--blush: #E8D5D3             /* Soft backgrounds */
+--antique-gold: #B8860B      /* Luxury touches */
+```
+
+### Typography
+- **Headings**: Cormorant Garamond / Playfair Display (serif)
+- **Body**: Montserrat / Inter (sans-serif)
+- **Accent**: Great Vibes / Allura (script, minimal use)
+
+---
+
+## Project Structure
+
+```
+reflets-de-bonheur/
+├── src/
+│   ├── components/
+│   │   ├── admin/           # Admin dashboard components
+│   │   │   ├── AdminPanel.tsx
+│   │   │   ├── StatsCard.tsx
+│   │   │   ├── EnhancedStatistics.tsx
+│   │   │   ├── TimelineGraph.tsx
+│   │   │   ├── StorageUsage.tsx
+│   │   │   ├── ReactionBreakdown.tsx
+│   │   │   ├── AlbumManager.tsx
+│   │   │   ├── QRCodeGenerator.tsx
+│   │   │   ├── SettingsToggle.tsx
+│   │   │   ├── TopUploaders.tsx
+│   │   │   └── ThemeSelector.tsx
+│   │   ├── auth/
+│   │   │   └── LoginForm.tsx
+│   │   ├── gallery/
+│   │   │   ├── GalleryGrid.tsx
+│   │   │   ├── MediaCard.tsx
+│   │   │   ├── UploadModal.tsx
+│   │   │   ├── UploadForm.tsx
+│   │   │   ├── Lightbox.tsx
+│   │   │   ├── Slideshow.tsx
+│   │   │   ├── SearchFilters.tsx
+│   │   │   ├── BulkActions.tsx
+│   │   │   └── ReactionsPanel.tsx
+│   │   ├── guestbook/
+│   │   │   ├── GuestbookContainer.tsx
+│   │   │   ├── GuestbookForm.tsx
+│   │   │   ├── AIAssistant.tsx
+│   │   │   └── MessageList.tsx
+│   │   ├── layout/
+│   │   │   ├── Header.astro
+│   │   │   ├── Footer.astro
+│   │   │   ├── LanguageToggle.tsx
+│   │   │   └── LanguageDetector.astro
+│   │   ├── pwa/
+│   │   │   └── InstallPrompt.tsx
+│   │   ├── ui/
+│   │   │   ├── Toast.tsx
+│   │   │   ├── Skeleton.tsx
+│   │   │   └── PageTransition.tsx
+│   │   ├── wedding/
+│   │   │   ├── WeddingHero.tsx
+│   │   │   ├── WeddingTimeline.tsx
+│   │   │   ├── WeddingInfo.tsx
+│   │   │   ├── WeddingRSVP.tsx
+│   │   │   ├── ThemedHero.tsx
+│   │   │   ├── LuxeHero.tsx
+│   │   │   ├── LuxeNav.tsx
+│   │   │   ├── LuxeUploadCard.tsx
+│   │   │   └── LuxeGalleryPreview.tsx
+│   │   └── decorative/
+│   │       └── FloralDecoration.astro
+│   ├── layouts/
+│   │   ├── MainLayout.astro
+│   │   ├── WeddingLayout.astro
+│   │   └── WeddingLuxeLayout.astro
+│   ├── pages/
+│   │   ├── index.astro              # Landing page (EN)
+│   │   ├── pricing.astro            # Pricing page
+│   │   ├── connexion.astro          # Login page
+│   │   ├── demo_gallery.astro       # Demo gallery
+│   │   ├── demo_livre-or.astro      # Demo guestbook
+│   │   ├── guestbook.astro          # Authenticated guestbook
+│   │   ├── admin.astro              # Admin dashboard
+│   │   ├── offline.astro            # PWA offline page
+│   │   ├── mentions-legales.astro   # Legal notices
+│   │   ├── cgv.astro                # Terms of service
+│   │   ├── politique-confidentialite.astro
+│   │   ├── account/
+│   │   │   └── gallery.astro        # Authenticated gallery
+│   │   ├── fr/                      # French pages
+│   │   │   ├── index.astro
+│   │   │   └── tarification.astro
+│   │   ├── es/                      # Spanish pages
+│   │   │   ├── index.astro
+│   │   │   └── precios.astro
+│   │   ├── [slug]/                  # Dynamic wedding pages
+│   │   │   ├── index.astro
+│   │   │   ├── photos.astro
+│   │   │   ├── livre-or.astro
+│   │   │   ├── rsvp.astro
+│   │   │   └── infos.astro
+│   │   └── api/                     # API endpoints (SSR)
+│   │       ├── admin/
+│   │       │   └── create-client.ts  # Server-side client creation
+│   │       ├── weddings/
+│   │       │   └── by-slug.ts        # Lookup wedding by slug
+│   │       └── upload/
+│   │           ├── presign.ts       # Generate presigned URLs
+│   │           └── confirm.ts       # Confirm upload & create DB record
+│   ├── lib/
+│   │   ├── api.ts                   # API functions
+│   │   ├── auth.ts                  # Auth helpers
+│   │   ├── mockData.ts              # Demo data
+│   │   ├── demoStorage.ts           # Demo persistence
+│   │   ├── types.ts                 # TypeScript types
+│   │   ├── theme.ts                 # Theme utilities
+│   │   ├── themes.ts                # Theme definitions
+│   │   ├── statistics.ts            # Stats calculations
+│   │   ├── weddingData.ts           # Wedding data helpers
+│   │   ├── services/
+│   │   │   ├── index.ts
+│   │   │   └── dataService.ts
+│   │   ├── supabase/
+│   │   │   ├── client.ts
+│   │   │   ├── api.ts
+│   │   │   ├── types.ts
+│   │   │   └── index.ts
+│   │   └── r2/
+│   │       ├── client.ts             # R2 S3-compatible client
+│   │       ├── upload.ts             # Client-side upload helpers
+│   │       ├── types.ts
+│   │       └── index.ts
+│   ├── i18n/
+│   │   ├── index.ts
+│   │   ├── utils.ts
+│   │   └── translations.ts
+│   └── styles/
+│       └── global.css
+├── public/
+│   ├── sw.js                        # Service Worker
+│   ├── manifest.json                # PWA manifest
+│   ├── icons/                       # PWA icons
+│   └── images/
+├── astro.config.mjs
+├── tailwind.config.mjs
+├── tsconfig.json
+├── package.json
+└── CLAUDE.md
+```
+
+---
+
+## Core Features
+
+### 1. Landing Page & Marketing
+- Elegant hero section with wedding imagery
+- Services showcase (Gallery, Guestbook, Website)
+- Feature highlights with benefits
+- Pricing section ($199 for 2 years)
+- Multi-language support (EN, FR, ES)
+
+### 2. Authentication
+- Supabase Auth for client accounts (email + password)
+- Wedding access via guest PIN / admin magic token
+- Guest sessions stored in `guest_sessions` (wedding_id + session_token)
+- Persistent session via localStorage
+- Protected routes
+
+### 3. Photo Gallery
+- **Masonry layout**: Responsive Pinterest-style grid
+- **Mixed media**: Photos and videos support
+- **Lightbox**: Full-screen viewing with navigation
+- **Slideshow**: Auto-play presentation mode
+- **Search & Filters**: By author, date, type
+- **Reactions**: Like and favorite photos
+- **Bulk Actions**: Multi-select for admin operations
+- **Upload**: Drag-and-drop with AI caption generation
+
+### 4. Guestbook
+- Written messages with author names
+- **AI Assistant**: Generates contextual messages based on:
+  - Relationship (Friends, Family, Colleague)
+  - Tone (Joyful, Emotional, Solemn, Poetic)
+- Editable AI suggestions
+- Real-time message display
+
+### 5. Admin Dashboard
+- **Statistics**: Enhanced stats with graphs
+  - Upload timeline
+  - Storage usage
+  - Reaction breakdown
+  - Top uploaders
+- **Album Management**: Organize photos into albums
+- **QR Code Generator**: Easy sharing
+- **Theme Selector**: Customize wedding appearance
+- **Upload Toggle**: Enable/disable guest uploads
+- **Content Moderation**: Delete inappropriate content
+
+### 6. Wedding Microsites
+- Dynamic wedding pages at `/[slug]/`
+- Custom themes (Classic, Luxe, etc.)
+- Sections: Home, Photos, Guestbook, RSVP, Info
+- Timeline and schedule display
+
+### 7. PWA Features
+- **Offline support**: Service Worker caching
+- **Install prompt**: Mobile-only, shows once
+- **App-like experience**: Standalone display mode
+
+### 8. Internationalization
+- **Languages**: English (default), French, Spanish
+- **URL-based**: `/fr/`, `/es/` prefixes
+- **Auto-detection**: Browser language redirect
+
+---
+
+## Data Layer
+
+### Database Architecture (Supabase Auth)
+There is **no `clients` table**. User accounts are managed via Supabase Auth:
+
+- **`auth.users`** - Supabase Auth handles user authentication (email + password)
+- **`profiles`** - Extends `auth.users` with subscription info (`profiles.id` references `auth.users.id`)
+- **`weddings`** - Each wedding belongs to a profile (`weddings.owner_id` references `profiles.id`)
+
+**The `Client` TypeScript type** (in `src/lib/auth/godAuth.ts`) is a **conceptual interface**, not a database table. It's constructed by joining data from `profiles` + `weddings` for use in the UI.
+
+### Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `profiles` | User profiles linked to `auth.users`, includes subscription status |
+| `weddings` | Wedding configuration, linked to owner profile |
+| `media` | Photos/videos uploaded to weddings |
+| `albums` | Photo album organization |
+| `album_media` | Junction table for album-media relationships |
+| `guestbook_messages` | Guestbook entries |
+| `reactions` | Media reactions (emoji) |
+| `favorites` | User favorites |
+| `rsvp` | RSVP responses |
+| `guest_sessions` | Guest authentication sessions (PIN/magic token) |
+| `auth_sessions` | Client/God admin authentication sessions |
+| `god_admins` | Super admin accounts |
+| `god_access_tokens` | Impersonation tokens for god admins |
+| `audit_log` | Security audit trail |
+
+### Authentication Flow
+- **Client login**: Supabase Auth (email + password) → creates `auth_sessions` entry
+- **Guest access**: `weddings.pin_code` (6 chars) or `weddings.magic_token` (admin) → creates `guest_sessions` entry
+- **God admin**: Separate `god_admins` table with password hash → creates `auth_sessions` entry
+
+### Key API Endpoints
+- `/api/admin/create-client` - Creates user in `auth.users`, profile, and wedding (uses service-role)
+- `/api/upload/presign` - Generates R2 presigned URLs
+- `/api/upload/confirm` - Creates `media` record after R2 upload (uses service-role)
+
+### Supabase Database SQL
+Available at `supabase/database.sql` (reference schema for context, not for execution)
+
+### Architecture: DataService Abstraction
+All components use `DataService` (`src/lib/services/dataService.ts`) which provides a unified API for both demo and production modes. Components never import directly from `mockData.ts`.
+
+**Key Pattern:**
+```typescript
+// In parent component (e.g., GalleryGrid, AdminPanel)
+const serviceRef = useRef<DataService | null>(null);
+if (!serviceRef.current) {
+  serviceRef.current = new DataService({ demoMode, weddingId });
+}
+const dataService = serviceRef.current;
+
+// Pass to child components via props
+<AlbumManager dataService={dataService} />
+<ReactionsPanel mediaId={id} dataService={dataService} />
+```
+
+### Demo Mode
+- **When:** `demoMode={true}` passed to component OR Supabase not configured
+- **Pages:** `/demo_gallery`, `/demo_livre-or`
+- **Storage:** Mock data in `mockData.ts`, persisted via `demoStorage.ts`
+- **Use case:** Demonstrations, development without database
+
+### Production Mode
+- **When:** Supabase configured AND `demoMode` not explicitly true
+- **Pages:** `/[slug]/photos`, `/[slug]/livre-or`, `/[slug]/admin`
+- **Database:** Supabase (profiles, weddings, media)
+- **File Storage:** Cloudflare R2 (media files)
+- **Auto-detection:** DataService checks `isSupabaseConfigured()`
+
+### Media Storage (R2)
+Files are stored in Cloudflare R2 using presigned URLs:
+1. Client requests presigned URL from `/api/upload/presign`
+2. Client uploads directly to R2
+3. Client confirms upload via `/api/upload/confirm`
+4. Database record created in Supabase via service role
+
+**Storage Structure:**
+```
+weddings/{weddingId}/media/{timestamp}-{random}-{filename}.{ext}
+```
+
+### DataService Methods
+- **Media:** `getMedia()`, `addMedia()`, `deleteMedia()`, `uploadMedia()`, `uploadMediaBatch()`
+- **Albums:** `getAlbums()`, `createAlbum()`, `updateAlbum()`, `deleteAlbum()`
+- **Guestbook:** `getMessages()`, `addMessage()`, `deleteMessage()`
+- **Favorites:** `getFavorites()`, `toggleFavorite()`, `isFavorited()`
+- **Reactions:** `getReactions()`, `toggleReaction()`, `getUserReaction()`
+- **Statistics:** `getStatistics()`
+- **Settings:** `getSettings()`, `updateSettings()`
+
+### Empty State UX
+When no content exists (new wedding), components show welcoming placeholders:
+- **Gallery:** "Votre galerie vous attend" with upload button
+- **Guestbook:** "Le livre d'or vous attend" encouraging first message
+
+---
+
+## Service Worker
+
+Located at `public/sw.js`:
+- **Cache versioning**: `reflets-v1.0.2`
+- **Strategies**:
+  - Navigation: Network-first, cache fallback
+  - Resources (CSS/JS): Cache-first with background update
+  - Images: Cache-first, network fallback
+- **Auto-update**: Prompts user when new version available
+
+**Important**: Bump `CACHE_VERSION` when making CSS/JS changes.
+
+---
+
+## Key Configuration Files
+
+### `tailwind.config.mjs`
+- Custom color palette (burgundy, cream, olive, etc.)
+- Custom fonts (Cormorant Garamond, Montserrat, Great Vibes)
+- Dark mode support (`class` strategy)
+
+### `astro.config.mjs`
+- React integration
+- Tailwind integration
+- Vite optimization for lucide-react
+- `output: "server"` for API routes
+
+### Environment Variables
+
+#### Supabase (Database)
+```
+PUBLIC_SUPABASE_URL=your-supabase-url
+PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=server-only-key
+```
+
+#### Supabase Auth
+```
+SUPABASE_AUTH_SITE_URL=http://localhost:4321
+```
+
+#### Cloudflare R2 (Media Storage)
+```
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key
+R2_SECRET_ACCESS_KEY=your-r2-secret-key
+R2_BUCKET_NAME=reflets-media
+R2_PUBLIC_URL=https://your-r2-public-url
+R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+```
+
+See `.env.example` for all configuration options.
+
+---
+
+## Development Workflow
+
+### Starting Development
+```bash
+cd /Users/kevin/Development/WeddingPictures/reflets-de-bonheur
+npm install
+npm run dev
+```
+
+### Testing Changes
+1. Make changes
+2. Hard refresh (`Cmd+Shift+R`) to bypass service worker cache
+3. If styles don't update, bump `CACHE_VERSION` in `public/sw.js`
+
+### Building for Production
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+## Next Steps
+
+### Immediate Priorities
+1. ~~**Supabase Integration**: Connect components to real database~~ ✅ DONE
+2. ~~**R2 Media Storage**: Cloudflare R2 for file uploads~~ ✅ DONE
+3. **Testing & Verification**: Test all features with real Supabase data
+4. **Payment Integration**: Stripe checkout for $199 package
+5. **Email Notifications**: Welcome emails, upload notifications
+6. **Image Processing**: Generate thumbnails and optimize images
+
+### Future Enhancements
+1. **Real-time sync**: WebSocket updates for gallery
+2. **Video transcoding**: Cloudflare Stream integration
+3. **Photo AI**: Face recognition, auto-tagging
+4. **Export**: Google Drive integration
+5. **Analytics**: Usage tracking dashboard
+6. **Error handling**: User-friendly error messages when Supabase fails
+7. **Optimistic updates**: Update UI immediately, sync in background
+8. **Offline support**: Queue uploads when offline
+
+---
+
+## Troubleshooting
+
+### Styles Not Updating
+1. Bump `CACHE_VERSION` in `public/sw.js`
+2. Hard refresh: `Cmd+Shift+R`
+3. Clear site data in DevTools > Application > Storage
+
+### React Component Not Hydrating
+Ensure `client:load` directive is present:
+```astro
+<Component client:load />
+```
+
+### Tailwind Classes Not Working
+Check that the file is in the `content` array in `tailwind.config.mjs`
+
+---
+
+## Contact
+
+**Developer**: Kevin
+**Started**: January 2026
+**Last Updated**: January 19, 2026
+
+---
+
+*This file serves as the single source of truth for the project. Architecture details are embedded above rather than in separate files.*

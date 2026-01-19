@@ -1,0 +1,165 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import Footer from '../components/layout/Footer.astro';
+---
+
+<MainLayout
+  title="Mentions Légales - Reflets de Bonheur"
+  description="Mentions légales du site Reflets de Bonheur - Galerie photo et livre d'or de mariage"
+  showHeader={true}
+>
+  <section class="py-20 bg-ivory dark:bg-deep-charcoal min-h-screen">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+      <h1 class="text-4xl sm:text-5xl font-serif font-bold text-deep-charcoal dark:text-ivory mb-8">
+        Mentions Légales
+      </h1>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <p class="text-warm-taupe dark:text-silver-mist mb-8">
+          Dernière mise à jour : Janvier 2026
+        </p>
+
+        <!-- Éditeur du site -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            1. Éditeur du Site
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Le site <strong>Reflets de Bonheur</strong> (ci-après « le Site ») est édité par :
+          </p>
+          <ul class="list-none space-y-2 text-warm-taupe dark:text-silver-mist">
+            <li><strong>Raison sociale :</strong> <span class="text-[#ae1725]">[À COMPLÉTER]</span></li>
+            <li><strong>Forme juridique :</strong> <span class="text-[#ae1725]">[À COMPLÉTER - ex: SARL, SAS, Auto-entrepreneur]</span></li>
+            <li><strong>Capital social :</strong> <span class="text-[#ae1725]">[À COMPLÉTER]</span> euros</li>
+            <li><strong>Siège social :</strong> <span class="text-[#ae1725]">[À COMPLÉTER - Adresse complète]</span></li>
+            <li><strong>SIRET :</strong> <span class="text-[#ae1725]">[À COMPLÉTER]</span></li>
+            <li><strong>RCS :</strong> <span class="text-[#ae1725]">[À COMPLÉTER - Ville]</span></li>
+            <li><strong>Numéro de TVA :</strong> <span class="text-[#ae1725]">[À COMPLÉTER ou "Non applicable"]</span></li>
+            <li><strong>Email :</strong> contact@reflets-bonheur.fr</li>
+            <li><strong>Téléphone :</strong> <span class="text-[#ae1725]">[À COMPLÉTER]</span></li>
+          </ul>
+        </div>
+
+        <!-- Directeur de publication -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            2. Directeur de la Publication
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            <strong>Nom :</strong> <span class="text-[#ae1725]">[À COMPLÉTER - Nom du responsable]</span>
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            <strong>Qualité :</strong> <span class="text-[#ae1725]">[À COMPLÉTER - ex: Gérant, Président]</span>
+          </p>
+        </div>
+
+        <!-- Hébergement -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            3. Hébergement
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Le Site est hébergé par :
+          </p>
+          <ul class="list-none space-y-2 text-warm-taupe dark:text-silver-mist">
+            <li><strong>Hébergeur :</strong> Netlify, Inc. <span class="text-[#ae1725]">[ou Vercel si applicable]</span></li>
+            <li><strong>Adresse :</strong> 2325 3rd Street, Suite 296, San Francisco, CA 94107, USA</li>
+            <li><strong>Site web :</strong> <a href="https://www.netlify.com" class="text-[#ae1725] hover:underline" target="_blank" rel="noopener">www.netlify.com</a></li>
+          </ul>
+        </div>
+
+        <!-- Propriété intellectuelle -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            4. Propriété Intellectuelle
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            L'ensemble du contenu du Site (textes, images, graphismes, logo, icônes, logiciels, etc.) est la propriété exclusive de Reflets de Bonheur ou de ses partenaires et est protégé par les lois françaises et internationales relatives à la propriété intellectuelle.
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Toute reproduction, représentation, modification, publication, adaptation de tout ou partie des éléments du Site, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable de Reflets de Bonheur.
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Les photos et vidéos uploadées par les utilisateurs restent la propriété de leurs auteurs respectifs. Reflets de Bonheur dispose d'une licence d'utilisation limitée au fonctionnement du service.
+          </p>
+        </div>
+
+        <!-- Données personnelles -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            5. Données Personnelles
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi « Informatique et Libertés » du 6 janvier 1978 modifiée, vous disposez de droits sur vos données personnelles.
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Pour plus d'informations sur la collecte et le traitement de vos données, veuillez consulter notre <a href="/politique-confidentialite" class="text-[#ae1725] hover:underline">Politique de Confidentialité</a>.
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            <strong>Délégué à la Protection des Données (DPO) :</strong> <span class="text-[#ae1725]">[À COMPLÉTER ou "Non applicable"]</span>
+          </p>
+        </div>
+
+        <!-- Cookies -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            6. Cookies
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Le Site utilise des cookies pour améliorer l'expérience utilisateur et analyser le trafic. Les cookies utilisés sont :
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li><strong>Cookies essentiels :</strong> nécessaires au fonctionnement du Site (authentification, préférences)</li>
+            <li><strong>Cookies analytiques :</strong> pour mesurer l'audience (Google Analytics)</li>
+          </ul>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Vous pouvez gérer vos préférences de cookies dans les paramètres de votre navigateur.
+          </p>
+        </div>
+
+        <!-- Limitation de responsabilité -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            7. Limitation de Responsabilité
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Reflets de Bonheur s'efforce d'assurer l'exactitude et la mise à jour des informations diffusées sur le Site. Toutefois, Reflets de Bonheur ne peut garantir l'exactitude, la précision ou l'exhaustivité des informations mises à disposition.
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Reflets de Bonheur décline toute responsabilité pour toute interruption du Site, survenance de bugs ou tout dommage résultant d'une intrusion frauduleuse d'un tiers.
+          </p>
+        </div>
+
+        <!-- Droit applicable -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            8. Droit Applicable
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents.
+          </p>
+        </div>
+
+        <!-- Contact -->
+        <div class="bg-[#ae1725]/10 rounded-xl p-6 border border-[#ae1725]/30">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            9. Contact
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter :
+          </p>
+          <ul class="list-none space-y-2 text-warm-taupe dark:text-silver-mist mt-4">
+            <li><strong>Email :</strong> contact@reflets-bonheur.fr</li>
+            <li><strong>Courrier :</strong> <span class="text-[#ae1725]">[Adresse postale à compléter]</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center">
+        <a href="/" class="text-[#ae1725] hover:underline">← Retour à l'accueil</a>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</MainLayout>

@@ -1,0 +1,68 @@
+---
+// Enable SSR for dynamic slugs
+export const prerender = false;
+
+import WeddingLayout from '../../layouts/WeddingLayout.astro';
+import WeddingLuxeLayout from '../../layouts/WeddingLuxeLayout.astro';
+import { WeddingRSVP } from '../../components/wedding/WeddingRSVP';
+import { LuxeNav } from '../../components/wedding/LuxeNav';
+import { getWeddingBySlugAsync } from '../../lib/weddingData';
+import { getTheme } from '../../lib/themes';
+
+const { slug } = Astro.params;
+const wedding = await getWeddingBySlugAsync(slug as string);
+
+if (!wedding) {
+  return Astro.redirect('/404');
+}
+
+const { config } = wedding;
+const themeId = config.theme.id || 'classic';
+const theme = getTheme(themeId);
+const isLuxe = themeId === 'luxe';
+const primaryColor = config.theme.primaryColor || '#ae1725';
+---
+
+{isLuxe ? (
+  <!-- LUXE THEME -->
+  <WeddingLuxeLayout wedding={wedding} title="RSVP" currentPage="home">
+    <section class="pt-6 pb-4 px-5">
+      <h1 class="text-2xl font-display text-center" style={`color: ${theme.colors.text}; font-family: 'Playfair Display', serif;`}>
+        Confirmez votre présence
+      </h1>
+      <p class="text-center text-sm mt-2" style={`color: ${theme.colors.textLight}`}>
+        {config.brideName} & {config.groomName} seraient ravis de vous compter parmi eux
+      </p>
+    </section>
+
+    <section class="px-4 pb-24">
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border" style={`border-color: ${theme.colors.border}`}>
+        <WeddingRSVP weddingId={wedding.id} config={config} client:load />
+      </div>
+    </section>
+
+    <LuxeNav slug={wedding.slug} currentPage="home" client:load />
+  </WeddingLuxeLayout>
+) : (
+  <!-- CLASSIC THEME -->
+  <WeddingLayout wedding={wedding} title="RSVP">
+    <section class="py-20 px-4 min-h-[80vh]">
+      <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl sm:text-5xl font-display font-bold text-deep-charcoal dark:text-ivory mb-4">
+            Confirmez votre présence
+          </h1>
+          <p class="text-lg text-warm-taupe dark:text-silver-mist">
+            {config.brideName} & {config.groomName} seraient ravis de savoir si vous serez des leurs.
+          </p>
+        </div>
+
+        <!-- RSVP Form -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-2xl shadow-lg p-6 sm:p-10">
+          <WeddingRSVP weddingId={wedding.id} config={config} client:load />
+        </div>
+      </div>
+    </section>
+  </WeddingLayout>
+)}

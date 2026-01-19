@@ -1,0 +1,228 @@
+---
+// Enable SSR for dynamic slugs
+export const prerender = false;
+
+import WeddingLayout from '../../layouts/WeddingLayout.astro';
+import WeddingLuxeLayout from '../../layouts/WeddingLuxeLayout.astro';
+import { WeddingTimeline } from '../../components/wedding/WeddingTimeline';
+import { WeddingInfo } from '../../components/wedding/WeddingInfo';
+import { LuxeNav } from '../../components/wedding/LuxeNav';
+import { getWeddingBySlugAsync } from '../../lib/weddingData';
+import { getTheme } from '../../lib/themes';
+
+const { slug } = Astro.params;
+const wedding = await getWeddingBySlugAsync(slug as string);
+
+if (!wedding) {
+  return Astro.redirect('/404');
+}
+
+const { config } = wedding;
+const themeId = config.theme.id || 'classic';
+const theme = getTheme(themeId);
+const isLuxe = themeId === 'luxe';
+const primaryColor = isLuxe ? theme.colors.accent : config.theme.primaryColor || '#ae1725';
+
+const weddingDate = new Date(config.weddingDate);
+const formattedDate = weddingDate.toLocaleDateString('fr-FR', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+{isLuxe ? (
+  <!-- LUXE THEME -->
+  <WeddingLuxeLayout wedding={wedding} title="Informations" currentPage="home">
+    <section class="pt-6 pb-4 px-5">
+      <h1 class="text-2xl font-display text-center" style={`color: ${theme.colors.text}; font-family: 'Playfair Display', serif;`}>
+        Informations
+      </h1>
+      <p class="text-center text-sm mt-2 capitalize" style={`color: ${theme.colors.textLight}`}>
+        {formattedDate}
+      </p>
+    </section>
+
+    <section class="px-4 pb-24">
+      {/* Timeline for Luxe */}
+      {config.timeline && config.timeline.length > 0 && (
+        <div class="mb-6">
+          <WeddingTimeline timeline={config.timeline} primaryColor={primaryColor} client:load />
+        </div>
+      )}
+
+      {/* Venue Info for Luxe */}
+      <WeddingInfo venue={config.venue} primaryColor={primaryColor} client:load />
+
+      {/* Info Cards for Luxe */}
+      <div class="grid gap-3 mt-6">
+        <div class="bg-white/80 backdrop-blur-sm rounded-xl p-4 border" style={`border-color: ${theme.colors.border}`}>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center" style={`background-color: ${primaryColor}15`}>
+              <svg class="w-4 h-4" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold" style={`color: ${theme.colors.text}`}>Contact</h3>
+              <p class="text-xs" style={`color: ${theme.colors.textLight}`}>Contactez-nous pour toute question</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-sm rounded-xl p-4 border" style={`border-color: ${theme.colors.border}`}>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center" style={`background-color: ${primaryColor}15`}>
+              <svg class="w-4 h-4" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold" style={`color: ${theme.colors.text}`}>Liste de mariage</h3>
+              <p class="text-xs" style={`color: ${theme.colors.textLight}`}>Votre présence est notre plus beau cadeau</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <LuxeNav slug={wedding.slug} currentPage="home" client:load />
+  </WeddingLuxeLayout>
+) : (
+  <!-- CLASSIC THEME -->
+  <WeddingLayout wedding={wedding} title="Informations">
+  <!-- Event Details -->
+  <section class="py-16 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl sm:text-5xl font-display font-bold text-deep-charcoal dark:text-ivory mb-4">
+        Informations Pratiques
+      </h1>
+      <p class="text-xl text-warm-taupe dark:text-silver-mist capitalize">
+        {formattedDate}
+      </p>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  {config.timeline && config.timeline.length > 0 && (
+    <WeddingTimeline timeline={config.timeline} primaryColor={primaryColor} client:load />
+  )}
+
+  <!-- Venue Info -->
+  <WeddingInfo venue={config.venue} primaryColor={primaryColor} client:load />
+
+  <!-- Additional Information -->
+  <section class="py-16 px-4 bg-pearl-white dark:bg-deep-charcoal/20">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl font-display font-bold text-center text-deep-charcoal dark:text-ivory mb-12">
+        Informations Complémentaires
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Contact -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center"
+              style={`background-color: ${primaryColor}15`}
+            >
+              <svg class="w-5 h-5" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-deep-charcoal dark:text-ivory">
+              Contact
+            </h3>
+          </div>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Pour toute question, n'hésitez pas à nous contacter par email ou téléphone. Nous serons ravis de vous répondre.
+          </p>
+        </div>
+
+        <!-- Gifts -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center"
+              style={`background-color: ${primaryColor}15`}
+            >
+              <svg class="w-5 h-5" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-deep-charcoal dark:text-ivory">
+              Liste de mariage
+            </h3>
+          </div>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Votre présence est notre plus beau cadeau. Si vous souhaitez nous faire un présent, nous avons créé une liste de mariage.
+          </p>
+        </div>
+
+        <!-- Accommodation -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center"
+              style={`background-color: ${primaryColor}15`}
+            >
+              <svg class="w-5 h-5" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-deep-charcoal dark:text-ivory">
+              Hébergement
+            </h3>
+          </div>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Des chambres sont disponibles sur place et aux alentours. Contactez-nous pour bénéficier de tarifs préférentiels.
+          </p>
+        </div>
+
+        <!-- Photos -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center"
+              style={`background-color: ${primaryColor}15`}
+            >
+              <svg class="w-5 h-5" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-deep-charcoal dark:text-ivory">
+              Photos & Vidéos
+            </h3>
+          </div>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Capturez vos plus beaux moments et partagez-les dans notre galerie ! Vos photos seront un précieux souvenir.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-16 px-4">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-2xl font-display font-bold text-deep-charcoal dark:text-ivory mb-6">
+        On vous attend avec impatience !
+      </h2>
+      {config.features.rsvp && (
+        <a
+          href={`/${wedding.slug}/rsvp`}
+          class="inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-semibold transition-all hover:opacity-90 hover:scale-105"
+          style={`background-color: ${primaryColor}`}
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Confirmer ma présence
+        </a>
+      )}
+    </div>
+  </section>
+</WeddingLayout>
+)}

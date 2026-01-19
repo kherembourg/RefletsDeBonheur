@@ -1,0 +1,104 @@
+---
+import type { Wedding } from '../lib/types';
+import { luxeTheme } from '../lib/themes';
+import '../styles/global.css';
+
+interface Props {
+  wedding: Wedding;
+  title?: string;
+  currentPage?: 'home' | 'photos' | 'live' | 'guestbook';
+}
+
+const { wedding, title, currentPage = 'home' } = Astro.props;
+const { config } = wedding;
+const pageTitle = title ? `${title} - ${wedding.name}` : wedding.name;
+
+const colors = luxeTheme.colors;
+---
+
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content={`Site de mariage de ${config.brideName} & ${config.groomName}`} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content={colors.background} />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Luxe Theme Styles -->
+    <style define:vars={{
+      bgColor: colors.background,
+      textMain: colors.text,
+      textLight: colors.textLight,
+      textMuted: colors.textMuted,
+      accent: colors.accent,
+      card: colors.card,
+      border: colors.border,
+      glass: colors.glass,
+    }}>
+      :root {
+        --luxe-bg: var(--bgColor);
+        --luxe-text: var(--textMain);
+        --luxe-text-light: var(--textLight);
+        --luxe-text-muted: var(--textMuted);
+        --luxe-accent: var(--accent);
+        --luxe-card: var(--card);
+        --luxe-border: var(--border);
+        --luxe-glass: var(--glass);
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--luxe-bg);
+        color: var(--luxe-text);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .luxe-container {
+        max-width: 100%;
+        min-height: 100vh;
+        padding-bottom: 100px; /* Space for floating nav */
+      }
+
+      @media (min-width: 768px) {
+        body {
+          display: flex;
+          justify-content: center;
+          background-color: #e5e5e5;
+        }
+        .luxe-container {
+          max-width: 430px;
+          box-shadow: 0 0 50px rgba(0,0,0,0.1);
+          background-color: var(--luxe-bg);
+        }
+      }
+
+      .font-display {
+        font-family: 'Playfair Display', serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="luxe-container">
+      <slot />
+    </div>
+
+    <!-- Floating Navigation -->
+    <script define:vars={{ slug: wedding.slug, currentPage }}>
+      // Inject navigation component client-side
+    </script>
+  </body>
+</html>

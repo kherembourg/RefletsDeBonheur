@@ -1,0 +1,145 @@
+---
+interface Props {
+  class?: string;
+  variant?: 'corner-left' | 'corner-right' | 'divider' | 'small';
+  color?: string;
+}
+
+const { class: className = '', variant = 'corner-left', color = '#ae1725' } = Astro.props;
+---
+
+{variant === 'corner-left' && (
+  <svg class={`floral-decoration ${className}`} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Main rose -->
+    <g opacity="0.15">
+      <!-- Rose petals -->
+      <ellipse cx="60" cy="60" rx="25" ry="20" fill={color} transform="rotate(-30 60 60)"/>
+      <ellipse cx="65" cy="55" rx="22" ry="18" fill={color} transform="rotate(15 65 55)"/>
+      <ellipse cx="55" cy="65" rx="20" ry="16" fill={color} transform="rotate(-60 55 65)"/>
+      <ellipse cx="70" cy="60" rx="18" ry="14" fill={color} transform="rotate(45 70 60)"/>
+      <circle cx="62" cy="58" r="10" fill={color}/>
+
+      <!-- Stem and leaves -->
+      <path d="M62 80 Q50 120, 30 160" stroke={color} stroke-width="2" fill="none"/>
+      <path d="M45 110 Q30 100, 20 115 Q35 115, 45 110" fill={color}/>
+      <path d="M35 140 Q20 130, 10 145 Q25 145, 35 140" fill={color}/>
+    </g>
+
+    <!-- Secondary smaller flowers -->
+    <g opacity="0.1">
+      <circle cx="120" cy="40" r="8" fill={color}/>
+      <ellipse cx="112" cy="38" rx="6" ry="4" fill={color}/>
+      <ellipse cx="128" cy="38" rx="6" ry="4" fill={color}/>
+      <ellipse cx="120" cy="30" rx="4" ry="6" fill={color}/>
+      <ellipse cx="120" cy="48" rx="4" ry="6" fill={color}/>
+
+      <path d="M120 55 Q130 80, 150 100" stroke={color} stroke-width="1.5" fill="none"/>
+    </g>
+
+    <!-- Decorative leaves scattered -->
+    <g opacity="0.08">
+      <path d="M160 60 Q170 50, 180 60 Q170 70, 160 60" fill={color}/>
+      <path d="M140 90 Q150 80, 160 90 Q150 100, 140 90" fill={color}/>
+      <path d="M80 130 Q90 120, 100 130 Q90 140, 80 130" fill={color}/>
+    </g>
+
+    <!-- Small buds -->
+    <g opacity="0.12">
+      <ellipse cx="100" cy="80" rx="5" ry="8" fill={color}/>
+      <ellipse cx="30" cy="80" rx="4" ry="6" fill={color}/>
+    </g>
+  </svg>
+)}
+
+{variant === 'corner-right' && (
+  <svg class={`floral-decoration ${className}`} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1)">
+    <!-- Main rose -->
+    <g opacity="0.15">
+      <ellipse cx="60" cy="60" rx="25" ry="20" fill={color} transform="rotate(-30 60 60)"/>
+      <ellipse cx="65" cy="55" rx="22" ry="18" fill={color} transform="rotate(15 65 55)"/>
+      <ellipse cx="55" cy="65" rx="20" ry="16" fill={color} transform="rotate(-60 55 65)"/>
+      <ellipse cx="70" cy="60" rx="18" ry="14" fill={color} transform="rotate(45 70 60)"/>
+      <circle cx="62" cy="58" r="10" fill={color}/>
+
+      <path d="M62 80 Q50 120, 30 160" stroke={color} stroke-width="2" fill="none"/>
+      <path d="M45 110 Q30 100, 20 115 Q35 115, 45 110" fill={color}/>
+      <path d="M35 140 Q20 130, 10 145 Q25 145, 35 140" fill={color}/>
+    </g>
+
+    <g opacity="0.1">
+      <circle cx="120" cy="40" r="8" fill={color}/>
+      <ellipse cx="112" cy="38" rx="6" ry="4" fill={color}/>
+      <ellipse cx="128" cy="38" rx="6" ry="4" fill={color}/>
+      <ellipse cx="120" cy="30" rx="4" ry="6" fill={color}/>
+      <ellipse cx="120" cy="48" rx="4" ry="6" fill={color}/>
+
+      <path d="M120 55 Q130 80, 150 100" stroke={color} stroke-width="1.5" fill="none"/>
+    </g>
+
+    <g opacity="0.08">
+      <path d="M160 60 Q170 50, 180 60 Q170 70, 160 60" fill={color}/>
+      <path d="M140 90 Q150 80, 160 90 Q150 100, 140 90" fill={color}/>
+      <path d="M80 130 Q90 120, 100 130 Q90 140, 80 130" fill={color}/>
+    </g>
+
+    <g opacity="0.12">
+      <ellipse cx="100" cy="80" rx="5" ry="8" fill={color}/>
+      <ellipse cx="30" cy="80" rx="4" ry="6" fill={color}/>
+    </g>
+  </svg>
+)}
+
+{variant === 'divider' && (
+  <svg class={`floral-divider ${className}`} viewBox="0 0 400 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Center flower -->
+    <g opacity="0.2">
+      <circle cx="200" cy="30" r="8" fill={color}/>
+      <ellipse cx="188" cy="28" rx="6" ry="4" fill={color} transform="rotate(-20 188 28)"/>
+      <ellipse cx="212" cy="28" rx="6" ry="4" fill={color} transform="rotate(20 212 28)"/>
+      <ellipse cx="200" cy="18" rx="4" ry="6" fill={color}/>
+      <ellipse cx="192" cy="38" rx="5" ry="4" fill={color} transform="rotate(30 192 38)"/>
+      <ellipse cx="208" cy="38" rx="5" ry="4" fill={color} transform="rotate(-30 208 38)"/>
+    </g>
+
+    <!-- Lines extending from center -->
+    <line x1="60" y1="30" x2="170" y2="30" stroke={color} stroke-width="1" opacity="0.2"/>
+    <line x1="230" y1="30" x2="340" y2="30" stroke={color} stroke-width="1" opacity="0.2"/>
+
+    <!-- Small decorative leaves on lines -->
+    <g opacity="0.15">
+      <path d="M100 30 Q105 22, 115 30 Q105 38, 100 30" fill={color}/>
+      <path d="M285 30 Q295 22, 300 30 Q295 38, 285 30" fill={color}/>
+    </g>
+
+    <!-- Tiny buds at ends -->
+    <g opacity="0.1">
+      <circle cx="60" cy="30" r="3" fill={color}/>
+      <circle cx="340" cy="30" r="3" fill={color}/>
+    </g>
+  </svg>
+)}
+
+{variant === 'small' && (
+  <svg class={`floral-small ${className}`} viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g opacity="0.2">
+      <circle cx="25" cy="25" r="6" fill={color}/>
+      <ellipse cx="17" cy="23" rx="5" ry="3" fill={color} transform="rotate(-30 17 23)"/>
+      <ellipse cx="33" cy="23" rx="5" ry="3" fill={color} transform="rotate(30 33 23)"/>
+      <ellipse cx="25" cy="15" rx="3" ry="5" fill={color}/>
+      <ellipse cx="20" cy="32" rx="4" ry="3" fill={color} transform="rotate(40 20 32)"/>
+      <ellipse cx="30" cy="32" rx="4" ry="3" fill={color} transform="rotate(-40 30 32)"/>
+    </g>
+  </svg>
+)}
+
+<style>
+  .floral-decoration {
+    pointer-events: none;
+  }
+  .floral-divider {
+    pointer-events: none;
+  }
+  .floral-small {
+    pointer-events: none;
+  }
+</style>

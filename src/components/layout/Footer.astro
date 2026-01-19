@@ -1,0 +1,67 @@
+---
+import { getLangFromUrl, useTranslations } from '../../i18n';
+
+const currentYear = new Date().getFullYear();
+const currentLang = getLangFromUrl(Astro.url);
+const t = useTranslations(currentLang);
+
+// Get localized pricing URL
+const pricingUrl = currentLang === 'en' ? '/pricing' : currentLang === 'fr' ? '/fr/tarification' : '/es/precios';
+
+// Taglines by language
+const taglines: Record<string, string> = {
+  en: 'Where every moment becomes eternal',
+  fr: 'Où chaque instant devient éternel',
+  es: 'Donde cada momento se vuelve eterno',
+};
+---
+
+<footer class="bg-charcoal dark:bg-charcoal text-cream mt-16 transition-colors duration-300">
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+      <!-- Logo & Tagline -->
+      <div class="text-center md:text-left">
+        <div class="flex items-center justify-center md:justify-start gap-3 mb-3">
+          <!-- Wedding Rings Icon -->
+          <svg viewBox="0 0 32 32" class="w-6 h-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="16" r="7" stroke="#c92a38" stroke-width="2" fill="none"/>
+            <circle cx="21" cy="16" r="7" stroke="#c92a38" stroke-width="2" fill="none"/>
+            <polygon points="11,7 9,10 13,10" fill="#c92a38"/>
+          </svg>
+          <span class="font-serif text-xl text-cream tracking-wide">Reflets de Bonheur</span>
+        </div>
+        <p class="text-sm text-sage font-light italic">{taglines[currentLang]}</p>
+      </div>
+
+      <!-- Links -->
+      <div class="flex flex-wrap justify-center gap-6 text-sm">
+        <a href={pricingUrl} class="text-sage hover:text-cream transition-colors font-light tracking-wide">
+          {t.nav.pricing}
+        </a>
+        <a href="/mentions-legales" class="text-sage hover:text-cream transition-colors font-light tracking-wide">
+          {t.footer.legalNotice}
+        </a>
+        <a href="/cgv" class="text-sage hover:text-cream transition-colors font-light tracking-wide">
+          {t.footer.terms}
+        </a>
+        <a href="/politique-confidentialite" class="text-sage hover:text-cream transition-colors font-light tracking-wide">
+          {t.footer.privacyPolicy}
+        </a>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="flex items-center justify-center gap-4 my-8">
+      <div class="flex-1 h-px bg-[#c92a38]/30"></div>
+      <div class="text-[#c92a38]/60">✦</div>
+      <div class="flex-1 h-px bg-[#c92a38]/30"></div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="text-center">
+      <p class="text-sm text-sage/70 font-light">
+        © {currentYear} Reflets de Bonheur. {t.footer.copyright}.
+      </p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,148 @@
+---
+// Enable SSR for this page to support dynamic slugs from Supabase
+export const prerender = false;
+
+import WeddingLayout from '../../layouts/WeddingLayout.astro';
+import WeddingLuxeLayout from '../../layouts/WeddingLuxeLayout.astro';
+import { WeddingHero } from '../../components/wedding/WeddingHero';
+import { LuxeHero } from '../../components/wedding/LuxeHero';
+import { LuxeUploadCard } from '../../components/wedding/LuxeUploadCard';
+import { LuxeGalleryPreview } from '../../components/wedding/LuxeGalleryPreview';
+import { LuxeNav } from '../../components/wedding/LuxeNav';
+import { WeddingTimeline } from '../../components/wedding/WeddingTimeline';
+import { WeddingInfo } from '../../components/wedding/WeddingInfo';
+import { getWeddingBySlugAsync } from '../../lib/weddingData';
+import { getTheme } from '../../lib/themes';
+
+const { slug } = Astro.params;
+const wedding = await getWeddingBySlugAsync(slug as string);
+
+// Redirect to 404 if wedding not found
+if (!wedding) {
+  return Astro.redirect('/404');
+}
+
+const { config } = wedding;
+const themeId = config.theme.id || 'classic';
+const theme = getTheme(themeId);
+const isLuxe = themeId === 'luxe';
+const primaryColor = isLuxe ? theme.colors.accent : config.theme.primaryColor || '#ae1725';
+---
+
+{isLuxe ? (
+  <!-- LUXE THEME -->
+  <WeddingLuxeLayout wedding={wedding} currentPage="home">
+    <!-- Hero Section -->
+    <LuxeHero config={config} client:load />
+
+    <!-- Upload Card -->
+    <LuxeUploadCard client:load />
+
+    <!-- Gallery Preview -->
+    <LuxeGalleryPreview slug={wedding.slug} client:load />
+
+    <!-- Floating Navigation -->
+    <LuxeNav slug={wedding.slug} currentPage="home" client:load />
+  </WeddingLuxeLayout>
+) : (
+  <!-- CLASSIC THEME -->
+  <WeddingLayout wedding={wedding}>
+    <!-- Hero Section -->
+    <WeddingHero config={config} client:load />
+
+    <!-- Welcome Message -->
+    {config.welcomeMessage && (
+      <section class="py-16 px-4 text-center">
+        <div class="max-w-2xl mx-auto">
+          <p class="text-xl sm:text-2xl text-warm-taupe dark:text-silver-mist leading-relaxed">
+            {config.welcomeMessage}
+          </p>
+        </div>
+      </section>
+    )}
+
+    <!-- Timeline -->
+    {config.features.timeline && config.timeline && config.timeline.length > 0 && (
+      <WeddingTimeline timeline={config.timeline} primaryColor={primaryColor} client:load />
+    )}
+
+    <!-- Venue Info -->
+    <WeddingInfo venue={config.venue} primaryColor={primaryColor} client:load />
+
+    <!-- Quick Actions -->
+    <section class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- RSVP Card -->
+          {config.features.rsvp && (
+            <a
+              href={`/${wedding.slug}/rsvp`}
+              class="group bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
+            >
+              <div
+                class="w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+                style={`background-color: ${primaryColor}15`}
+              >
+                <svg class="w-7 h-7" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-deep-charcoal dark:text-ivory mb-2">
+                Confirmer ma présence
+              </h3>
+              <p class="text-sm text-warm-taupe dark:text-silver-mist">
+                Répondez à notre invitation
+              </p>
+            </a>
+          )}
+
+          <!-- Photos Card -->
+          {config.features.photoGallery && (
+            <a
+              href={`/${wedding.slug}/photos`}
+              class="group bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
+            >
+              <div
+                class="w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+                style={`background-color: ${primaryColor}15`}
+              >
+                <svg class="w-7 h-7" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-deep-charcoal dark:text-ivory mb-2">
+                Galerie Photos
+              </h3>
+              <p class="text-sm text-warm-taupe dark:text-silver-mist">
+                Partagez vos photos et vidéos
+              </p>
+            </a>
+          )}
+
+          <!-- Guestbook Card -->
+          {config.features.guestbook && (
+            <a
+              href={`/${wedding.slug}/livre-or`}
+              class="group bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
+            >
+              <div
+                class="w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+                style={`background-color: ${primaryColor}15`}
+              >
+                <svg class="w-7 h-7" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-deep-charcoal dark:text-ivory mb-2">
+                Livre d'Or
+              </h3>
+              <p class="text-sm text-warm-taupe dark:text-silver-mist">
+                Laissez un message aux mariés
+              </p>
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  </WeddingLayout>
+)}

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background - Elegant Olive Green -->
+  <rect width="512" height="512" fill="#4A5D4A" rx="80"/>
+
+  <!-- Wedding Rings - Cream/Gold -->
+  <g transform="translate(256, 256)">
+    <!-- Left Ring -->
+    <circle cx="-50" cy="0" r="90" fill="none" stroke="#FAF8F5" stroke-width="20"/>
+    <circle cx="-50" cy="0" r="90" fill="none" stroke="#B8860B" stroke-width="6" opacity="0.6"/>
+
+    <!-- Right Ring (interlocked) -->
+    <circle cx="50" cy="0" r="90" fill="none" stroke="#FAF8F5" stroke-width="20"/>
+    <circle cx="50" cy="0" r="90" fill="none" stroke="#B8860B" stroke-width="6" opacity="0.6"/>
+
+    <!-- Diamond on left ring -->
+    <polygon points="-50,-105 -35,-85 -65,-85" fill="#B8860B"/>
+    <polygon points="-50,-85 -35,-85 -50,-70 -65,-85" fill="#FAF8F5" opacity="0.8"/>
+  </g>
+
+  <!-- Subtle leaf decorations -->
+  <g fill="#FAF8F5" opacity="0.15">
+    <ellipse cx="100" cy="100" rx="20" ry="40" transform="rotate(-45, 100, 100)"/>
+    <ellipse cx="412" cy="100" rx="20" ry="40" transform="rotate(45, 412, 100)"/>
+    <ellipse cx="100" cy="412" rx="20" ry="40" transform="rotate(45, 100, 412)"/>
+    <ellipse cx="412" cy="412" rx="20" ry="40" transform="rotate(-45, 412, 412)"/>
+  </g>
+</svg>

@@ -1,0 +1,150 @@
+{
+  "name": "Reflets de Bonheur",
+  "short_name": "Reflets",
+  "description": "Partagez et revivez les plus beaux moments de votre mariage",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F0E8",
+  "theme_color": "#ae1725",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "fr-FR",
+  "dir": "ltr",
+  "categories": ["photo", "social", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/gallery-light.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Galerie de photos"
+    },
+    {
+      "src": "/screenshots/gallery-mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Galerie mobile"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Galerie",
+      "short_name": "Galerie",
+      "description": "Voir toutes les photos",
+      "url": "/gallery",
+      "icons": [
+        {
+          "src": "/icons/shortcut-gallery.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Livre d'Or",
+      "short_name": "Livre d'Or",
+      "description": "Laisser un message",
+      "url": "/guestbook",
+      "icons": [
+        {
+          "src": "/icons/shortcut-guestbook.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ajouter",
+      "short_name": "Upload",
+      "description": "Ajouter des photos",
+      "url": "/gallery?upload=true",
+      "icons": [
+        {
+          "src": "/icons/shortcut-upload.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/gallery",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {
+          "name": "photos",
+          "accept": ["image/*", "video/*"]
+        }
+      ]
+    }
+  },
+  "related_applications": [],
+  "prefer_related_applications": false
+}

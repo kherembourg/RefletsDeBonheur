@@ -1,0 +1,123 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Hors ligne" showHeader={false}>
+  <div class="min-h-screen flex items-center justify-center px-4 py-16">
+    <div class="max-w-md w-full text-center">
+      <!-- Offline Icon -->
+      <div class="mb-8 flex justify-center">
+        <div class="w-32 h-32 rounded-full bg-[#ae1725]/10 flex items-center justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-16 h-16 text-[#ae1725]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Heading -->
+      <h1 class="text-4xl font-display font-bold text-deep-charcoal dark:text-ivory mb-4">
+        Vous êtes hors ligne
+      </h1>
+
+      <!-- Description -->
+      <p class="text-lg text-warm-taupe dark:text-silver-mist mb-8">
+        Impossible de se connecter au réseau. Certaines fonctionnalités peuvent être limitées jusqu'à ce que vous soyez à nouveau en ligne.
+      </p>
+
+      <!-- Features Available Offline -->
+      <div class="bg-ivory dark:bg-deep-charcoal/50 rounded-lg p-6 mb-8 text-left">
+        <h2 class="text-lg font-semibold text-deep-charcoal dark:text-ivory mb-4">
+          Fonctionnalités disponibles hors ligne :
+        </h2>
+        <ul class="space-y-2 text-warm-taupe dark:text-silver-mist">
+          <li class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-[#ae1725] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Consulter les photos déjà chargées</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-[#ae1725] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Naviguer dans l'application</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-[#ae1725] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Consulter vos favoris</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Retry Button -->
+      <button
+        id="retry-button"
+        class="btn-primary w-full"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span>Réessayer</span>
+      </button>
+
+      <!-- Connection Status -->
+      <div id="connection-status" class="mt-6 text-sm text-warm-taupe dark:text-silver-mist">
+        <span id="status-text">Vérification de la connexion...</span>
+      </div>
+    </div>
+  </div>
+</MainLayout>
+
+<script>
+  // Check online status
+  function updateConnectionStatus() {
+    const statusText = document.getElementById('status-text');
+    if (statusText) {
+      if (navigator.onLine) {
+        statusText.textContent = '✅ Connexion rétablie ! Vous pouvez rafraîchir la page.';
+        statusText.classList.remove('text-warm-taupe', 'dark:text-silver-mist');
+        statusText.classList.add('text-green-600', 'dark:text-green-400');
+      } else {
+        statusText.textContent = '❌ Pas de connexion Internet détectée.';
+        statusText.classList.remove('text-green-600', 'dark:text-green-400');
+        statusText.classList.add('text-warm-taupe', 'dark:text-silver-mist');
+      }
+    }
+  }
+
+  // Retry button
+  const retryButton = document.getElementById('retry-button');
+  if (retryButton) {
+    retryButton.addEventListener('click', () => {
+      window.location.reload();
+    });
+  }
+
+  // Listen for online/offline events
+  window.addEventListener('online', updateConnectionStatus);
+  window.addEventListener('offline', updateConnectionStatus);
+
+  // Initial check
+  updateConnectionStatus();
+
+  // Auto-refresh when online
+  window.addEventListener('online', () => {
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  });
+</script>
+</MainLayout>

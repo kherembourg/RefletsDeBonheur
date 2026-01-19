@@ -1,0 +1,352 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import { Check, X, HelpCircle, Camera, BookHeart, Globe, ArrowRight } from 'lucide-react';
+
+const lang = 'es';
+---
+
+<MainLayout
+  title="Precios - Reflets de Bonheur"
+  description="Precios simples y transparentes: 99€ por 2 años con tu dominio personalizado incluido."
+  showHeader={true}
+>
+  <Header slot="header" />
+
+  <!-- Hero Section -->
+  <section class="py-20 bg-cream">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+          Precios
+        </span>
+        <h1 class="font-serif text-4xl sm:text-5xl font-light text-charcoal mt-4 mb-6">
+          Precios simples y transparentes
+        </h1>
+        <div class="w-16 h-px mx-auto mb-6" style="background-color: #ae1725;"></div>
+        <p class="text-charcoal-light font-light">
+          Todo lo que necesitas para inmortalizar tu boda, sin sorpresas
+        </p>
+      </div>
+
+      <!-- Pricing Card -->
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-white border p-8 sm:p-12 relative" style="border-color: rgba(174, 23, 37, 0.2);">
+          <!-- Badge -->
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+            <span class="text-white text-xs font-sans font-medium tracking-wider uppercase px-4 py-2" style="background-color: #ae1725;">
+              Oferta de Lanzamiento
+            </span>
+          </div>
+
+          <div class="text-center mb-10 pt-4">
+            <h2 class="font-serif text-2xl text-charcoal mb-2">Paquete Completo</h2>
+            <p class="text-charcoal-light font-light text-sm">Todos los servicios incluidos</p>
+          </div>
+
+          <!-- Price -->
+          <div class="text-center mb-10">
+            <div class="flex items-center justify-center gap-4 mb-3">
+              <span class="text-2xl text-charcoal-light/50 line-through font-light">149€</span>
+              <span class="font-serif text-6xl sm:text-7xl font-light text-[#ae1725]">99€</span>
+            </div>
+            <p class="text-charcoal-light mb-2">
+              por <strong class="text-charcoal">2 años</strong>
+              <span class="ml-2 font-medium text-[#ae1725]">(Ahorra 50€)</span>
+            </p>
+            <div class="inline-flex items-center gap-2 px-4 py-2 mt-2" style="background-color: rgba(174, 23, 37, 0.05);">
+              <span class="text-sm text-charcoal-light">
+                Luego <strong class="text-[#ae1725]">19,99€/año</strong> para mantener tu galería
+              </span>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="flex items-center gap-4 my-8">
+            <div class="flex-1 h-px" style="background-color: rgba(174, 23, 37, 0.1);"></div>
+            <span class="text-sm" style="color: rgba(174, 23, 37, 0.4);">✦</span>
+            <div class="flex-1 h-px" style="background-color: rgba(174, 23, 37, 0.1);"></div>
+          </div>
+
+          <!-- Three Services -->
+          <div class="grid md:grid-cols-3 gap-6 mb-10">
+            <div class="text-center p-4">
+              <Camera class="w-6 h-6 mx-auto mb-3 text-[#ae1725]" />
+              <h4 class="font-medium text-charcoal text-sm mb-2">Galería de Fotos</h4>
+              <ul class="text-xs text-charcoal-light space-y-1 font-light">
+                <li>Carga ilimitada</li>
+                <li>Álbumes organizados</li>
+                <li>Descarga ZIP</li>
+              </ul>
+            </div>
+
+            <div class="text-center p-4 border-x" style="border-color: rgba(174, 23, 37, 0.1);">
+              <BookHeart class="w-6 h-6 mx-auto mb-3 text-[#ae1725]" />
+              <h4 class="font-medium text-charcoal text-sm mb-2">Libro de Visitas</h4>
+              <ul class="text-xs text-charcoal-light space-y-1 font-light">
+                <li>Mensajes ilimitados</li>
+                <li>Moderación admin</li>
+                <li>Exportar PDF</li>
+              </ul>
+            </div>
+
+            <div class="text-center p-4">
+              <Globe class="w-6 h-6 mx-auto mb-3 text-[#ae1725]" />
+              <h4 class="font-medium text-charcoal text-sm mb-2">Sitio Web de Boda</h4>
+              <ul class="text-xs text-charcoal-light space-y-1 font-light">
+                <li>Dominio personalizado</li>
+                <li>Programa y lugar</li>
+                <li>RSVP integrado</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- CTA -->
+          <div class="text-center">
+            <a
+              href="/connexion"
+              class="inline-flex items-center px-10 py-4 text-white font-sans font-medium text-sm tracking-wider uppercase transition-all hover:opacity-90"
+              style="background-color: #ae1725;"
+            >
+              Comenzar ahora
+              <ArrowRight class="ml-2 w-4 h-4" />
+            </a>
+            <p class="mt-4 text-charcoal-light text-sm font-light">
+              Garantía de devolución de 30 días
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features List -->
+  <section class="py-20" style="background-color: rgba(174, 23, 37, 0.03);">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+          Incluido en la oferta
+        </span>
+        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-4">
+          Todo lo que necesitas
+        </h2>
+      </div>
+
+      <div class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-4">
+        {[
+          "Galería de fotos y videos ilimitada",
+          "Nombre de dominio personalizado",
+          "Libro de visitas digital",
+          "Sitio web de boda",
+          "Aplicación móvil (PWA)",
+          "Modo sin conexión",
+          "Descarga masiva (ZIP)",
+          "Exportar libro de visitas a PDF",
+          "Álbumes por categorías",
+          "Reacciones y favoritos",
+          "Modo presentación",
+          "Soporte por email"
+        ].map(feature => (
+          <div class="flex items-center gap-3 p-3 bg-white">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
+              <Check class="w-3 h-3" />
+            </div>
+            <span class="text-charcoal font-light text-sm">{feature}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="py-20 bg-cream">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+          Preguntas frecuentes
+        </span>
+        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-4">
+          Respondemos a tus preguntas
+        </h2>
+      </div>
+
+      <div class="max-w-3xl mx-auto space-y-4">
+        <!-- FAQ Item 1 -->
+        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+          <div class="flex items-start gap-3">
+            <HelpCircle class="w-5 h-5 flex-shrink-0 mt-0.5 text-[#ae1725]" />
+            <div>
+              <h3 class="font-medium text-charcoal mb-2">
+                ¿Cómo funciona el dominio personalizado?
+              </h3>
+              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+                Eliges tu nombre durante el registro (ej: maria-jose.reflets-bonheur.fr).
+                Esta será la dirección única de tu espacio de boda, accesible para todos tus invitados.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Item 2 -->
+        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+          <div class="flex items-start gap-3">
+            <HelpCircle class="w-5 h-5 flex-shrink-0 mt-0.5 text-[#ae1725]" />
+            <div>
+              <h3 class="font-medium text-charcoal mb-2">
+                ¿Cómo funciona la renovación?
+              </h3>
+              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+                Después de 2 años, si quieres mantener tu galería en línea (modo solo lectura, sin nuevas cargas),
+                cuesta solo 19,99€/año. La renovación es opcional - puedes descargar tus datos en cualquier momento.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Item 3 -->
+        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+          <div class="flex items-start gap-3">
+            <HelpCircle class="w-5 h-5 flex-shrink-0 mt-0.5 text-[#ae1725]" />
+            <div>
+              <h3 class="font-medium text-charcoal mb-2">
+                ¿Mis fotos están seguras?
+              </h3>
+              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+                Sí, tus datos están encriptados y respaldados automáticamente.
+                Solo las personas con el código de acceso pueden ver tu galería.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Item 4 -->
+        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+          <div class="flex items-start gap-3">
+            <HelpCircle class="w-5 h-5 flex-shrink-0 mt-0.5 text-[#ae1725]" />
+            <div>
+              <h3 class="font-medium text-charcoal mb-2">
+                ¿Cuánto tiempo permanece mi sitio en línea?
+              </h3>
+              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+                Tu sitio es accesible durante 2 años como mínimo. Después, puedes renovarlo o recuperar
+                todos tus datos. Conservamos tus archivos durante 90 días después de la expiración.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Item 5 -->
+        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+          <div class="flex items-start gap-3">
+            <HelpCircle class="w-5 h-5 flex-shrink-0 mt-0.5 text-[#ae1725]" />
+            <div>
+              <h3 class="font-medium text-charcoal mb-2">
+                ¿Puedo descargar mis fotos?
+              </h3>
+              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+                En cualquier momento, puedes descargar todas tus fotos y videos en un clic (formato ZIP).
+                El libro de visitas se puede exportar como PDF.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Section -->
+  <section class="py-20" style="background-color: rgba(174, 23, 37, 0.03);">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+          Comparación
+        </span>
+        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-4">
+          ¿Por qué elegirnos?
+        </h2>
+      </div>
+
+      <div class="max-w-5xl mx-auto overflow-x-auto">
+        <table class="w-full bg-white">
+          <thead>
+            <tr style="background-color: #ae1725;">
+              <th class="px-4 py-4 text-left text-sm font-medium tracking-wide text-white">Característica</th>
+              <th class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">Reflets de Bonheur</th>
+              <th class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">Google Photos</th>
+              <th class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">WeTransfer</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y" style="--tw-divide-opacity: 0.1; border-color: rgba(174, 23, 37, 0.1);">
+            <tr>
+              <td class="px-4 py-4 text-sm text-charcoal">Precio</td>
+              <td class="px-4 py-4 text-center font-medium text-sm text-[#ae1725]">99€/2 años</td>
+              <td class="px-4 py-4 text-center text-charcoal-light text-sm">Gratis (limitado)</td>
+              <td class="px-4 py-4 text-center text-charcoal-light text-sm">12€/mes</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 text-sm text-charcoal">Dominio personalizado</td>
+              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-[#ae1725]" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 text-sm text-charcoal">Libro de visitas</td>
+              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-[#ae1725]" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 text-sm text-charcoal">Sitio web de boda</td>
+              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-[#ae1725]" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 text-sm text-charcoal">Calidad original</td>
+              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-[#ae1725]" /></td>
+              <td class="px-4 py-4 text-center text-charcoal-light text-sm">Comprimido</td>
+              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-[#ae1725]" /></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 text-sm text-charcoal">Sin anuncios</td>
+              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-[#ae1725]" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <td class="px-4 py-4 text-center text-charcoal-light text-sm">Versión Pro</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="py-20" style="background-color: #ae1725;">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto">
+        <h2 class="font-serif text-3xl sm:text-4xl font-light mb-6 text-white">
+          ¿Listo para comenzar?
+        </h2>
+        <p class="text-white/80 font-light mb-4">
+          <span class="line-through text-white/50">149€</span>
+          <strong class="text-white ml-2">99€</strong> por 2 años completos.
+        </p>
+        <p class="text-white/70 font-light text-sm mb-8">
+          Dominio personalizado incluido • Luego 19,99€/año para renovación
+        </p>
+        <a
+          href="/connexion"
+          class="inline-flex items-center px-10 py-4 bg-white font-sans font-medium text-sm tracking-wider uppercase hover:bg-gray-100 transition-all text-[#ae1725]"
+        >
+          Comenzar ahora
+          <ArrowRight class="ml-2 w-4 h-4" />
+        </a>
+        <p class="mt-6 text-white/60 text-sm font-light">
+          Garantía de devolución de 30 días
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</MainLayout>

@@ -1,0 +1,119 @@
+---
+// Language detection script - runs on client side
+// Detects browser language and redirects if needed
+---
+
+<script is:inline>
+(function() {
+  const LANG_PREF_KEY = 'reflets_lang_preference';
+  const LANG_DETECTED_KEY = 'reflets_lang_detected';
+
+  // Supported languages
+  const supportedLangs = ['en', 'fr', 'es'];
+  const defaultLang = 'en';
+
+  // Pages that should NOT have language detection (app pages)
+  const appPages = ['/gallery', '/guestbook', '/admin', '/connexion', '/offline'];
+
+  // Check if current page is an app page (not a public marketing page)
+  function isAppPage() {
+    const path = window.location.pathname;
+    // Check if it's an app page or a wedding subdomain page (contains slug)
+    return appPages.some(page => path.startsWith(page)) ||
+           // Wedding pages like /julie-thomas/photos
+           (path.split('/').length >= 2 && !['fr', 'es', ''].includes(path.split('/')[1]) &&
+            !['pricing', 'mentions-legales', 'cgv', 'politique-confidentialite'].includes(path.split('/')[1]));
+  }
+
+  // Get current path language
+  function getCurrentLang() {
+    const path = window.location.pathname;
+    if (path.startsWith('/fr/') || path === '/fr') return 'fr';
+    if (path.startsWith('/es/') || path === '/es') return 'es';
+    return 'en'; // Default
+  }
+
+  // Get browser language
+  function getBrowserLang() {
+    const browserLang = navigator.language || navigator.userLanguage || '';
+    const shortLang = browserLang.split('-')[0].toLowerCase();
+
+    if (supportedLangs.includes(shortLang)) {
+      return shortLang;
+    }
+
+    return defaultLang;
+  }
+
+  // Get redirect URL for a language (only for public pages)
+  function getUrlForLang(targetLang) {
+    const path = window.location.pathname;
+    let newPath = path;
+
+    // Remove current language prefix if exists
+    if (path.startsWith('/fr/') || path === '/fr') {
+      newPath = path.replace(/^\/fr\/?/, '/') || '/';
+    } else if (path.startsWith('/es/') || path === '/es') {
+      newPath = path.replace(/^\/es\/?/, '/') || '/';
+    }
+
+    // Add new language prefix (except for English)
+    if (targetLang !== 'en') {
+      newPath = '/' + targetLang + (newPath === '/' ? '' : newPath);
+    }
+
+    return newPath;
+  }
+
+  // Only run on initial page load, not on every navigation
+  function shouldDetectAndRedirect() {
+    // Don't redirect on app pages
+    if (isAppPage()) {
+      return false;
+    }
+
+    // Check if we've already detected the language this session
+    const alreadyDetected = sessionStorage.getItem(LANG_DETECTED_KEY);
+    if (alreadyDetected) {
+      return false;
+    }
+
+    // Check if user has a stored preference
+    const storedPref = localStorage.getItem(LANG_PREF_KEY);
+    if (storedPref) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // Main detection logic
+  function detectAndRedirect() {
+    if (!shouldDetectAndRedirect()) {
+      return;
+    }
+
+    // Mark as detected for this session
+    sessionStorage.setItem(LANG_DETECTED_KEY, 'true');
+
+    const currentLang = getCurrentLang();
+    const browserLang = getBrowserLang();
+
+    // If browser language is different from current page, redirect
+    if (browserLang !== currentLang) {
+      const newUrl = getUrlForLang(browserLang);
+      if (newUrl !== window.location.pathname) {
+        // Store the detected preference
+        localStorage.setItem(LANG_PREF_KEY, browserLang);
+        window.location.href = newUrl;
+      }
+    } else {
+      // Store current language as preference
+      localStorage.setItem(LANG_PREF_KEY, currentLang);
+    }
+  }
+
+  // Run detection
+  detectAndRedirect();
+})();
+</script>

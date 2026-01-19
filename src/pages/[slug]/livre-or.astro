@@ -1,0 +1,72 @@
+---
+// Enable SSR for dynamic slugs
+export const prerender = false;
+
+import WeddingLayout from '../../layouts/WeddingLayout.astro';
+import WeddingLuxeLayout from '../../layouts/WeddingLuxeLayout.astro';
+import { GuestbookContainer } from '../../components/guestbook/GuestbookContainer';
+import { LuxeNav } from '../../components/wedding/LuxeNav';
+import { getWeddingBySlugAsync } from '../../lib/weddingData';
+import { getTheme } from '../../lib/themes';
+
+const { slug } = Astro.params;
+const wedding = await getWeddingBySlugAsync(slug as string);
+
+if (!wedding) {
+  return Astro.redirect('/404');
+}
+
+const { config } = wedding;
+const themeId = config.theme.id || 'classic';
+const theme = getTheme(themeId);
+const isLuxe = themeId === 'luxe';
+
+// In production, this would be the real wedding ID from Supabase
+const weddingId = wedding.id;
+---
+
+{isLuxe ? (
+  <!-- LUXE THEME -->
+  <WeddingLuxeLayout wedding={wedding} title="Livre d'Or" currentPage="guestbook">
+    <section class="pt-6 pb-4 px-5">
+      <h1 class="text-2xl font-display text-center" style={`color: ${theme.colors.text}; font-family: 'Playfair Display', serif;`}>
+        Livre d'Or
+      </h1>
+      <p class="text-center text-sm mt-2" style={`color: ${theme.colors.textLight}`}>
+        Laissez un message pour {config.brideName} & {config.groomName}
+      </p>
+    </section>
+
+    <section class="px-4 pb-24">
+      <GuestbookContainer
+        weddingId={weddingId}
+        client:load
+      />
+    </section>
+
+    <LuxeNav slug={wedding.slug} currentPage="guestbook" client:load />
+  </WeddingLuxeLayout>
+) : (
+  <!-- CLASSIC THEME -->
+  <WeddingLayout wedding={wedding} title="Livre d'Or">
+    <section class="py-12 px-4 min-h-screen bg-ivory dark:bg-deep-charcoal/30">
+      <div class="container mx-auto max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl sm:text-5xl font-display font-bold text-deep-charcoal dark:text-ivory mb-4">
+            Livre d'Or
+          </h1>
+          <p class="text-lg text-warm-taupe dark:text-silver-mist max-w-2xl mx-auto">
+            Laissez un message pour {config.brideName} & {config.groomName}
+          </p>
+        </div>
+
+        <!-- Guestbook -->
+        <GuestbookContainer
+          weddingId={weddingId}
+          client:load
+        />
+      </div>
+    </section>
+  </WeddingLayout>
+)}

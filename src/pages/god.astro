@@ -1,0 +1,29 @@
+---
+/**
+ * God Admin Page
+ * Super admin interface for managing all clients
+ */
+import '../styles/global.css';
+import { GodApp } from '../components/god/GodApp';
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>God Admin - Reflets de Bonheur</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body class="bg-gray-900 text-gray-100 m-0 p-0" style="font-family: 'Inter', sans-serif;">
+  <GodApp client:load />
+</body>
+</html>

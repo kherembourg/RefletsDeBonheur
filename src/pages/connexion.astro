@@ -1,0 +1,60 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import Footer from '../components/layout/Footer.astro';
+import { EnhancedLoginForm } from '../components/auth/EnhancedLoginForm';
+---
+
+<MainLayout
+  title="Connexion"
+  description="Accédez à votre espace Reflets de Bonheur"
+  showHeader={false}
+>
+  <EnhancedLoginForm client:load />
+
+  <Footer slot="footer" />
+</MainLayout>
+
+<script>
+  // Redirect to appropriate page if already authenticated
+  if (typeof window !== 'undefined') {
+    // Check for client session
+    const clientToken = localStorage.getItem('reflets_client_token');
+    const clientSession = localStorage.getItem('reflets_client_session');
+
+    if (clientToken && clientSession) {
+      try {
+        const session = JSON.parse(clientSession);
+        if (session.wedding_slug) {
+          window.location.href = `/${session.wedding_slug}/admin`;
+        }
+      } catch (e) {
+        // Invalid session, clear it
+        localStorage.removeItem('reflets_client_token');
+        localStorage.removeItem('reflets_client_session');
+      }
+    }
+
+    // Check for guest session
+    const guestToken = localStorage.getItem('reflets_guest_token');
+    const guestSession = localStorage.getItem('reflets_guest_session');
+
+    if (guestToken && guestSession) {
+      try {
+        const session = JSON.parse(guestSession);
+        if (session.wedding_slug) {
+          window.location.href = `/${session.wedding_slug}`;
+        }
+      } catch (e) {
+        // Invalid session, clear it
+        localStorage.removeItem('reflets_guest_token');
+        localStorage.removeItem('reflets_guest_session');
+      }
+    }
+
+    // Fallback: check old demo auth
+    const authCode = localStorage.getItem('reflets_auth_code');
+    if (authCode) {
+      window.location.href = '/demo_gallery';
+    }
+  }
+</script>

@@ -1,0 +1,54 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import { ArrowRight } from 'lucide-react';
+
+const lang = 'es';
+---
+
+<MainLayout
+  title="Reflets de Bonheur - Tu Boda, Inmortalizada"
+  description="La solución elegante para tu boda: galería de fotos, libro de visitas digital y sitio web personalizado. 99€ por 2 años."
+  showHeader={true}
+>
+  <Header slot="header" />
+
+  <!-- Coming Soon Page -->
+  <section class="min-h-screen flex items-center justify-center bg-cream">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto">
+        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+          Próximamente
+        </span>
+        <h1 class="font-serif text-4xl sm:text-5xl font-light text-charcoal mt-4 mb-6">
+          Versión en Español
+        </h1>
+        <div class="w-16 h-px mx-auto mb-6" style="background-color: #ae1725;"></div>
+        <p class="text-charcoal-light font-light mb-8">
+          Estamos trabajando en la versión en español de nuestro sitio web.
+          Mientras tanto, puedes visitar nuestra versión en inglés o francés.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="/"
+            class="inline-flex items-center px-8 py-4 bg-[#ae1725] text-white font-sans font-medium text-sm tracking-wider uppercase hover:bg-[#c92a38] transition-all"
+          >
+            English Version
+            <ArrowRight class="ml-2 w-4 h-4" />
+          </a>
+          <a
+            href="/fr"
+            class="inline-flex items-center px-8 py-4 border border-[#ae1725] text-[#ae1725] font-sans font-medium text-sm tracking-wider uppercase hover:bg-[#ae1725]/5 transition-all"
+          >
+            Version Française
+            <ArrowRight class="ml-2 w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</MainLayout>

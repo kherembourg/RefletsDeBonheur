@@ -1,0 +1,318 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import { Camera, BookHeart, Globe, Check, ArrowRight, Sparkles } from 'lucide-react';
+
+const lang = 'en';
+---
+
+<MainLayout
+  title="Reflets de Bonheur - Your Wedding, Immortalized"
+  description="The elegant solution for your wedding: photo gallery, digital guestbook, and personalized website. $99 for 2 years."
+  showHeader={true}
+>
+  <Header slot="header" />
+
+  <!-- Hero Section - Elegant & Minimalist -->
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Elegant Background Image -->
+    <div class="absolute inset-0">
+      <img
+        src="https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80"
+        alt="Elegant wedding"
+        class="w-full h-full object-cover"
+      />
+      <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="text-center max-w-4xl mx-auto">
+        <!-- Decorative Element -->
+        <div class="mb-6">
+          <span class="text-white/90 tracking-[0.3em] uppercase text-sm font-sans font-light">
+            Your story deserves to be shared
+          </span>
+        </div>
+
+        <!-- Main Title - Elegant Serif -->
+        <h1 class="font-serif text-5xl sm:text-6xl lg:text-7xl font-light text-white mb-6 leading-tight">
+          Reflets de Bonheur
+        </h1>
+
+        <!-- Decorative Divider -->
+        <div class="flex items-center justify-center gap-4 mb-6">
+          <div class="w-16 h-px bg-[#ae1725]"></div>
+          <div class="text-[#ae1725]">✦</div>
+          <div class="w-16 h-px bg-[#ae1725]"></div>
+        </div>
+
+        <!-- Subtitle -->
+        <p class="font-serif text-xl sm:text-2xl text-white/95 font-light italic mb-8">
+          Immortalize every moment of your union
+        </p>
+
+        <!-- Value Proposition -->
+        <p class="text-lg text-white/85 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
+          An elegant photo gallery, a digital guestbook, and a personalized wedding website.
+          Everything you need to share your happiness.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+          <a
+            href="/pricing"
+            class="group inline-flex items-center px-8 py-4 bg-burgundy text-white rounded-none font-sans font-medium text-sm tracking-wider uppercase hover:bg-burgundy-light transition-all duration-300"
+          >
+            Discover the offer
+            <ArrowRight class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </a>
+          <a
+            href="/demo_gallery"
+            class="inline-flex items-center px-8 py-4 bg-transparent text-white border border-white/50 rounded-none font-sans font-medium text-sm tracking-wider uppercase hover:bg-white/10 transition-all duration-300"
+          >
+            View demo
+          </a>
+        </div>
+
+        <!-- Pricing Highlight -->
+        <div class="inline-block bg-black/50 backdrop-blur-sm px-8 py-4 border border-burgundy/50">
+          <p class="text-white/90 text-sm font-sans tracking-wide">
+            <span class="line-through text-white/50">$249</span>
+            <span class="text-burgundy font-semibold text-lg mx-2">$199</span>
+            <span>for 2 years • Custom domain included</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+      <div class="w-px h-16 bg-gradient-to-b from-white/0 via-burgundy to-white/0 animate-pulse"></div>
+    </div>
+  </section>
+
+  <!-- Services Section - Clean & Elegant -->
+  <section class="py-24 bg-cream">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Section Header -->
+      <div class="text-center mb-20">
+        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+          Our Services
+        </span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-light text-charcoal mt-4 mb-6">
+          Three services, one solution
+        </h2>
+        <div class="w-16 h-px mx-auto" style="background-color: #ae1725;"></div>
+      </div>
+
+      <!-- Services Grid -->
+      <div class="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto">
+        <!-- Service 1: Gallery -->
+        <div class="text-center group">
+          <div class="w-20 h-20 mx-auto mb-6 flex items-center justify-center border transition-all duration-300" style="border-color: rgba(174, 23, 37, 0.3);">
+            <Camera class="w-8 h-8 text-[#ae1725]" />
+          </div>
+          <h3 class="font-serif text-2xl text-charcoal mb-4">Photo Gallery</h3>
+          <p class="text-charcoal-light font-light leading-relaxed">
+            Share your most beautiful moments with your guests. Unlimited uploads, organized albums, one-click download.
+          </p>
+        </div>
+
+        <!-- Service 2: Guestbook -->
+        <div class="text-center group">
+          <div class="w-20 h-20 mx-auto mb-6 flex items-center justify-center border transition-all duration-300" style="border-color: rgba(174, 23, 37, 0.3);">
+            <BookHeart class="w-8 h-8 text-[#ae1725]" />
+          </div>
+          <h3 class="font-serif text-2xl text-charcoal mb-4">Guestbook</h3>
+          <p class="text-charcoal-light font-light leading-relaxed">
+            Collect wishes and messages from your loved ones. Easy moderation, PDF export to keep an eternal memory.
+          </p>
+        </div>
+
+        <!-- Service 3: Website -->
+        <div class="text-center group">
+          <div class="w-20 h-20 mx-auto mb-6 flex items-center justify-center border transition-all duration-300" style="border-color: rgba(174, 23, 37, 0.3);">
+            <Globe class="w-8 h-8 text-[#ae1725]" />
+          </div>
+          <h3 class="font-serif text-2xl text-charcoal mb-4">Wedding Website</h3>
+          <p class="text-charcoal-light font-light leading-relaxed">
+            Your personalized domain with all the information: schedule, venue, RSVP. Elegant and simple.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section - Soft Background -->
+  <section class="py-24" style="background-color: rgba(174, 23, 37, 0.03);">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <!-- Image -->
+          <div class="relative">
+            <img
+              src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80"
+              alt="Married couple"
+              class="w-full h-[500px] object-cover"
+            />
+            <div class="absolute inset-0 border -translate-x-4 -translate-y-4 -z-10" style="border-color: rgba(174, 23, 37, 0.2);"></div>
+          </div>
+
+          <!-- Content -->
+          <div>
+            <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+              Why choose us
+            </span>
+            <h2 class="font-serif text-4xl font-light text-charcoal mt-4 mb-8">
+              Elegance at the service of your memories
+            </h2>
+
+            <div class="space-y-6">
+              <div class="flex items-start gap-4">
+                <div class="w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1" style="border: 1px solid #ae1725; color: #ae1725;">
+                  <Check class="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 class="font-medium text-charcoal mb-1">Setup in 2 minutes</h4>
+                  <p class="text-charcoal-light font-light text-sm">Create your space in a few clicks, no technical skills required.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div class="w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1" style="border: 1px solid #ae1725; color: #ae1725;">
+                  <Check class="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 class="font-medium text-charcoal mb-1">Secure data</h4>
+                  <p class="text-charcoal-light font-light text-sm">Your photos are protected and automatically backed up.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div class="w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1" style="border: 1px solid #ae1725; color: #ae1725;">
+                  <Check class="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 class="font-medium text-charcoal mb-1">Mobile app</h4>
+                  <p class="text-charcoal-light font-light text-sm">Install the app on your phone for instant access, even offline.</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div class="w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1" style="border: 1px solid #ae1725; color: #ae1725;">
+                  <Check class="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 class="font-medium text-charcoal mb-1">Responsive support</h4>
+                  <p class="text-charcoal-light font-light text-sm">Our team supports you before, during, and after the big day.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works - Timeline Style -->
+  <section class="py-24 bg-cream">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-20">
+        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-[#ae1725]">
+          How it works
+        </span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-light text-charcoal mt-4 mb-6">
+          Three simple steps
+        </h2>
+        <div class="w-16 h-px mx-auto" style="background-color: #ae1725;"></div>
+      </div>
+
+      <div class="max-w-4xl mx-auto">
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Step 1 -->
+          <div class="text-center">
+            <div class="w-12 h-12 mx-auto mb-6 flex items-center justify-center font-serif text-xl" style="border: 1px solid #ae1725; color: #ae1725;">
+              1
+            </div>
+            <h3 class="font-serif text-xl text-charcoal mb-3">Sign up</h3>
+            <p class="text-charcoal-light font-light text-sm">
+              Create your account and choose your personalized domain name.
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="text-center">
+            <div class="w-12 h-12 mx-auto mb-6 flex items-center justify-center font-serif text-xl" style="border: 1px solid #ae1725; color: #ae1725;">
+              2
+            </div>
+            <h3 class="font-serif text-xl text-charcoal mb-3">Customize</h3>
+            <p class="text-charcoal-light font-light text-sm">
+              Add your photos, configure your site, and personalize your space.
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="text-center">
+            <div class="w-12 h-12 mx-auto mb-6 flex items-center justify-center font-serif text-xl" style="border: 1px solid #ae1725; color: #ae1725;">
+              3
+            </div>
+            <h3 class="font-serif text-xl text-charcoal mb-3">Share</h3>
+            <p class="text-charcoal-light font-light text-sm">
+              Send the link to your guests. They can contribute and relive the moments.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section - Elegant -->
+  <section class="py-24" style="background-color: #ae1725;">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto">
+        <!-- Decorative -->
+        <div class="flex items-center justify-center gap-4 mb-8">
+          <div class="w-12 h-px bg-white/30"></div>
+          <Sparkles class="w-5 h-5 text-white/60" />
+          <div class="w-12 h-px bg-white/30"></div>
+        </div>
+
+        <h2 class="font-serif text-4xl sm:text-5xl font-light mb-6 text-white">
+          Ready to immortalize your union?
+        </h2>
+        <p class="text-white/80 text-lg font-light mb-8">
+          Join the couples who chose Reflets de Bonheur to share their happiness.
+        </p>
+
+        <!-- Pricing -->
+        <div class="mb-10">
+          <p class="text-white/60 mb-2">
+            <span class="line-through">$249</span>
+          </p>
+          <p class="text-4xl font-serif font-light text-white">
+            $199 <span class="text-lg font-sans">for 2 years</span>
+          </p>
+          <p class="text-white/70 text-sm mt-2">
+            Then $19.99/year to keep your gallery online
+          </p>
+        </div>
+
+        <!-- CTA -->
+        <a
+          href="/pricing"
+          class="inline-flex items-center px-10 py-4 bg-white font-sans font-medium text-sm tracking-wider uppercase hover:bg-gray-100 transition-all duration-300 text-[#ae1725]"
+        >
+          Get started now
+          <ArrowRight class="ml-2 w-4 h-4" />
+        </a>
+
+        <p class="mt-6 text-white/60 text-sm">
+          30-day money-back guarantee
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</MainLayout>

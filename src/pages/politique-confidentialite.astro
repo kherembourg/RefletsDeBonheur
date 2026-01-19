@@ -1,0 +1,316 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import Footer from '../components/layout/Footer.astro';
+---
+
+<MainLayout
+  title="Politique de Confidentialité - Reflets de Bonheur"
+  description="Politique de confidentialité et protection des données personnelles - Reflets de Bonheur"
+  showHeader={true}
+>
+  <section class="py-20 bg-ivory dark:bg-deep-charcoal min-h-screen">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+      <h1 class="text-4xl sm:text-5xl font-serif font-bold text-deep-charcoal dark:text-ivory mb-8">
+        Politique de Confidentialité
+      </h1>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <p class="text-warm-taupe dark:text-silver-mist mb-8">
+          Dernière mise à jour : Janvier 2026
+        </p>
+
+        <div class="bg-[#ae1725]/10 rounded-xl p-6 mb-8 border border-[#ae1725]/30">
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Chez <strong>Reflets de Bonheur</strong>, nous accordons une importance primordiale à la protection de vos données personnelles. Cette politique explique comment nous collectons, utilisons et protégeons vos informations conformément au Règlement Général sur la Protection des Données (RGPD).
+          </p>
+        </div>
+
+        <!-- Section 1 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            1. Responsable du Traitement
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Le responsable du traitement des données personnelles est :
+          </p>
+          <ul class="list-none space-y-2 text-warm-taupe dark:text-silver-mist">
+            <li><strong>Société :</strong> Reflets de Bonheur</li>
+            <li><strong>Adresse :</strong> <span class="text-[#ae1725]">[À COMPLÉTER]</span></li>
+            <li><strong>Email :</strong> contact@reflets-bonheur.fr</li>
+            <li><strong>DPO :</strong> <span class="text-[#ae1725]">[À COMPLÉTER ou "Non désigné"]</span></li>
+          </ul>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            2. Données Collectées
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Nous collectons les données suivantes :
+          </p>
+
+          <h3 class="text-xl font-semibold text-deep-charcoal dark:text-ivory mb-3">2.1 Données d'inscription</h3>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li>Nom et prénom</li>
+            <li>Adresse email</li>
+            <li>Mot de passe (chiffré)</li>
+            <li>Date du mariage</li>
+            <li>Nom de domaine choisi</li>
+          </ul>
+
+          <h3 class="text-xl font-semibold text-deep-charcoal dark:text-ivory mb-3">2.2 Données de paiement</h3>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li>Les données de carte bancaire sont traitées directement par notre prestataire <strong>Stripe</strong></li>
+            <li>Nous ne stockons jamais vos numéros de carte bancaire</li>
+          </ul>
+
+          <h3 class="text-xl font-semibold text-deep-charcoal dark:text-ivory mb-3">2.3 Contenus uploadés</h3>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li>Photos et vidéos</li>
+            <li>Messages du livre d'or</li>
+            <li>Informations du site web de mariage (programme, lieu, etc.)</li>
+          </ul>
+
+          <h3 class="text-xl font-semibold text-deep-charcoal dark:text-ivory mb-3">2.4 Données techniques</h3>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist">
+            <li>Adresse IP</li>
+            <li>Type de navigateur et appareil</li>
+            <li>Pages visitées et durée de visite</li>
+            <li>Cookies (voir section dédiée)</li>
+          </ul>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            3. Finalités du Traitement
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Vos données sont utilisées pour :
+          </p>
+          <table class="w-full text-warm-taupe dark:text-silver-mist">
+            <thead>
+              <tr class="border-b border-silver-mist/20">
+                <th class="text-left py-2 font-semibold">Finalité</th>
+                <th class="text-left py-2 font-semibold">Base légale</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-silver-mist/10">
+              <tr>
+                <td class="py-2">Fourniture du service</td>
+                <td class="py-2">Exécution du contrat</td>
+              </tr>
+              <tr>
+                <td class="py-2">Facturation et paiement</td>
+                <td class="py-2">Exécution du contrat</td>
+              </tr>
+              <tr>
+                <td class="py-2">Support client</td>
+                <td class="py-2">Exécution du contrat</td>
+              </tr>
+              <tr>
+                <td class="py-2">Emails de service (expiration, etc.)</td>
+                <td class="py-2">Intérêt légitime</td>
+              </tr>
+              <tr>
+                <td class="py-2">Newsletter (si consentement)</td>
+                <td class="py-2">Consentement</td>
+              </tr>
+              <tr>
+                <td class="py-2">Analyse d'audience</td>
+                <td class="py-2">Intérêt légitime</td>
+              </tr>
+              <tr>
+                <td class="py-2">Amélioration du service</td>
+                <td class="py-2">Intérêt légitime</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            4. Durée de Conservation
+          </h2>
+          <table class="w-full text-warm-taupe dark:text-silver-mist">
+            <thead>
+              <tr class="border-b border-silver-mist/20">
+                <th class="text-left py-2 font-semibold">Type de données</th>
+                <th class="text-left py-2 font-semibold">Durée</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-silver-mist/10">
+              <tr>
+                <td class="py-2">Données de compte</td>
+                <td class="py-2">Durée de l'abonnement + 3 ans</td>
+              </tr>
+              <tr>
+                <td class="py-2">Photos et vidéos</td>
+                <td class="py-2">Durée de l'abonnement + 90 jours</td>
+              </tr>
+              <tr>
+                <td class="py-2">Messages du livre d'or</td>
+                <td class="py-2">Durée de l'abonnement + 90 jours</td>
+              </tr>
+              <tr>
+                <td class="py-2">Données de facturation</td>
+                <td class="py-2">10 ans (obligation légale)</td>
+              </tr>
+              <tr>
+                <td class="py-2">Logs de connexion</td>
+                <td class="py-2">1 an</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 5 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            5. Partage des Données
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Vos données peuvent être partagées avec :
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li><strong>Stripe</strong> - Traitement des paiements (certifié PCI-DSS)</li>
+            <li><strong>Netlify / Vercel</strong> - Hébergement (serveurs UE/US)</li>
+            <li><strong>Google Analytics</strong> - Analyse d'audience (anonymisé)</li>
+            <li><strong>Service de support</strong> - Si vous nous contactez</li>
+          </ul>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            <strong>Nous ne vendons jamais vos données</strong> à des tiers à des fins publicitaires.
+          </p>
+        </div>
+
+        <!-- Section 6 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            6. Transferts Internationaux
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Certains de nos prestataires sont situés aux États-Unis. Ces transferts sont encadrés par :
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist">
+            <li>Le Data Privacy Framework UE-US</li>
+            <li>Des clauses contractuelles types approuvées par la Commission Européenne</li>
+          </ul>
+        </div>
+
+        <!-- Section 7 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            7. Sécurité des Données
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Nous mettons en œuvre des mesures de sécurité appropriées :
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist">
+            <li>Chiffrement HTTPS/TLS pour toutes les communications</li>
+            <li>Mots de passe chiffrés (bcrypt)</li>
+            <li>Sauvegardes régulières et chiffrées</li>
+            <li>Accès restreint aux données (principe du moindre privilège)</li>
+            <li>Surveillance et alertes de sécurité</li>
+          </ul>
+        </div>
+
+        <!-- Section 8 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            8. Cookies
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Notre site utilise des cookies :
+          </p>
+
+          <h3 class="text-xl font-semibold text-deep-charcoal dark:text-ivory mb-3">Cookies essentiels (obligatoires)</h3>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li>Session d'authentification</li>
+            <li>Préférences utilisateur (thème sombre, langue)</li>
+            <li>Sécurité (CSRF token)</li>
+          </ul>
+
+          <h3 class="text-xl font-semibold text-deep-charcoal dark:text-ivory mb-3">Cookies analytiques (optionnels)</h3>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li>Google Analytics (mesure d'audience)</li>
+          </ul>
+
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Vous pouvez gérer vos préférences de cookies dans les paramètres de votre navigateur.
+          </p>
+        </div>
+
+        <!-- Section 9 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            9. Vos Droits
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Conformément au RGPD, vous disposez des droits suivants :
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-warm-taupe dark:text-silver-mist mb-4">
+            <li><strong>Droit d'accès :</strong> obtenir une copie de vos données</li>
+            <li><strong>Droit de rectification :</strong> corriger vos données inexactes</li>
+            <li><strong>Droit à l'effacement :</strong> demander la suppression de vos données</li>
+            <li><strong>Droit à la portabilité :</strong> récupérer vos données dans un format structuré</li>
+            <li><strong>Droit d'opposition :</strong> vous opposer à certains traitements</li>
+            <li><strong>Droit de limitation :</strong> limiter le traitement de vos données</li>
+            <li><strong>Droit de retrait du consentement :</strong> retirer votre consentement à tout moment</li>
+          </ul>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Pour exercer ces droits, contactez-nous à : <strong>contact@reflets-bonheur.fr</strong>
+          </p>
+        </div>
+
+        <!-- Section 10 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            10. Données des Invités
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Les invités qui uploadent des photos ou laissent des messages dans le livre d'or ont les mêmes droits que les Clients concernant leurs données personnelles.
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            Le Client (couple marié) est responsable d'informer ses invités de l'existence du service et de la collecte de leurs données.
+          </p>
+        </div>
+
+        <!-- Section 11 -->
+        <div class="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 mb-8 border border-silver-mist/20">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            11. Réclamation
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Si vous estimez que vos droits ne sont pas respectés, vous pouvez déposer une réclamation auprès de la CNIL :
+          </p>
+          <ul class="list-none space-y-2 text-warm-taupe dark:text-silver-mist">
+            <li><strong>Commission Nationale de l'Informatique et des Libertés (CNIL)</strong></li>
+            <li>3 Place de Fontenoy, TSA 80715, 75334 Paris Cedex 07</li>
+            <li>Site web : <a href="https://www.cnil.fr" class="text-[#ae1725] hover:underline" target="_blank" rel="noopener">www.cnil.fr</a></li>
+          </ul>
+        </div>
+
+        <!-- Section 12 -->
+        <div class="bg-[#ae1725]/10 rounded-xl p-6 border border-[#ae1725]/30">
+          <h2 class="text-2xl font-bold text-deep-charcoal dark:text-ivory mb-4">
+            12. Modifications
+          </h2>
+          <p class="text-warm-taupe dark:text-silver-mist mb-4">
+            Nous pouvons modifier cette politique de confidentialité. En cas de modification substantielle, nous vous informerons par email ou via une notification sur le site.
+          </p>
+          <p class="text-warm-taupe dark:text-silver-mist">
+            <strong>Contact :</strong> Pour toute question relative à cette politique, écrivez-nous à <strong>contact@reflets-bonheur.fr</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center">
+        <a href="/" class="text-[#ae1725] hover:underline">← Retour à l'accueil</a>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</MainLayout>
