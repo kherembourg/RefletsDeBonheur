@@ -21,6 +21,8 @@ import {
   Trash2,
   Settings,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { godLogout, getAllClients, getDashboardStats, createImpersonationToken, updateClientStatus, deleteClient } from '../../lib/auth/godAuth';
 import type { Client, GodAdmin } from '../../lib/auth/godAuth';
@@ -41,6 +43,8 @@ interface DashboardStats {
   recentClients: Client[];
 }
 
+const ROWS_PER_PAGE = 100;
+
 export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -49,6 +53,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadData();
@@ -141,6 +146,17 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
 
     return matchesSearch && matchesStatus;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredClients.length / ROWS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
+  const endIndex = startIndex + ROWS_PER_PAGE;
+  const paginatedClients = filteredClients.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { bg: string; text: string; icon: typeof CheckCircle }> = {
@@ -245,7 +261,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
         )}
 
         {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
           {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
@@ -289,66 +305,89 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
           </button>
         </div>
 
+        {/* Results Count - Above the table */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg">
+              <span className="text-amber-400 font-semibold">{filteredClients.length}</span>
+              <span className="text-gray-300 ml-1.5">
+                client{filteredClients.length !== 1 ? 's' : ''} trouvé{filteredClients.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            {(searchQuery || statusFilter !== 'all') && (
+              <span className="text-sm text-gray-500">
+                {searchQuery && `Recherche: "${searchQuery}"`}
+                {searchQuery && statusFilter !== 'all' && ' • '}
+                {statusFilter !== 'all' && `Statut: ${statusFilter}`}
+              </span>
+            )}
+          </div>
+          {totalPages > 1 && (
+            <span className="text-sm text-gray-500">
+              Page {currentPage} sur {totalPages}
+            </span>
+          )}
+        </div>
+
         {/* Clients Table */}
         <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-700">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Date mariage
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Médias
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Stockage
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Expiration
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Statut
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Date mariage
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Médias
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Stockage
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Expiration
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-700">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    <RefreshCw className="animate-spin mx-auto mb-2" size={24} />
+                    Chargement...
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      <RefreshCw className="animate-spin mx-auto mb-2" size={24} />
-                      Chargement...
-                    </td>
-                  </tr>
-                ) : filteredClients.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      Aucun client trouvé
-                    </td>
-                  </tr>
-                ) : (
-                  filteredClients.map((client) => (
+              ) : paginatedClients.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    Aucun client trouvé
+                  </td>
+                </tr>
+              ) : (
+                paginatedClients.map((client) => (
                     <tr key={client.id} className="hover:bg-gray-700/50 transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <div>
                           <p className="font-medium text-white">{client.wedding_name}</p>
                           <p className="text-sm text-gray-400">{client.couple_names}</p>
                           <p className="text-xs text-gray-500">{client.email}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         {getStatusBadge(client.status)}
                       </td>
-                      <td className="px-6 py-4 text-gray-300">
+                      <td className="px-6 py-5 text-gray-300">
                         {formatDate(client.wedding_date)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <div className="flex items-center gap-4 text-sm text-gray-400">
                           <span className="flex items-center gap-1">
                             <Image size={14} />
@@ -360,13 +399,13 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">
+                      <td className="px-6 py-5 text-gray-300 text-sm">
                         {formatStorage(client.storage_used_mb)}
                       </td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">
+                      <td className="px-6 py-5 text-gray-300 text-sm">
                         {formatDate(client.subscription_expires_at)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <div className="flex items-center justify-end gap-2">
                           {/* View Client Interface */}
                           <button
@@ -435,15 +474,73 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
                 )}
               </tbody>
             </table>
-          </div>
         </div>
 
-        {/* Results Count */}
-        <div className="mt-4 text-sm text-gray-500">
-          {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} affiché{filteredClients.length !== 1 ? 's' : ''}
-          {searchQuery && ` pour "${searchQuery}"`}
-          {statusFilter !== 'all' && ` (${statusFilter})`}
-        </div>
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              Affichage de {startIndex + 1} à {Math.min(endIndex, filteredClients.length)} sur {filteredClients.length} clients
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Début
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={18} />
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Fin
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Create Client Modal */}

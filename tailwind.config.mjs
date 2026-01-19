@@ -5,10 +5,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        // New elegant French-inspired palette
-        'burgundy': '#ae1725',
-        'burgundy-light': '#c92a38',
-        'burgundy-dark': '#8a121d',
+        // Elegant romantic palette - softer marsala tones
+        'burgundy': '#8B4557',        // Softer marsala/dusty rose
+        'burgundy-light': '#A65D6F',  // Lighter hover state
+        'burgundy-dark': '#6D3344',   // Darker variant
+        'rose-gold': '#B76E79',       // Accent color
+        // Legacy red kept for compatibility
+        'burgundy-old': '#ae1725',
         'olive': '#4A5D4A',
         'olive-light': '#5C6F5C',
         'olive-dark': '#3A4A3A',
