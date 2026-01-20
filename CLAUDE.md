@@ -17,7 +17,7 @@ The application is fully functional with:
 - Supabase Auth + profiles power client accounts
 - Client wedding pages (`/[slug]/*`) connect to Supabase when configured
 
-**Last Updated:** January 19, 2026
+**Last Updated:** January 20, 2026
 
 ---
 
@@ -472,15 +472,72 @@ npm run preview
 
 ---
 
+## Testing
+
+### Test Framework
+- **Vitest**: Test runner with fast execution
+- **React Testing Library**: Component testing
+- **jsdom**: Browser environment simulation
+
+### Running Tests
+```bash
+npm test                 # Run all tests
+npm run test:coverage    # Run with coverage report
+npm test -- path/to/file # Run specific test file
+```
+
+### Test Coverage (as of January 2026)
+- **Overall Coverage**: ~39% statements
+- **Auth Module**: ~91% statements
+  - `godAuth.ts`: ~96% coverage
+  - `clientAuth.ts`: ~87% coverage
+- **Admin Components**: ~91% coverage
+- **i18n Module**: ~97% coverage
+
+### Test Files Location
+```
+src/
+├── lib/
+│   ├── auth/
+│   │   ├── godAuth.test.ts     # God admin auth tests (60 tests)
+│   │   └── clientAuth.test.ts  # Client/guest auth tests (37 tests)
+│   ├── auth.test.ts            # Core auth utilities (30 tests)
+│   ├── mockData.test.ts        # Mock data tests (41 tests)
+│   └── services/
+│       └── dataService.test.ts # Data service tests (27 tests)
+├── components/
+│   └── admin/
+│       ├── AdminPanel.test.tsx
+│       ├── AlbumManager.test.tsx
+│       └── ... (more component tests)
+├── i18n/
+│   └── utils.test.ts           # i18n utility tests (36 tests)
+└── test/
+    ├── setup.ts                # Test setup & mocks
+    └── integration/
+        └── demoPages.test.ts   # Integration tests (28 tests)
+```
+
+### God Access Token TTL
+God access tokens (for impersonation) have a **24-hour TTL** and are automatically cleaned up:
+- Tokens expire 24 hours after creation
+- Database trigger cleans up expired tokens on new inserts (1% probability)
+- Hourly cleanup via `pg_cron` if enabled
+- Manual cleanup available via `cleanup_expired_god_tokens()` function
+- View token status: `SELECT * FROM god_tokens_status;`
+
+---
+
 ## Next Steps
 
 ### Immediate Priorities
 1. ~~**Supabase Integration**: Connect components to real database~~ ✅ DONE
 2. ~~**R2 Media Storage**: Cloudflare R2 for file uploads~~ ✅ DONE
-3. **Testing & Verification**: Test all features with real Supabase data
-4. **Payment Integration**: Stripe checkout for $199 package
-5. **Email Notifications**: Welcome emails, upload notifications
-6. **Image Processing**: Generate thumbnails and optimize images
+3. ~~**Testing & God Token Fix**: Auth tests and 24h TTL~~ ✅ DONE
+4. **Increase Test Coverage**: Target 100% for critical paths
+5. **Payment Integration**: Stripe checkout for $199 package
+6. **Email Notifications**: Welcome emails, upload notifications
+7. **Image Processing**: Generate thumbnails and optimize images
 
 ### Future Enhancements
 1. **Real-time sync**: WebSocket updates for gallery
