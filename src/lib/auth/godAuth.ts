@@ -66,7 +66,7 @@ const GOD_SESSION_KEY = 'reflets_god_session';
 
 // Token expiration times
 const SESSION_DURATION_HOURS = 24;
-const IMPERSONATION_DURATION_MINUTES = 15;
+const GOD_ACCESS_TOKEN_DURATION_HOURS = 24; // 24-hour TTL for god access tokens
 
 const CLIENT_CREATE_ENDPOINT = '/api/admin/create-client';
 
@@ -432,9 +432,14 @@ export async function createImpersonationToken(
   clientId: string
 ): Promise<{ success: boolean; token?: string; error?: string }> {
   try {
+    // Validate inputs
+    if (!godAdminId || !clientId) {
+      return { success: false, error: 'Invalid god admin ID or client ID' };
+    }
+
     const token = generateToken(32);
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + IMPERSONATION_DURATION_MINUTES);
+    expiresAt.setHours(expiresAt.getHours() + GOD_ACCESS_TOKEN_DURATION_HOURS);
 
     const { data: wedding, error: weddingError } = await supabase
       .from('weddings')
@@ -674,3 +679,109 @@ export async function getDashboardStats(): Promise<{
     };
   }
 }
+
+/**
+ * Clean up expired god access tokens
+ * This function removes tokens that have exceeded their 24-hour TTL
+ * @returns The number of deleted tokens
+ */
+export async function cleanupExpiredGodTokens(): Promise<{
+  success: boolean;
+  deletedCount: number;
+  error?: string;
+}> {
+  try {
+    const now = new Date().toISOString();
+
+    // Delete expired god access tokens
+    const { data, error } = await supabase
+      .from('god_access_tokens')
+      .delete()
+      .lt('expires_at', now)
+      .select('id');
+
+    if (error) {
+      console.error('Failed to cleanup expired tokens:', error);
+      return { success: false, deletedCount: 0, error: error.message };
+    }
+
+    const deletedCount = data?.length || 0;
+
+    if (deletedCount > 0) {
+      await logAuditEvent('god_tokens_cleanup', 'system', null, {
+        deleted_count: deletedCount,
+        cleanup_time: now,
+      });
+    }
+
+    return { success: true, deletedCount };
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    return { success: false, deletedCount: 0, error: 'An unexpected error occurred' };
+  }
+}
+
+/**
+ * Check if a god access token is expired
+ * @param tokenId The ID of the token to check
+ * @returns Whether the token is valid (not expired)
+ */
+export async function isGodTokenValid(tokenId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('god_access_tokens')
+      .select('id, expires_at, used_count, max_uses')
+      .eq('id', tokenId)
+      .single();
+
+    if (error || !data) {
+      return false;
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(data.expires_at);
+
+    // Check if expired
+    if (expiresAt <= now) {
+      return false;
+    }
+
+    // Check if max uses exceeded
+    if (data.used_count >= data.max_uses) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Token validation error:', error);
+    return false;
+  }
+}
+
+/**
+ * Get token expiration time
+ * @param token The token string to check
+ * @returns The expiration date or null if not found
+ */
+export async function getTokenExpiration(token: string): Promise<Date | null> {
+  try {
+    const { data, error } = await supabase
+      .from('god_access_tokens')
+      .select('expires_at')
+      .eq('token', token)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return new Date(data.expires_at);
+  } catch (error) {
+    console.error('Get token expiration error:', error);
+    return null;
+  }
+}
+
+// Export constants for testing
+export const GOD_TOKEN_TTL_HOURS = GOD_ACCESS_TOKEN_DURATION_HOURS;
+export const GOD_SESSION_TTL_HOURS = SESSION_DURATION_HOURS;
