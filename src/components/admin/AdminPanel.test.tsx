@@ -269,7 +269,7 @@ describe('AdminPanel Component', () => {
 
     it('should show loading state during backup', async () => {
       const { mockAPI } = await import('../../lib/api');
-      mockAPI.exportBackup.mockImplementation(
+      (mockAPI.exportBackup as ReturnType<typeof vi.fn>).mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 1000))
       );
 
@@ -391,7 +391,7 @@ describe('AdminPanel Component', () => {
 
     it('should handle settings toggle failure', async () => {
       const { mockAPI } = await import('../../lib/api');
-      mockAPI.toggleUploads.mockRejectedValue(new Error('Toggle failed'));
+      (mockAPI.toggleUploads as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Toggle failed'));
 
       render(<AdminPanel demoMode={true} />);
 
@@ -410,7 +410,7 @@ describe('AdminPanel Component', () => {
 
     it('should handle backup failure', async () => {
       const { mockAPI } = await import('../../lib/api');
-      mockAPI.exportBackup.mockRejectedValue(new Error('Backup failed'));
+      (mockAPI.exportBackup as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Backup failed'));
 
       render(<AdminPanel demoMode={true} />);
 

@@ -41,7 +41,7 @@ export const GET: APIRoute = async ({ url }) => {
     const now = new Date();
     const endDate = profile.subscription_end_date ? new Date(profile.subscription_end_date) : null;
     const daysRemaining = endDate ? Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
-    const isTrialExpired = profile.subscription_status === 'trial' && endDate && endDate < now;
+    const isTrialExpired = profile.subscription_status === 'trial' && endDate !== null && endDate < now;
 
     const subscriptionInfo: SubscriptionInfo = {
       status: isTrialExpired ? 'expired' : (profile.subscription_status as SubscriptionInfo['status']),

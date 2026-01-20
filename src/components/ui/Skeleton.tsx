@@ -1,11 +1,13 @@
 interface SkeletonProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function Skeleton({ className = '' }: SkeletonProps) {
+export function Skeleton({ className = '', style }: SkeletonProps) {
   return (
     <div
       className={`animate-pulse bg-silver-mist/30 rounded ${className}`}
+      style={style}
       aria-live="polite"
       aria-busy="true"
     />

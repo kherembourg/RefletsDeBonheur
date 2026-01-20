@@ -252,7 +252,9 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                     <h4 className="text-sm font-semibold text-deep-charcoal flex items-center gap-2">
                       {field.label}
                       {customized && (
-                        <Check className="w-3.5 h-3.5 text-green-600" title="Personnalisé" />
+                        <span title="Personnalisé">
+                          <Check className="w-3.5 h-3.5 text-green-600" />
+                        </span>
                       )}
                     </h4>
                     <p className="text-xs text-warm-taupe mt-0.5">

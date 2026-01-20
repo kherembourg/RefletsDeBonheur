@@ -238,7 +238,7 @@ export const DEFAULT_WEDDING_CONFIG: WeddingConfig = {
 // TIMELINE ICON MAPPING
 // ============================================
 
-export const TIMELINE_ICONS: Record<TimelineEvent['icon'], string> = {
+export const TIMELINE_ICONS: Record<NonNullable<TimelineEvent['icon']>, string> = {
   ceremony: 'heart',
   cocktail: 'wine',
   dinner: 'utensils',

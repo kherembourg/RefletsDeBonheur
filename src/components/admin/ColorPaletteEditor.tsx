@@ -286,7 +286,9 @@ function ColorGroup({
                 <label className="text-sm font-medium text-deep-charcoal flex items-center gap-2">
                   {field.label}
                   {customized && (
-                    <Check className="w-3.5 h-3.5 text-green-600" title="Personnalisé" />
+                    <span title="Personnalisé">
+                      <Check className="w-3.5 h-3.5 text-green-600" />
+                    </span>
                   )}
                 </label>
                 <button
