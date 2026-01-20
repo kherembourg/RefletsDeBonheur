@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**Budget:** €50-100
+**Budget:** €50-100 (test) + option to scale
 **Target Markets:** France & USA
 **Product Price:** €99 (France/EU) / $199 (USA) for 2 years
 **Goal:** Acquire enough customers to cover expenses and validate the concept
@@ -71,7 +71,7 @@ Build audience organically before spending on ads.
 |----------|--------|-----------------|-----------|
 | Meta Ads France | €40 | 40-80 clicks | Best targeting for engaged couples |
 | Meta Ads USA | €30 | 15-20 clicks | Higher CPC but larger market |
-| TikTok Spark Ads | €30 | 40-175 clicks | Boost best organic content |
+| TikTok Spark Ads (optional, min $150 test) | €30 | 40-175 clicks | Boost best organic content |
 
 ### Meta Ads Strategy
 
@@ -101,15 +101,16 @@ Build audience organically before spending on ads.
 
 ### TikTok Ads Strategy
 
-**Important Budget Note:**
-TikTok requires **minimum $50/day** at campaign level and **$20/day** at ad group level. This means:
+**Important Budget Note (TikTok Minimums):**
+TikTok typically requires **minimum $50/day** at campaign level and **$20/day** at ad group level. This means:
 - Minimum test: $50/day × 3 days = $150 minimum
-- **Recommendation:** Start with organic content, then use **Spark Ads** to boost your best-performing organic videos (lower cost, better performance)
+- With a €50-100 total test budget, **paid TikTok is not viable** unless you commit to at least $150 in a short burst.
+- **Recommendation:** Start with organic content, then plan Spark Ads only when you can meet the daily minimums.
 
-**Spark Ads Approach (Recommended for small budget):**
+**Spark Ads Approach (When minimums are met):**
 - Create organic content first
 - Identify videos with good engagement (>5% completion rate)
-- Boost as Spark Ads with $20-30 budget
+- Boost as Spark Ads with **$20-30/day** ad group budget
 - Target: Engaged couples, wedding interests, 24-35 age
 
 **TikTok Ad Costs (2025):**
@@ -172,7 +173,7 @@ Since you don't want to appear on camera, here are the best AI tools for creatin
 - [ ] Create first Meta ad campaign (€40 France)
 
 ### Week 4: Optimization
-- [ ] Boost best TikTok as Spark Ad (€30)
+- [ ] Boost best TikTok as Spark Ad (€30, only if minimums are met)
 - [ ] Launch USA Meta campaign (€30)
 - [ ] Analyze results, iterate
 
@@ -181,12 +182,17 @@ Since you don't want to appear on camera, here are the best AI tools for creatin
 ## Expected Results
 
 ### Conservative Estimate (€100 budget)
+Assume pricing is **€99 (FR/EU) / $199 (USA) for 2 years**.
+
 | Metric | France | USA | Total |
 |--------|--------|-----|-------|
 | Impressions | 8,000-15,000 | 3,000-5,000 | 11,000-20,000 |
 | Clicks | 80-150 | 30-50 | 110-200 |
 | Conversions (2%) | 1.5-3 | 0.5-1 | 2-4 |
-| Revenue | €150-300 | $100-200 | €250-500 |
+| Revenue (local currency) | €150-300 | $100-200 | — |
+
+**Example total (all in EUR):**  
+If 2 FR conversions (2 × €99 = €198) + 1 US conversion ($199 ≈ €185), total ≈ **€383** (EUR).
 
 ### Optimistic Estimate (with viral TikTok)
 - 1 viral TikTok (>100K views) = 500-2000 profile visits
@@ -212,8 +218,13 @@ Since you don't want to appear on camera, here are the best AI tools for creatin
 
 ### Medium-term (Month 1)
 7. Launch Meta ads with €40 budget
-8. Boost best TikTok with Spark Ads
+8. Boost best TikTok with Spark Ads (only if budget ≥ $150 test)
 9. Track, analyze, optimize
+
+### Pre-launch Validation (Before spending)
+10. Launch a simple landing page + waitlist
+11. Offer a lead magnet (e.g., "Wedding Photo Checklist")
+12. Aim for 100+ email signups before scaling paid ads
 
 ---
 
@@ -230,13 +241,23 @@ Since you don't want to appear on camera, here are the best AI tools for creatin
 
 ---
 
+## Unit Economics (Quick Check)
+
+**Goal:** Keep paid CAC below gross margin per customer.
+- Price: €99 for 2 years (FR/EU)
+- If variable cost ≈ €8-9 per year → €16-18 over 2 years
+- **Gross margin ≈ €81-83** per customer (2-year)
+- **Target CAC:** €40-60 max (ideally below €50)
+
+---
+
 ## Budget Breakdown
 
 ### Option A: €50 Budget
 | Item | Cost |
 |------|------|
 | Meta Ads France | €35 |
-| TikTok Spark Ad | €15 |
+| TikTok Organic | €0 |
 | AI Video Tool | Free tier |
 | **Total** | **€50** |
 
@@ -245,7 +266,8 @@ Since you don't want to appear on camera, here are the best AI tools for creatin
 |------|------|
 | Meta Ads France | €40 |
 | Meta Ads USA | €30 |
-| TikTok Spark Ads | €30 |
+| TikTok Organic | €0 |
+| Extra Meta (retargeting) | €30 |
 | AI Video Tool | Free tier |
 | **Total** | **€100** |
 
