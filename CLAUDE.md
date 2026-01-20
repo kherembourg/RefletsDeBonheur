@@ -284,7 +284,13 @@ reflets-de-bonheur/
 
 ### 6. Website Editor (NEW)
 - **Visual Editor**: Split-screen interface with real-time preview
-- **Theme Selection**: Choose between predefined themes (Classic, Luxe)
+- **Theme Selection**: Choose between 6 predefined themes:
+  - **Classic** - Elegant burgundy with timeless design
+  - **Luxe** - Minimalist gold accents and sophistication
+  - **Jardin Moderne** - Fresh botanical with sage greens and blush
+  - **Cobalt** - Bold electric blue with modern aesthetics
+  - **Éditorial** - Magazine-style with high contrast and bold typography
+  - **French Minimalist** - Ultra-clean Parisian elegance (Herembourg-inspired)
 - **Color Customization**: Override any theme color with custom palette
 - **Content Editor**: Edit all text content (hero, welcome, gallery, etc.)
 - **Image Management**: Upload/manage custom images (hero, logo, backgrounds)
@@ -295,9 +301,10 @@ reflets-de-bonheur/
 
 ### 7. Wedding Microsites
 - Dynamic wedding pages at `/[slug]/`
-- Custom themes (Classic, Luxe, etc.)
+- 6 custom themes with unique color palettes and typography
 - Sections: Home, Photos, Guestbook, RSVP, Info
 - Timeline and schedule display
+- Fully customizable via Website Editor
 
 ### 7. PWA Features
 - **Offline support**: Service Worker caching
