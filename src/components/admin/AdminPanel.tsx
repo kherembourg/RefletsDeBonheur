@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, ImageIcon, MessageSquare, DownloadCloud, Heart, ToggleLeft, ToggleRight, QrCode, Palette, FolderOpen, BarChart3, Loader2 } from 'lucide-react';
+import { Settings, ImageIcon, MessageSquare, DownloadCloud, Heart, ToggleLeft, ToggleRight, QrCode, Palette, FolderOpen, BarChart3, Loader2, Edit3 } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 import { SettingsToggle } from './SettingsToggle';
 import { QRCodeGenerator } from './QRCodeGenerator';
@@ -269,12 +269,38 @@ export function AdminPanel({ weddingId, demoMode = false }: AdminPanelProps) {
           </div>
         </div>
 
-        <div className="bg-white shadow-sm border border-charcoal/5 p-6">
+        <div className="bg-white shadow-sm border border-charcoal/5 p-6 space-y-6">
           <ThemeSelector
             currentTheme={currentTheme}
             onThemeChange={setCurrentTheme}
             weddingSlug="julie-thomas"
           />
+
+          {/* Advanced Website Editor */}
+          <div className="pt-6 border-t border-charcoal/10">
+            <div className="bg-gradient-to-br from-burgundy/5 to-purple-50 rounded-xl p-6 border border-burgundy/20">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-burgundy flex items-center justify-center flex-shrink-0">
+                  <Edit3 className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-deep-charcoal mb-2">
+                    Éditeur de site web avancé
+                  </h3>
+                  <p className="text-sm text-warm-taupe mb-4">
+                    Personnalisez en profondeur l'apparence de votre site : couleurs, textes, images et bien plus encore avec l'éditeur visuel.
+                  </p>
+                  <a
+                    href="/admin/website-editor"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-burgundy text-white rounded-lg hover:bg-burgundy-dark transition-all shadow-md hover:shadow-lg"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Ouvrir l'éditeur
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
