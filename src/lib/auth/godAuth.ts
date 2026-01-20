@@ -403,25 +403,25 @@ export async function updateClientStatus(
   clientId: string,
   status: 'active' | 'expired' | 'trial'
 ): Promise<boolean> {
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      subscription_status: status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', clientId);
+  try {
+    const response = await fetch('/api/god/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, status }),
+    });
 
-  if (error) {
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      console.error('Failed to update client status:', result.error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
     console.error('Failed to update client status:', error);
     return false;
   }
-
-  await logAuditEvent('client_status_changed', 'god', null, {
-    client_id: clientId,
-    new_status: status,
-  });
-
-  return true;
 }
 
 /**
@@ -437,38 +437,19 @@ export async function createImpersonationToken(
       return { success: false, error: 'Invalid god admin ID or client ID' };
     }
 
-    const token = generateToken(32);
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + GOD_ACCESS_TOKEN_DURATION_HOURS);
-
-    const { data: wedding, error: weddingError } = await supabase
-      .from('weddings')
-      .select('id')
-      .eq('owner_id', clientId)
-      .single();
-
-    if (weddingError || !wedding) {
-      return { success: false, error: 'Wedding not found' };
-    }
-
-    const { error } = await supabase
-      .from('god_access_tokens')
-      .insert({
-        god_admin_id: godAdminId,
-        wedding_id: wedding.id,
-        token,
-        expires_at: expiresAt.toISOString(),
-      });
-
-    if (error) {
-      return { success: false, error: 'Failed to create access token' };
-    }
-
-    await logAuditEvent('impersonation_token_created', 'god', godAdminId, {
-      wedding_id: wedding.id,
+    const response = await fetch('/api/god/create-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ godAdminId, clientId }),
     });
 
-    return { success: true, token };
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      return { success: false, error: result.error || 'Failed to create access token' };
+    }
+
+    return { success: true, token: result.token };
   } catch (error) {
     console.error('Create impersonation token error:', error);
     return { success: false, error: 'An unexpected error occurred' };
@@ -484,84 +465,25 @@ export async function verifyImpersonationToken(token: string): Promise<{
   error?: string;
 }> {
   try {
-    const { data: accessToken, error } = await supabase
-      .from('god_access_tokens')
-      .select('*')
-      .eq('token', token)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (error || !accessToken) {
-      return { valid: false, error: 'Invalid or expired access token' };
-    }
-
-    if (accessToken.used_count >= accessToken.max_uses) {
-      return { valid: false, error: 'Access token has been used' };
-    }
-
-    const { data: wedding, error: weddingError } = await supabase
-      .from('weddings')
-      .select('*')
-      .eq('id', accessToken.wedding_id)
-      .single();
-
-    if (weddingError || !wedding) {
-      return { valid: false, error: 'Wedding not found' };
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', wedding.owner_id)
-      .single();
-
-    if (profileError || !profile) {
-      return { valid: false, error: 'Profile not found' };
-    }
-
-    const coupleNames = `${wedding.bride_name} & ${wedding.groom_name}`.trim();
-    const weddingName = (wedding.name || `Mariage de ${coupleNames}`.trim()).trim();
-    const client: Client = {
-      id: wedding.owner_id,
-      wedding_name: weddingName,
-      couple_names: coupleNames,
-      wedding_date: wedding.wedding_date,
-      wedding_slug: wedding.slug,
-      username: profile.email,
-      email: profile.email,
-      guest_code: wedding.pin_code || '',
-      admin_code: wedding.magic_token,
-      allow_uploads: wedding.config.features.gallery,
-      allow_guestbook: wedding.config.features.guestbook,
-      theme: wedding.config.theme.name,
-      custom_domain: null,
-      status: profile.subscription_status === 'active' || profile.subscription_status === 'trial' ? profile.subscription_status : 'expired',
-      subscription_started_at: profile.created_at,
-      subscription_expires_at: profile.subscription_end_date,
-      created_at: profile.created_at,
-      updated_at: profile.updated_at,
-      last_login_at: null,
-      photo_count: 0,
-      video_count: 0,
-      message_count: 0,
-      storage_used_mb: 0,
-    };
-
-    await supabase
-      .from('god_access_tokens')
-      .update({
-        used_at: new Date().toISOString(),
-        used_count: accessToken.used_count + 1,
-      })
-      .eq('id', accessToken.id);
-
-    await logAuditEvent('impersonation_token_used', 'god', accessToken.god_admin_id, {
-      wedding_id: wedding.id,
+    const response = await fetch('/api/god/verify-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
     });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return { valid: false, error: result.error || 'Failed to verify token' };
+    }
+
+    if (!result.valid) {
+      return { valid: false, error: result.error || 'Invalid token' };
+    }
 
     return {
       valid: true,
-      client,
+      client: result.client,
     };
   } catch (error) {
     console.error('Verify impersonation token error:', error);
