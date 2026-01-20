@@ -1,0 +1,33 @@
+# Code Owners for Reflets de Bonheur
+# These owners will be automatically requested for review when someone opens a pull request
+
+# Default owner for everything
+* @kherembourg
+
+# GitHub Actions workflows
+/.github/ @kherembourg
+
+# Database and API
+/src/lib/supabase/ @kherembourg
+/src/pages/api/ @kherembourg
+/supabase/ @kherembourg
+
+# Authentication
+/src/lib/auth/ @kherembourg
+/src/components/auth/ @kherembourg
+
+# Tests
+*.test.ts @kherembourg
+*.test.tsx @kherembourg
+/src/test/ @kherembourg
+
+# Documentation
+*.md @kherembourg
+CLAUDE.md @kherembourg
+
+# Configuration files
+package.json @kherembourg
+package-lock.json @kherembourg
+tsconfig.json @kherembourg
+astro.config.mjs @kherembourg
+tailwind.config.mjs @kherembourg
