@@ -1,0 +1,72 @@
+---
+import { WebsiteEditor } from '../../components/admin/WebsiteEditor';
+
+// For demo purposes, we'll use hardcoded values
+// In production, these would come from authentication/session
+const weddingId = 'demo-wedding-id';
+const weddingSlug = 'demo_gallery'; // This should be the actual wedding slug
+
+// Fetch initial customization from API (commented out for demo)
+// const response = await fetch(`${Astro.url.origin}/api/customization/get?weddingId=${weddingId}`);
+// const { customization } = await response.json();
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Éditeur de site web - Reflets de Bonheur</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  </head>
+  <body class="m-0 p-0 overflow-hidden">
+    <WebsiteEditor
+      client:only="react"
+      weddingId={weddingId}
+      weddingSlug={weddingSlug}
+      onSave={async (customization) => {
+        'use client';
+        const response = await fetch('/api/customization/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ weddingId, customization }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save customization');
+        }
+
+        return response.json();
+      }}
+    />
+
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+      }
+
+      /* Animation for unsaved changes badge */
+      @keyframes slide-up {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 20px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
+
+      .animate-slide-up {
+        animation: slide-up 0.3s ease-out;
+      }
+    </style>
+  </body>
+</html>

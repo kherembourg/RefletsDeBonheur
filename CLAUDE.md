@@ -108,7 +108,11 @@ reflets-de-bonheur/
 │   │   │   ├── QRCodeGenerator.tsx
 │   │   │   ├── SettingsToggle.tsx
 │   │   │   ├── TopUploaders.tsx
-│   │   │   └── ThemeSelector.tsx
+│   │   │   ├── ThemeSelector.tsx
+│   │   │   ├── WebsiteEditor.tsx      # Visual website customization
+│   │   │   ├── ColorPaletteEditor.tsx # Color scheme editor
+│   │   │   ├── ContentEditor.tsx      # Text content editor
+│   │   │   └── ImageManager.tsx       # Image upload/management
 │   │   ├── auth/
 │   │   │   └── LoginForm.tsx
 │   │   ├── gallery/
@@ -197,6 +201,8 @@ reflets-de-bonheur/
 │   │   ├── themes.ts                # Theme definitions
 │   │   ├── statistics.ts            # Stats calculations
 │   │   ├── weddingData.ts           # Wedding data helpers
+│   │   ├── customization.ts         # Customization types & helpers
+│   │   ├── applyCustomization.ts    # Apply custom settings to pages
 │   │   ├── services/
 │   │   │   ├── index.ts
 │   │   │   └── dataService.ts
@@ -276,11 +282,29 @@ reflets-de-bonheur/
 - **Upload Toggle**: Enable/disable guest uploads
 - **Content Moderation**: Delete inappropriate content
 
-### 6. Wedding Microsites
+### 6. Website Editor (NEW)
+- **Visual Editor**: Split-screen interface with real-time preview
+- **Theme Selection**: Choose between 6 predefined themes:
+  - **Classic** - Elegant burgundy with timeless design
+  - **Luxe** - Minimalist gold accents and sophistication
+  - **Jardin Moderne** - Fresh botanical with sage greens and blush
+  - **Cobalt** - Bold electric blue with modern aesthetics
+  - **Éditorial** - Magazine-style with high contrast and bold typography
+  - **French Minimalist** - Ultra-clean Parisian elegance (Herembourg-inspired)
+- **Color Customization**: Override any theme color with custom palette
+- **Content Editor**: Edit all text content (hero, welcome, gallery, etc.)
+- **Image Management**: Upload/manage custom images (hero, logo, backgrounds)
+- **Live Preview**: Changes reflect instantly in preview pane
+- **Auto-save Detection**: Visual indicator for unsaved changes
+- Access: `/admin/website-editor` from admin dashboard
+- **Documentation**: See `WEBSITE_EDITOR.md` for full details
+
+### 7. Wedding Microsites
 - Dynamic wedding pages at `/[slug]/`
-- Custom themes (Classic, Luxe, etc.)
+- 6 custom themes with unique color palettes and typography
 - Sections: Home, Photos, Guestbook, RSVP, Info
 - Timeline and schedule display
+- Fully customizable via Website Editor
 
 ### 7. PWA Features
 - **Offline support**: Service Worker caching
@@ -333,6 +357,8 @@ There is **no `clients` table**. User accounts are managed via Supabase Auth:
 - `/api/admin/create-client` - Creates user in `auth.users`, profile, and wedding (uses service-role)
 - `/api/upload/presign` - Generates R2 presigned URLs
 - `/api/upload/confirm` - Creates `media` record after R2 upload (uses service-role)
+- `/api/customization/save` - Saves website customization (theme, colors, content, images)
+- `/api/customization/get` - Fetches website customization for a wedding
 
 ### Supabase Database SQL
 Available at `supabase/database.sql` (reference schema for context, not for execution)
@@ -534,10 +560,11 @@ God access tokens (for impersonation) have a **24-hour TTL** and are automatical
 1. ~~**Supabase Integration**: Connect components to real database~~ ✅ DONE
 2. ~~**R2 Media Storage**: Cloudflare R2 for file uploads~~ ✅ DONE
 3. ~~**Testing & God Token Fix**: Auth tests and 24h TTL~~ ✅ DONE
-4. **Increase Test Coverage**: Target 100% for critical paths
-5. **Payment Integration**: Stripe checkout for $199 package
-6. **Email Notifications**: Welcome emails, upload notifications
-7. **Image Processing**: Generate thumbnails and optimize images
+4. ~~**Website Editor**: Visual customization for themes, colors, content, images~~ ✅ DONE
+5. **Increase Test Coverage**: Target 100% for critical paths
+6. **Payment Integration**: Stripe checkout for $199 package
+7. **Email Notifications**: Welcome emails, upload notifications
+8. **Image Processing**: Generate thumbnails and optimize images
 
 ### Future Enhancements
 1. **Real-time sync**: WebSocket updates for gallery
