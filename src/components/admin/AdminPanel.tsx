@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, ImageIcon, MessageSquare, DownloadCloud, Heart, ToggleLeft, ToggleRight, QrCode, Palette, FolderOpen, BarChart3, Loader2, Edit3 } from 'lucide-react';
+import { Settings, ImageIcon, MessageSquare, DownloadCloud, Heart, ToggleLeft, ToggleRight, QrCode, Palette, FolderOpen, BarChart3, Loader2, Edit3, CreditCard } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 import { SettingsToggle } from './SettingsToggle';
 import { QRCodeGenerator } from './QRCodeGenerator';
 import { EnhancedStatistics } from './EnhancedStatistics';
 import { AlbumManager } from './AlbumManager';
 import { ThemeSelector } from './ThemeSelector';
+import { SubscriptionStatus } from './SubscriptionStatus';
 import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
 import { DataService, type GallerySettings, type WeddingStatistics } from '../../lib/services/dataService';
 import { mockAPI, downloadBlob } from '../../lib/api';
@@ -14,10 +15,11 @@ import type { ThemeId } from '../../lib/themes';
 
 interface AdminPanelProps {
   weddingId?: string;
+  profileId?: string;
   demoMode?: boolean;
 }
 
-export function AdminPanel({ weddingId, demoMode = false }: AdminPanelProps) {
+export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPanelProps) {
   // Create service once using ref
   const serviceRef = useRef<DataService | null>(null);
   if (!serviceRef.current) {
@@ -172,6 +174,26 @@ export function AdminPanel({ weddingId, demoMode = false }: AdminPanelProps) {
             <p className="font-serif text-3xl text-charcoal font-light">{stats.favoriteCount}</p>
             <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Favoris</p>
           </div>
+        </div>
+      </section>
+
+      {/* Subscription Section */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
+            <CreditCard className="text-[#ae1725]" size={20} />
+          </div>
+          <div>
+            <h2 className="font-serif text-xl text-charcoal font-light">Abonnement</h2>
+            <p className="text-charcoal/50 text-sm font-light">Gérez votre forfait</p>
+          </div>
+        </div>
+
+        <div className="bg-white shadow-sm border border-charcoal/5 p-6">
+          <SubscriptionStatus
+            profileId={profileId || ''}
+            demoMode={demoMode}
+          />
         </div>
       </section>
 
