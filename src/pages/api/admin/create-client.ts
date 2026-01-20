@@ -83,8 +83,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const userId = authResult.data.user.id;
+    // Set trial period to 1 month (30 days)
     const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 2);
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')

@@ -22,6 +22,8 @@
 
 import type { APIRoute } from 'astro';
 import { generatePresignedUploadUrl, isR2Configured } from '../../../lib/r2';
+import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
+import { isSupabaseConfigured } from '../../../lib/supabase/client';
 
 export const prerender = false;
 
@@ -57,6 +59,67 @@ export const POST: APIRoute = async ({ request }) => {
           headers: { 'Content-Type': 'application/json' },
         }
       );
+    }
+
+    // Check subscription status - only allow cloud uploads for active subscriptions
+    if (isSupabaseConfigured() && isSupabaseServiceRoleConfigured()) {
+      const adminClient = getSupabaseAdminClient();
+
+      // Get wedding owner
+      const { data: wedding, error: weddingError } = await adminClient
+        .from('weddings')
+        .select('owner_id')
+        .eq('id', weddingId)
+        .single();
+
+      if (weddingError || !wedding) {
+        return new Response(
+          JSON.stringify({
+            error: 'Wedding not found',
+            message: 'The specified wedding does not exist',
+          }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Get owner's subscription status
+      const { data: profile, error: profileError } = await adminClient
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', wedding.owner_id)
+        .single();
+
+      if (profileError || !profile) {
+        return new Response(
+          JSON.stringify({
+            error: 'Profile not found',
+            message: 'The wedding owner profile does not exist',
+          }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Only allow cloud uploads for active subscriptions
+      if (profile.subscription_status !== 'active') {
+        return new Response(
+          JSON.stringify({
+            error: 'Subscription required',
+            code: 'TRIAL_MODE',
+            message: 'Les uploads cloud sont réservés aux abonnements actifs. Pendant l\'essai gratuit, les photos sont stockées localement.',
+            subscriptionStatus: profile.subscription_status,
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
     }
 
     // Validate content type

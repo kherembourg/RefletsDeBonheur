@@ -333,16 +333,31 @@ export class DataService {
     }
 
     // Dynamic import to avoid loading R2 client on client-side unnecessarily
-    const { uploadToR2 } = await import('../r2/upload');
+    const { uploadToR2, TrialModeError } = await import('../r2/upload');
 
-    return uploadToR2({
-      weddingId: this.weddingId,
-      file,
-      caption: options.caption,
-      guestName: options.author,
-      guestIdentifier: this.guestIdentifier,
-      onProgress: options.onProgress,
-    });
+    try {
+      return await uploadToR2({
+        weddingId: this.weddingId,
+        file,
+        caption: options.caption,
+        guestName: options.author,
+        guestIdentifier: this.guestIdentifier,
+        onProgress: options.onProgress,
+      });
+    } catch (error) {
+      // If trial mode, fall back to local storage with warning
+      if (error instanceof TrialModeError) {
+        console.warn('[DataService] Trial mode - using local storage:', error.message);
+        const dataUrl = await this.fileToDataUrl(file);
+        return this.addMedia({
+          url: dataUrl,
+          type: file.type.startsWith('video') ? 'video' : 'image',
+          caption: options.caption,
+          author: options.author,
+        });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -376,16 +391,39 @@ export class DataService {
       throw new Error('No wedding ID set for production mode');
     }
 
-    const { uploadMultipleToR2 } = await import('../r2/upload');
+    const { uploadMultipleToR2, TrialModeError } = await import('../r2/upload');
 
-    return uploadMultipleToR2({
-      weddingId: this.weddingId,
-      files,
-      guestName: options.author,
-      guestIdentifier: this.guestIdentifier,
-      onFileProgress: options.onFileProgress,
-      onOverallProgress: options.onOverallProgress,
-    });
+    try {
+      return await uploadMultipleToR2({
+        weddingId: this.weddingId,
+        files,
+        guestName: options.author,
+        guestIdentifier: this.guestIdentifier,
+        onFileProgress: options.onFileProgress,
+        onOverallProgress: options.onOverallProgress,
+      });
+    } catch (error) {
+      // If trial mode, fall back to local upload with warning
+      if (error instanceof TrialModeError) {
+        console.warn('[DataService] Trial mode - using local storage for batch upload:', error.message);
+        const results: MediaItem[] = [];
+        for (let i = 0; i < files.length; i++) {
+          const { file, caption } = files[i];
+          const dataUrl = await this.fileToDataUrl(file);
+          const item = await this.addMedia({
+            url: dataUrl,
+            type: file.type.startsWith('video') ? 'video' : 'image',
+            caption,
+            author: options.author,
+          });
+          results.push(item);
+          options.onFileProgress?.(i, { loaded: file.size, total: file.size, percentage: 100 });
+          options.onOverallProgress?.(i + 1, files.length);
+        }
+        return results;
+      }
+      throw error;
+    }
   }
 
   /**

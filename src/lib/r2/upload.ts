@@ -26,6 +26,18 @@ export interface UploadError {
   message: string;
 }
 
+// Custom error for trial mode
+export class TrialModeError extends Error {
+  code = 'TRIAL_MODE';
+  subscriptionStatus: string;
+
+  constructor(message: string, subscriptionStatus: string) {
+    super(message);
+    this.name = 'TrialModeError';
+    this.subscriptionStatus = subscriptionStatus;
+  }
+}
+
 /**
  * Upload a file to R2 storage
  *
@@ -51,6 +63,10 @@ export async function uploadToR2(options: UploadOptions): Promise<MediaItem> {
 
   if (!presignResponse.ok) {
     const error = await presignResponse.json();
+    // Check if this is a trial mode restriction
+    if (error.code === 'TRIAL_MODE') {
+      throw new TrialModeError(error.message, error.subscriptionStatus);
+    }
     throw new Error(error.message || 'Failed to get upload URL');
   }
 
