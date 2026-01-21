@@ -87,10 +87,10 @@ export default function BulkActions({ selectedItems, allItems, onClearSelection 
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-slide-up">
-      <div className="bg-deep-charcoal dark:bg-[#1A1A1A] text-ivory dark:text-[#E5E5E5] rounded-full shadow-2xl px-6 py-4 flex items-center gap-4 border border-[#ae1725]/20">
+      <div className="bg-deep-charcoal dark:bg-[#1A1A1A] text-ivory dark:text-[#E5E5E5] rounded-full shadow-2xl px-6 py-4 flex items-center gap-4 border border-burgundy-old/20">
         {/* Selection Count */}
         <div className="flex items-center gap-2">
-          <CheckSquare size={20} className="text-[#ae1725]" />
+          <CheckSquare size={20} className="text-burgundy-old" />
           <span className="font-medium">
             {selectedCount} photo{selectedCount > 1 ? 's' : ''} sélectionnée{selectedCount > 1 ? 's' : ''}
           </span>
@@ -103,7 +103,7 @@ export default function BulkActions({ selectedItems, allItems, onClearSelection 
         <button
           onClick={handleBulkDownload}
           disabled={isDownloading}
-          className="flex items-center gap-2 px-4 py-2 bg-[#ae1725] text-white rounded-full font-medium hover:bg-[#c92a38] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-4 py-2 bg-burgundy-old text-white rounded-full font-medium hover:bg-[#c92a38] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download size={18} />
           {isDownloading ? (
@@ -127,7 +127,7 @@ export default function BulkActions({ selectedItems, allItems, onClearSelection 
         {isDownloading && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-ivory/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#ae1725] transition-all duration-300"
+              className="h-full bg-burgundy-old transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>

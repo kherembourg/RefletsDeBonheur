@@ -197,7 +197,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-linear-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
                 <LayoutDashboard className="text-white" size={20} />
               </div>
               <div>
@@ -270,7 +270,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
               placeholder="Rechercher par nom, email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             />
           </div>
 
@@ -278,7 +278,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-amber-500"
           >
             <option value="all">Tous les statuts</option>
             <option value="active">Actifs</option>
@@ -298,7 +298,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
           {/* Create Client */}
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all shadow-lg"
+            className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all shadow-lg"
           >
             <Plus size={18} />
             <span>Nouveau client</span>
@@ -578,7 +578,7 @@ function StatCard({ label, value, icon: Icon, color, isText }: StatCardProps) {
 
   return (
     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[color]} flex items-center justify-center mb-3`}>
+      <div className={`w-10 h-10 rounded-lg bg-linear-to-br ${colors[color]} flex items-center justify-center mb-3`}>
         <Icon className="text-white" size={20} />
       </div>
       <p className="text-2xl font-bold text-white">

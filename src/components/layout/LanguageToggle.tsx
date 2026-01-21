@@ -67,7 +67,7 @@ export function LanguageToggle({ currentLang, currentPath }: LanguageToggleProps
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-charcoal hover:text-[#ae1725] transition-colors rounded-lg hover:bg-gray-100"
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-charcoal hover:text-burgundy-old transition-colors rounded-lg hover:bg-gray-100"
         aria-label="Change language"
         aria-expanded={isOpen}
       >
@@ -84,7 +84,7 @@ export function LanguageToggle({ currentLang, currentPath }: LanguageToggleProps
               key={code}
               href={getUrlForLang(code)}
               className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                code === currentLang ? 'text-[#ae1725] bg-gray-50' : 'text-charcoal'
+                code === currentLang ? 'text-burgundy-old bg-gray-50' : 'text-charcoal'
               }`}
               onClick={() => setIsOpen(false)}
             >

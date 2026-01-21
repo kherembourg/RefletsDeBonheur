@@ -58,7 +58,7 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
               key={reaction.type}
               className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all ${
                 userReaction === reaction.type
-                  ? 'bg-[#ae1725]/20 ring-1 ring-[#ae1725]'
+                  ? 'bg-burgundy-old/20 ring-1 ring-burgundy-old'
                   : 'bg-ivory/50 dark:bg-[#2A2A2A]'
               }`}
             >
@@ -70,7 +70,7 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
           {/* Add reaction button */}
           <button
             onClick={() => setShowPicker(!showPicker)}
-            className="p-1.5 rounded-full bg-ivory/50 dark:bg-[#2A2A2A] hover:bg-[#ae1725]/20 transition-all"
+            className="p-1.5 rounded-full bg-ivory/50 dark:bg-[#2A2A2A] hover:bg-burgundy-old/20 transition-all"
             aria-label="Ajouter une réaction"
           >
             <Smile size={14} className="text-warm-taupe" />
@@ -89,8 +89,8 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
                 <button
                   key={type}
                   onClick={() => handleReaction(type)}
-                  className={`text-2xl p-2 rounded-lg hover:bg-[#ae1725]/10 transition-all hover:scale-125 ${
-                    userReaction === type ? 'bg-[#ae1725]/20 ring-2 ring-[#ae1725]' : ''
+                  className={`text-2xl p-2 rounded-lg hover:bg-burgundy-old/10 transition-all hover:scale-125 ${
+                    userReaction === type ? 'bg-burgundy-old/20 ring-2 ring-burgundy-old' : ''
                   }`}
                   title={type}
                 >
@@ -120,9 +120,9 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
               onClick={() => handleReaction(type)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all hover:scale-105 ${
                 isActive
-                  ? 'bg-[#ae1725] text-white shadow-md ring-2 ring-[#ae1725]/50'
+                  ? 'bg-burgundy-old text-white shadow-md ring-2 ring-burgundy-old/50'
                   : count > 0
-                  ? 'bg-ivory dark:bg-[#2A2A2A] text-deep-charcoal dark:text-[#E5E5E5] hover:bg-[#ae1725]/20'
+                  ? 'bg-ivory dark:bg-[#2A2A2A] text-deep-charcoal dark:text-[#E5E5E5] hover:bg-burgundy-old/20'
                   : 'bg-silver-mist/20 text-warm-taupe hover:bg-silver-mist/30'
               }`}
               aria-label={`Réagir avec ${type}`}

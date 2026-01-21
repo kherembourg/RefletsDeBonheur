@@ -40,10 +40,10 @@ export function GodLogin({ onLoginSuccess }: GodLoginProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-2xl max-w-md w-full border border-gray-700">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-linear-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="bg-gray-800/80 backdrop-blur-xs p-8 rounded-2xl shadow-2xl max-w-md w-full border border-gray-700">
         {/* Icon */}
-        <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+        <div className="w-20 h-20 bg-linear-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
           <Shield className="text-white" size={40} strokeWidth={2} />
         </div>
 
@@ -58,7 +58,7 @@ export function GodLogin({ onLoginSuccess }: GodLoginProps) {
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
-            <AlertCircle className="text-red-400 flex-shrink-0" size={20} />
+            <AlertCircle className="text-red-400 shrink-0" size={20} />
             <p className="text-sm text-red-300">{error}</p>
           </div>
         )}
@@ -76,7 +76,7 @@ export function GodLogin({ onLoginSuccess }: GodLoginProps) {
               placeholder="Entrez votre nom d'utilisateur"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
               disabled={loading}
               required
               autoComplete="username"
@@ -95,7 +95,7 @@ export function GodLogin({ onLoginSuccess }: GodLoginProps) {
                 placeholder="Entrez votre mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                className="w-full px-4 py-3 pr-12 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 disabled={loading}
                 required
                 autoComplete="current-password"
@@ -114,7 +114,7 @@ export function GodLogin({ onLoginSuccess }: GodLoginProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

@@ -69,7 +69,7 @@ const faqs = [
         class="w-full h-full object-cover"
         loading="eager"
       />
-      <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60"></div>
+      <div class="absolute inset-0 bg-linear-to-b from-black/50 via-black/30 to-black/60"></div>
     </div>
 
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -88,7 +88,7 @@ const faqs = [
         </div>
 
         <!-- Social Proof Badge -->
-        <div class="mb-6 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+        <div class="mb-6 inline-flex items-center gap-2 bg-white/10 backdrop-blur-xs px-4 py-2 rounded-full">
           <Users class="w-4 h-4 text-white" />
           <span class="text-white/90 text-sm font-medium">
             Déjà 500+ couples nous font confiance
@@ -118,7 +118,7 @@ const faqs = [
           </a>
           <a
             href="/demo_gallery"
-            class="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-sm text-white border border-white/30 rounded-lg font-sans font-medium text-base hover:bg-white/20 transition-all duration-300"
+            class="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-xs text-white border border-white/30 rounded-lg font-sans font-medium text-base hover:bg-white/20 transition-all duration-300"
           >
             <span class="mr-2">▶</span>
             Voir un exemple réel
@@ -126,7 +126,7 @@ const faqs = [
         </div>
 
         <!-- Pricing Highlight - Clear Value -->
-        <div class="inline-flex flex-col sm:flex-row items-center gap-4 bg-white/10 backdrop-blur-sm px-6 py-4 rounded-xl border border-white/20">
+        <div class="inline-flex flex-col sm:flex-row items-center gap-4 bg-white/10 backdrop-blur-xs px-6 py-4 rounded-xl border border-white/20">
           <div class="flex items-baseline gap-2">
             <span class="line-through text-white/50 text-lg">149€</span>
             <span class="text-white font-bold text-3xl">99€</span>
@@ -330,7 +330,7 @@ const faqs = [
 
             <div class="space-y-6">
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 flex items-center justify-center flex-shrink-0 bg-burgundy/10 rounded-lg">
+                <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
                   <Clock class="w-5 h-5 text-burgundy" />
                 </div>
                 <div>
@@ -340,7 +340,7 @@ const faqs = [
               </div>
 
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 flex items-center justify-center flex-shrink-0 bg-burgundy/10 rounded-lg">
+                <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
                   <Shield class="w-5 h-5 text-burgundy" />
                 </div>
                 <div>
@@ -350,7 +350,7 @@ const faqs = [
               </div>
 
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 flex items-center justify-center flex-shrink-0 bg-burgundy/10 rounded-lg">
+                <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
                   <Smartphone class="w-5 h-5 text-burgundy" />
                 </div>
                 <div>
@@ -360,7 +360,7 @@ const faqs = [
               </div>
 
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 flex items-center justify-center flex-shrink-0 bg-burgundy/10 rounded-lg">
+                <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
                   <Download class="w-5 h-5 text-burgundy" />
                 </div>
                 <div>
@@ -513,7 +513,7 @@ const faqs = [
         {faqs.map((faq) => (
           <div class="bg-cream rounded-xl p-6 hover:shadow-md transition-shadow">
             <div class="flex items-start gap-4">
-              <HelpCircle class="w-6 h-6 flex-shrink-0 text-burgundy mt-0.5" />
+              <HelpCircle class="w-6 h-6 shrink-0 text-burgundy mt-0.5" />
               <div>
                 <h3 class="font-semibold text-charcoal mb-2">
                   {faq.question}
@@ -565,10 +565,10 @@ const faqs = [
         </p>
 
         <!-- Pricing -->
-        <div class="mb-10 bg-white/10 backdrop-blur-sm rounded-2xl p-6 inline-block">
+        <div class="mb-10 bg-white/10 backdrop-blur-xs rounded-2xl p-6 inline-block">
           <p class="text-white/60 mb-2 text-sm">
             <span class="line-through">149€</span>
-            <span class="ml-2 bg-white/20 px-2 py-0.5 rounded text-white text-xs font-medium">-33%</span>
+            <span class="ml-2 bg-white/20 px-2 py-0.5 rounded-sm text-white text-xs font-medium">-33%</span>
           </p>
           <p class="text-5xl font-serif font-light text-white mb-2">
             99€

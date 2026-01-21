@@ -130,7 +130,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
       className="fixed inset-0 bg-deep-charcoal z-50 flex flex-col animate-fade-in"
     >
       {/* Top Controls Bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-deep-charcoal/90 to-transparent p-4">
+      <div className="absolute top-0 left-0 right-0 z-10 bg-linear-to-b from-deep-charcoal/90 to-transparent p-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           {/* Left: Info */}
           <div className="flex items-center gap-4 text-ivory">
@@ -187,7 +187,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
                   }}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                     speed === option.value
-                      ? 'bg-[#ae1725] text-white font-semibold'
+                      ? 'bg-burgundy-old text-white font-semibold'
                       : 'bg-ivory/10 text-ivory hover:bg-ivory/20'
                   }`}
                 >
@@ -221,7 +221,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
       </div>
 
       {/* Bottom Controls Bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-deep-charcoal/90 to-transparent p-6">
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-linear-to-t from-deep-charcoal/90 to-transparent p-6">
         <div className="max-w-7xl mx-auto">
           {/* Progress Bar */}
           <div className="mb-4">
@@ -233,7 +233,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
             </div>
             <div className="w-full h-1 bg-ivory/20 rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#ae1725] transition-all duration-300"
+                className="h-full bg-burgundy-old transition-all duration-300"
                 style={{ width: `${((currentIndex + 1) / media.length) * 100}%` }}
               />
             </div>
@@ -252,7 +252,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
 
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="p-4 bg-[#ae1725] hover:bg-[#c92a38] text-white rounded-full transition-all duration-200 hover:scale-110 shadow-lg"
+              className="p-4 bg-burgundy-old hover:bg-[#c92a38] text-white rounded-full transition-all duration-200 hover:scale-110 shadow-lg"
               aria-label={isPlaying ? 'Pause' : 'Lecture'}
             >
               {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" />}

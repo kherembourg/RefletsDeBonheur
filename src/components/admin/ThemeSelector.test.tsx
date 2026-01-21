@@ -96,7 +96,7 @@ describe('ThemeSelector Component', () => {
 
       // Check for selected indicator (check mark icon wrapper)
       // The selected theme has a ring/border styling
-      const selectedTheme = container.querySelector('.border-\\[\\#ae1725\\]');
+      const selectedTheme = container.querySelector('[class*="border-burgundy-old"]');
       expect(selectedTheme).toBeInTheDocument();
     });
 

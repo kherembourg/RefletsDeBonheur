@@ -169,7 +169,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Prénom Nom"
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-[#ae1725] focus:ring-2 focus:ring-[#ae1725]/20 outline-none transition-all bg-white dark:bg-deep-charcoal/50"
+            className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
             required
           />
         </div>
@@ -188,7 +188,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="votre@email.com"
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-[#ae1725] focus:ring-2 focus:ring-[#ae1725]/20 outline-none transition-all bg-white dark:bg-deep-charcoal/50"
+            className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
           />
         </div>
       </div>
@@ -201,7 +201,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
               type="checkbox"
               checked={plusOne}
               onChange={(e) => setPlusOne(e.target.checked)}
-              className="w-5 h-5 rounded border-silver-mist/30 text-[#ae1725] focus:ring-[#ae1725]/20"
+              className="w-5 h-5 rounded-sm border-silver-mist/30 text-burgundy-old focus:ring-burgundy-old/20"
             />
             <span className="text-sm font-medium text-deep-charcoal dark:text-ivory">
               Je viendrai accompagné(e)
@@ -217,7 +217,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
                   value={plusOneName}
                   onChange={(e) => setPlusOneName(e.target.value)}
                   placeholder="Nom de votre accompagnant(e)"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-[#ae1725] focus:ring-2 focus:ring-[#ae1725]/20 outline-none transition-all bg-white dark:bg-deep-charcoal/50"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
                 />
               </div>
             </div>
@@ -237,7 +237,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
             value={dietaryRestrictions}
             onChange={(e) => setDietaryRestrictions(e.target.value)}
             placeholder="Végétarien, sans gluten, allergies..."
-            className="w-full px-4 py-3 rounded-lg border border-silver-mist/30 focus:border-[#ae1725] focus:ring-2 focus:ring-[#ae1725]/20 outline-none transition-all bg-white dark:bg-deep-charcoal/50"
+            className="w-full px-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
           />
         </div>
       )}
@@ -253,14 +253,14 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Votre message..."
           rows={3}
-          className="w-full px-4 py-3 rounded-lg border border-silver-mist/30 focus:border-[#ae1725] focus:ring-2 focus:ring-[#ae1725]/20 outline-none transition-all bg-white dark:bg-deep-charcoal/50 resize-none"
+          className="w-full px-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50 resize-none"
         />
       </div>
 
       {/* Error message */}
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 text-sm">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}

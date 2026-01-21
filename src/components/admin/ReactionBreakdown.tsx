@@ -23,7 +23,7 @@ export function ReactionBreakdown({ reactions, totalReactions }: ReactionBreakdo
     <div className="space-y-4">
       {/* Total */}
       <div className="text-center p-4 bg-pearl-white dark:bg-deep-charcoal/30 rounded-lg">
-        <div className="text-3xl font-bold text-[#ae1725]">
+        <div className="text-3xl font-bold text-burgundy-old">
           {totalReactions}
         </div>
         <div className="text-sm text-warm-taupe dark:text-silver-mist">
@@ -36,14 +36,14 @@ export function ReactionBreakdown({ reactions, totalReactions }: ReactionBreakdo
         {reactions.map((reaction, index) => {
           const barWidth = (reaction.count / maxCount) * 100;
           const colors = [
-            'bg-[#ae1725]',
-            'bg-[#ae1725]/80',
-            'bg-[#ae1725]/60',
-            'bg-[#ae1725]/40',
-            'bg-[#ae1725]/30',
-            'bg-[#ae1725]/20'
+            'bg-burgundy-old',
+            'bg-burgundy-old/80',
+            'bg-burgundy-old/60',
+            'bg-burgundy-old/40',
+            'bg-burgundy-old/30',
+            'bg-burgundy-old/20'
           ];
-          const colorClass = colors[index] || 'bg-[#ae1725]/20';
+          const colorClass = colors[index] || 'bg-burgundy-old/20';
 
           return (
             <div key={reaction.type} className="space-y-2">

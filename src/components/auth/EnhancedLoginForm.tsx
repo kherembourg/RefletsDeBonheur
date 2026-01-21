@@ -94,7 +94,7 @@ export function EnhancedLoginForm() {
       <div className="bg-ivory p-8 rounded-2xl shadow-xl max-w-md w-full border border-silver-mist">
         {/* Icon */}
         <div className="w-20 h-20 bg-soft-blush rounded-full flex items-center justify-center mx-auto mb-6">
-          <Camera className="text-[#ae1725]" size={40} strokeWidth={2} />
+          <Camera className="text-burgundy-old" size={40} strokeWidth={2} />
         </div>
 
         {/* Title */}
@@ -112,7 +112,7 @@ export function EnhancedLoginForm() {
             onClick={() => setMode('code')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
               mode === 'code'
-                ? 'bg-white text-deep-charcoal shadow-sm'
+                ? 'bg-white text-deep-charcoal shadow-xs'
                 : 'text-warm-taupe hover:text-deep-charcoal'
             }`}
           >
@@ -123,7 +123,7 @@ export function EnhancedLoginForm() {
             onClick={() => setMode('client')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
               mode === 'client'
-                ? 'bg-white text-deep-charcoal shadow-sm'
+                ? 'bg-white text-deep-charcoal shadow-xs'
                 : 'text-warm-taupe hover:text-deep-charcoal'
             }`}
           >
@@ -134,7 +134,7 @@ export function EnhancedLoginForm() {
         {/* Error Alert */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-            <AlertCircle className="text-red-500 flex-shrink-0" size={18} />
+            <AlertCircle className="text-red-500 shrink-0" size={18} />
             <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
@@ -148,7 +148,7 @@ export function EnhancedLoginForm() {
                 placeholder="Code d'accès"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-all text-center text-lg tracking-widest uppercase placeholder:normal-case placeholder:tracking-normal bg-pearl-white"
+                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all text-center text-lg tracking-widest uppercase placeholder:normal-case placeholder:tracking-normal bg-pearl-white"
                 disabled={loading}
                 required
               />
@@ -160,7 +160,7 @@ export function EnhancedLoginForm() {
                 placeholder="Votre prénom (optionnel)"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-all bg-pearl-white"
+                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all bg-pearl-white"
                 disabled={loading}
               />
             </div>
@@ -190,14 +190,14 @@ export function EnhancedLoginForm() {
                 <button
                   type="button"
                   onClick={() => setCode('MARIAGE2026')}
-                  className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded text-xs transition-colors"
+                  className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded-sm text-xs transition-colors"
                 >
                   MARIAGE2026
                 </button>
                 <button
                   type="button"
                   onClick={() => setCode('ADMIN123')}
-                  className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded text-xs transition-colors"
+                  className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded-sm text-xs transition-colors"
                 >
                   ADMIN123
                 </button>
@@ -221,7 +221,7 @@ export function EnhancedLoginForm() {
                   placeholder="marie@example.com"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-all bg-pearl-white"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all bg-pearl-white"
                   disabled={loading}
                   required
                   autoComplete="username"
@@ -241,7 +241,7 @@ export function EnhancedLoginForm() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border-2 border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-all bg-pearl-white"
+                  className="w-full pl-10 pr-12 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all bg-pearl-white"
                   disabled={loading}
                   required
                   autoComplete="current-password"
@@ -277,7 +277,7 @@ export function EnhancedLoginForm() {
             {/* Info */}
             <div className="pt-4 border-t border-silver-mist/30">
               <div className="flex items-start gap-2 text-xs text-warm-taupe">
-                <Sparkles className="flex-shrink-0 mt-0.5" size={14} />
+                <Sparkles className="shrink-0 mt-0.5" size={14} />
                 <p>
                   L'espace client est réservé aux mariés. Si vous êtes invité,
                   utilisez le code d'accès fourni par les mariés.

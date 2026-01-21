@@ -98,7 +98,7 @@ export default function InstallPrompt() {
       <div className="bg-[#333333] text-[#F5F0E8] p-4 shadow-xl">
         <div className="flex items-start gap-3">
           {/* Icon with light background */}
-          <div className="flex-shrink-0 w-12 h-12 bg-[#F5F0E8] rounded-lg flex items-center justify-center">
+          <div className="shrink-0 w-12 h-12 bg-[#F5F0E8] rounded-lg flex items-center justify-center">
             <svg viewBox="0 0 32 32" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="11" cy="16" r="7" stroke="#ae1725" strokeWidth="2" fill="none"/>
               <circle cx="21" cy="16" r="7" stroke="#ae1725" strokeWidth="2" fill="none"/>
@@ -118,7 +118,7 @@ export default function InstallPrompt() {
             <div className="flex gap-2">
               <button
                 onClick={handleInstall}
-                className="flex-1 bg-[#ae1725] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#c92a38] transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-burgundy-old text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#c92a38] transition-colors flex items-center justify-center gap-2"
               >
                 <Download size={16} />
                 Installer

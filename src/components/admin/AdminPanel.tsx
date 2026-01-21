@@ -130,7 +130,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 text-[#ae1725] animate-spin" />
+        <Loader2 className="w-8 h-8 text-burgundy-old animate-spin" />
         <span className="ml-3 text-charcoal/60 font-light">Chargement...</span>
       </div>
     );
@@ -141,8 +141,8 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
       {/* Statistics Overview */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
-            <BarChart3 className="text-[#ae1725]" size={20} />
+          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+            <BarChart3 className="text-burgundy-old" size={20} />
           </div>
           <div>
             <h2 className="font-serif text-xl text-charcoal font-light">Vue d'ensemble</h2>
@@ -151,25 +151,25 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white p-6 shadow-sm border border-charcoal/5 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-[#ae1725]/10 to-[#ae1725]/5 flex items-center justify-center">
-              <ImageIcon className="text-[#ae1725]" size={22} />
+          <div className="bg-white p-6 shadow-xs border border-charcoal/5 text-center">
+            <div className="w-12 h-12 mx-auto mb-3 bg-linear-to-br from-burgundy-old/10 to-burgundy-old/5 flex items-center justify-center">
+              <ImageIcon className="text-burgundy-old" size={22} />
             </div>
             <p className="font-serif text-3xl text-charcoal font-light">{stats.mediaCount}</p>
             <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Photos</p>
           </div>
 
-          <div className="bg-white p-6 shadow-sm border border-charcoal/5 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-[#ae1725]/10 to-[#ae1725]/5 flex items-center justify-center">
-              <MessageSquare className="text-[#ae1725]" size={22} />
+          <div className="bg-white p-6 shadow-xs border border-charcoal/5 text-center">
+            <div className="w-12 h-12 mx-auto mb-3 bg-linear-to-br from-burgundy-old/10 to-burgundy-old/5 flex items-center justify-center">
+              <MessageSquare className="text-burgundy-old" size={22} />
             </div>
             <p className="font-serif text-3xl text-charcoal font-light">{stats.messageCount}</p>
             <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Messages</p>
           </div>
 
-          <div className="bg-white p-6 shadow-sm border border-charcoal/5 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-[#ae1725]/10 to-[#ae1725]/5 flex items-center justify-center">
-              <Heart className="text-[#ae1725]" size={22} />
+          <div className="bg-white p-6 shadow-xs border border-charcoal/5 text-center">
+            <div className="w-12 h-12 mx-auto mb-3 bg-linear-to-br from-burgundy-old/10 to-burgundy-old/5 flex items-center justify-center">
+              <Heart className="text-burgundy-old" size={22} />
             </div>
             <p className="font-serif text-3xl text-charcoal font-light">{stats.favoriteCount}</p>
             <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Favoris</p>
@@ -180,8 +180,8 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
       {/* Subscription Section */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
-            <CreditCard className="text-[#ae1725]" size={20} />
+          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+            <CreditCard className="text-burgundy-old" size={20} />
           </div>
           <div>
             <h2 className="font-serif text-xl text-charcoal font-light">Abonnement</h2>
@@ -189,7 +189,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
           </div>
         </div>
 
-        <div className="bg-white shadow-sm border border-charcoal/5 p-6">
+        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
           <SubscriptionStatus
             profileId={profileId || ''}
             demoMode={demoMode}
@@ -199,16 +199,16 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
 
       {/* Decorative Divider */}
       <div className="flex items-center justify-center gap-4">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#ae1725]/20 to-transparent"></div>
-        <div className="text-[#ae1725]/30 text-lg">❧</div>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#ae1725]/20 to-transparent"></div>
+        <div className="flex-1 h-px bg-linear-to-r from-transparent via-burgundy-old/20 to-transparent"></div>
+        <div className="text-burgundy-old/30 text-lg">❧</div>
+        <div className="flex-1 h-px bg-linear-to-r from-transparent via-burgundy-old/20 to-transparent"></div>
       </div>
 
       {/* Settings Section */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
-            <Settings className="text-[#ae1725]" size={20} />
+          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+            <Settings className="text-burgundy-old" size={20} />
           </div>
           <div>
             <h2 className="font-serif text-xl text-charcoal font-light">Paramètres</h2>
@@ -216,7 +216,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
           </div>
         </div>
 
-        <div className="bg-white shadow-sm border border-charcoal/5">
+        <div className="bg-white shadow-xs border border-charcoal/5">
           {/* Upload Toggle */}
           <div className="flex items-center justify-between p-6 border-b border-charcoal/5">
             <div>
@@ -265,8 +265,8 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
       {/* QR Code Section */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
-            <QrCode className="text-[#ae1725]" size={20} />
+          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+            <QrCode className="text-burgundy-old" size={20} />
           </div>
           <div>
             <h2 className="font-serif text-xl text-charcoal font-light">QR Code</h2>
@@ -274,7 +274,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
           </div>
         </div>
 
-        <div className="bg-white shadow-sm border border-charcoal/5 p-6">
+        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
           <QRCodeGenerator />
         </div>
       </section>
@@ -282,8 +282,8 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
       {/* Theme Section */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
-            <Palette className="text-[#ae1725]" size={20} />
+          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+            <Palette className="text-burgundy-old" size={20} />
           </div>
           <div>
             <h2 className="font-serif text-xl text-charcoal font-light">Thème</h2>
@@ -291,7 +291,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
           </div>
         </div>
 
-        <div className="bg-white shadow-sm border border-charcoal/5 p-6 space-y-6">
+        <div className="bg-white shadow-xs border border-charcoal/5 p-6 space-y-6">
           <ThemeSelector
             currentTheme={currentTheme}
             onThemeChange={setCurrentTheme}
@@ -300,9 +300,9 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
 
           {/* Advanced Website Editor */}
           <div className="pt-6 border-t border-charcoal/10">
-            <div className="bg-gradient-to-br from-burgundy/5 to-purple-50 rounded-xl p-6 border border-burgundy/20">
+            <div className="bg-linear-to-br from-burgundy/5 to-purple-50 rounded-xl p-6 border border-burgundy/20">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-burgundy flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-burgundy flex items-center justify-center shrink-0">
                   <Edit3 className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
@@ -329,8 +329,8 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
       {/* Albums Section */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
-            <FolderOpen className="text-[#ae1725]" size={20} />
+          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+            <FolderOpen className="text-burgundy-old" size={20} />
           </div>
           <div>
             <h2 className="font-serif text-xl text-charcoal font-light">Albums</h2>
@@ -338,7 +338,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
           </div>
         </div>
 
-        <div className="bg-white shadow-sm border border-charcoal/5 p-6">
+        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
           <AlbumManager dataService={dataService} />
         </div>
       </section>
@@ -346,8 +346,8 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
       {/* Enhanced Statistics */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-[#ae1725]/20 flex items-center justify-center">
-            <BarChart3 className="text-[#ae1725]" size={20} />
+          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+            <BarChart3 className="text-burgundy-old" size={20} />
           </div>
           <div>
             <h2 className="font-serif text-xl text-charcoal font-light">Statistiques détaillées</h2>
@@ -355,7 +355,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
           </div>
         </div>
 
-        <div className="bg-white shadow-sm border border-charcoal/5 p-6">
+        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
           {enhancedStats ? (
             <EnhancedStatistics stats={enhancedStats} />
           ) : (
@@ -367,7 +367,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
       </section>
 
       {/* Storage Info */}
-      <section className="bg-gradient-to-br from-cream to-cream-dark p-6 text-center">
+      <section className="bg-linear-to-br from-cream to-cream-dark p-6 text-center">
         <p className="text-sm font-medium text-charcoal/70">Stockage</p>
         <p className="text-xs text-charcoal/50 mt-1 font-light">
           Géré par Cloudflare R2 en production

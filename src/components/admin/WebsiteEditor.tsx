@@ -88,7 +88,7 @@ export function WebsiteEditor({
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-cream via-white to-blush/30">
+    <div className="h-screen flex flex-col bg-linear-to-br from-cream via-white to-blush/30">
       {/* Header */}
       <div className="bg-white border-b border-silver-mist/30 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ export function WebsiteEditor({
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex-1 px-4 py-3 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                       isActive
-                        ? 'bg-gradient-to-b from-burgundy/5 to-transparent text-burgundy border-b-2 border-burgundy'
+                        ? 'bg-linear-to-b from-burgundy/5 to-transparent text-burgundy border-b-2 border-burgundy'
                         : 'text-warm-taupe hover:text-deep-charcoal hover:bg-silver-mist/10'
                     }`}
                   >
@@ -190,10 +190,10 @@ export function WebsiteEditor({
         </div>
 
         {/* Preview Panel - Left Side */}
-        <div className="flex-1 bg-gradient-to-br from-silver-mist/5 to-silver-mist/10 p-6 flex flex-col">
+        <div className="flex-1 bg-linear-to-br from-silver-mist/5 to-silver-mist/10 p-6 flex flex-col">
           <div className="bg-white rounded-xl shadow-2xl border border-silver-mist/30 flex-1 flex flex-col overflow-hidden">
             {/* Preview Header */}
-            <div className="bg-gradient-to-r from-burgundy/5 to-transparent px-6 py-3 border-b border-silver-mist/20 flex items-center justify-between">
+            <div className="bg-linear-to-r from-burgundy/5 to-transparent px-6 py-3 border-b border-silver-mist/20 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Eye className="w-5 h-5 text-burgundy" />
                 <span className="font-medium text-deep-charcoal">
@@ -290,11 +290,11 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
                   <div className="w-full h-full p-3 flex items-center justify-center">
                     <div className="text-center">
                       <div
-                        className="h-3 w-24 rounded mx-auto mb-2"
+                        className="h-3 w-24 rounded-sm mx-auto mb-2"
                         style={{ backgroundColor: theme.colors.text, opacity: 0.3 }}
                       />
                       <div
-                        className="h-2 w-16 rounded mx-auto"
+                        className="h-2 w-16 rounded-sm mx-auto"
                         style={{ backgroundColor: theme.colors.accent, opacity: 0.5 }}
                       />
                     </div>

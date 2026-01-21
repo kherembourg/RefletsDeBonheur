@@ -194,7 +194,7 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
 
       {/* Info Box */}
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
-        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="text-sm text-amber-900">
           <p className="font-medium mb-1">Formats recommandés</p>
           <p>
@@ -224,7 +224,7 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
             >
               <div className="flex items-start gap-4">
                 {/* Image Preview */}
-                <div className="w-32 h-32 rounded-lg bg-silver-mist/20 border-2 border-silver-mist/30 overflow-hidden flex-shrink-0 relative">
+                <div className="w-32 h-32 rounded-lg bg-silver-mist/20 border-2 border-silver-mist/30 overflow-hidden shrink-0 relative">
                   {imageUrl ? (
                     <>
                       <img

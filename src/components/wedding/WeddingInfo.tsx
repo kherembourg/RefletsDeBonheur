@@ -51,13 +51,13 @@ export function WeddingInfo({ venue, primaryColor }: WeddingInfoProps) {
                   {venue.name}
                 </h3>
                 <p className="text-warm-taupe dark:text-silver-mist flex items-start gap-2">
-                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: primaryColor }} />
+                  <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: primaryColor }} />
                   <span>{venue.address}</span>
                 </p>
 
                 {venue.parkingInfo && (
                   <p className="text-warm-taupe dark:text-silver-mist flex items-start gap-2 mt-3">
-                    <Car className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: primaryColor }} />
+                    <Car className="w-5 h-5 shrink-0 mt-0.5" style={{ color: primaryColor }} />
                     <span>{venue.parkingInfo}</span>
                   </p>
                 )}
@@ -79,7 +79,7 @@ export function WeddingInfo({ venue, primaryColor }: WeddingInfoProps) {
 
         {/* Additional info cards */}
         <div className="grid sm:grid-cols-2 gap-6 mt-8">
-          <div className="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-xs">
             <h4 className="text-lg font-semibold text-deep-charcoal dark:text-ivory mb-3">
               Dress code
             </h4>
@@ -88,7 +88,7 @@ export function WeddingInfo({ venue, primaryColor }: WeddingInfoProps) {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 shadow-xs">
             <h4 className="text-lg font-semibold text-deep-charcoal dark:text-ivory mb-3">
               Hébergement
             </h4>

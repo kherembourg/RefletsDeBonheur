@@ -55,8 +55,8 @@ export function SearchFilters({
         <div
           className={`flex items-center gap-2 bg-ivory border-2 rounded-xl px-4 py-3 transition-all ${
             isSearchFocused
-              ? 'border-[#ae1725] shadow-md'
-              : 'border-silver-mist hover:border-[#ae1725]/50'
+              ? 'border-burgundy-old shadow-md'
+              : 'border-silver-mist hover:border-burgundy-old/50'
           }`}
         >
           <Search className="text-warm-taupe" size={20} />
@@ -67,7 +67,7 @@ export function SearchFilters({
             onChange={(e) => onSearchChange(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
-            className="flex-1 bg-transparent border-none outline-none text-deep-charcoal placeholder-warm-taupe"
+            className="flex-1 bg-transparent border-none outline-hidden text-deep-charcoal placeholder-warm-taupe"
           />
           {searchQuery && (
             <button
@@ -89,7 +89,7 @@ export function SearchFilters({
             onClick={() => onMediaTypeChange('all')}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
               mediaType === 'all'
-                ? 'bg-[#ae1725] text-white shadow-sm'
+                ? 'bg-burgundy-old text-white shadow-xs'
                 : 'bg-silver-mist/30 text-warm-taupe hover:bg-silver-mist/50'
             }`}
           >
@@ -99,7 +99,7 @@ export function SearchFilters({
             onClick={() => onMediaTypeChange('image')}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-1.5 ${
               mediaType === 'image'
-                ? 'bg-[#ae1725] text-white shadow-sm'
+                ? 'bg-burgundy-old text-white shadow-xs'
                 : 'bg-silver-mist/30 text-warm-taupe hover:bg-silver-mist/50'
             }`}
           >
@@ -110,7 +110,7 @@ export function SearchFilters({
             onClick={() => onMediaTypeChange('video')}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-1.5 ${
               mediaType === 'video'
-                ? 'bg-[#ae1725] text-white shadow-sm'
+                ? 'bg-burgundy-old text-white shadow-xs'
                 : 'bg-silver-mist/30 text-warm-taupe hover:bg-silver-mist/50'
             }`}
           >
@@ -127,7 +127,7 @@ export function SearchFilters({
           onClick={() => onShowFavoritesChange(!showFavoritesOnly)}
           className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-1.5 ${
             showFavoritesOnly
-              ? 'bg-red-500 text-ivory shadow-sm'
+              ? 'bg-red-500 text-ivory shadow-xs'
               : 'bg-silver-mist/30 text-warm-taupe hover:bg-silver-mist/50'
           }`}
         >
@@ -146,7 +146,7 @@ export function SearchFilters({
               <select
                 value={selectedAlbumId || ''}
                 onChange={(e) => onAlbumChange(e.target.value || null)}
-                className="px-3 py-2 bg-ivory border border-silver-mist rounded-lg text-sm text-deep-charcoal font-medium focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-colors cursor-pointer"
+                className="px-3 py-2 bg-ivory border border-silver-mist rounded-lg text-sm text-deep-charcoal font-medium focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors cursor-pointer"
               >
                 <option value="">Tous les albums</option>
                 {albums.map(album => (
@@ -168,7 +168,7 @@ export function SearchFilters({
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
-            className="px-3 py-2 bg-ivory border border-silver-mist rounded-lg text-sm text-deep-charcoal font-medium focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-colors cursor-pointer"
+            className="px-3 py-2 bg-ivory border border-silver-mist rounded-lg text-sm text-deep-charcoal font-medium focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors cursor-pointer"
           >
             <option value="newest">Plus récent</option>
             <option value="oldest">Plus ancien</option>

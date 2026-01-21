@@ -12,12 +12,12 @@ interface MessageListProps {
 
 // Card background colors - soft pastel palette
 const cardColors = [
-  'bg-gradient-to-br from-rose-50 to-pink-50',
-  'bg-gradient-to-br from-amber-50 to-orange-50',
-  'bg-gradient-to-br from-emerald-50 to-teal-50',
-  'bg-gradient-to-br from-sky-50 to-blue-50',
-  'bg-gradient-to-br from-violet-50 to-purple-50',
-  'bg-gradient-to-br from-cream to-blush',
+  'bg-linear-to-br from-rose-50 to-pink-50',
+  'bg-linear-to-br from-amber-50 to-orange-50',
+  'bg-linear-to-br from-emerald-50 to-teal-50',
+  'bg-linear-to-br from-sky-50 to-blue-50',
+  'bg-linear-to-br from-violet-50 to-purple-50',
+  'bg-linear-to-br from-cream to-blush',
 ];
 
 // Decorative corner elements
@@ -37,13 +37,13 @@ export function MessageList({ messages, isAdmin, onDelete }: MessageListProps) {
       <div className="text-center py-16 sm:py-24 px-4">
         {/* Decorative illustration */}
         <div className="relative w-32 h-32 mx-auto mb-8">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#ae1725]/5 to-[#ae1725]/10 rounded-full"></div>
+          <div className="absolute inset-0 bg-linear-to-br from-burgundy-old/5 to-burgundy-old/10 rounded-full"></div>
           <div className="absolute inset-4 bg-white rounded-full shadow-inner flex items-center justify-center">
-            <MessageSquare className="text-[#ae1725]/40" size={36} />
+            <MessageSquare className="text-burgundy-old/40" size={36} />
           </div>
           {/* Decorative hearts */}
-          <div className="absolute -top-2 -right-2 w-6 h-6 text-[#ae1725]/30">❤</div>
-          <div className="absolute -bottom-1 -left-3 w-4 h-4 text-[#ae1725]/20">❤</div>
+          <div className="absolute -top-2 -right-2 w-6 h-6 text-burgundy-old/30">❤</div>
+          <div className="absolute -bottom-1 -left-3 w-4 h-4 text-burgundy-old/20">❤</div>
         </div>
 
         <h3 className="font-serif text-2xl sm:text-3xl text-charcoal mb-3">
@@ -56,9 +56,9 @@ export function MessageList({ messages, isAdmin, onDelete }: MessageListProps) {
 
         {/* Decorative bottom element */}
         <div className="flex items-center justify-center gap-4 mt-12">
-          <div className="w-16 h-px bg-gradient-to-r from-transparent to-[#ae1725]/20"></div>
-          <div className="text-[#ae1725]/30 text-lg">❧</div>
-          <div className="w-16 h-px bg-gradient-to-r from-[#ae1725]/20 to-transparent"></div>
+          <div className="w-16 h-px bg-linear-to-r from-transparent to-burgundy-old/20"></div>
+          <div className="text-burgundy-old/30 text-lg">❧</div>
+          <div className="w-16 h-px bg-linear-to-r from-burgundy-old/20 to-transparent"></div>
         </div>
       </div>
     );
@@ -125,12 +125,12 @@ export function MessageList({ messages, isAdmin, onDelete }: MessageListProps) {
               </div>
 
               {/* Inner card content */}
-              <div className="bg-white/80 backdrop-blur-sm p-6 relative min-h-[200px] flex flex-col">
+              <div className="bg-white/80 backdrop-blur-xs p-6 relative min-h-[200px] flex flex-col">
                 {/* Corner decorations */}
-                <div className="absolute top-2 left-3 text-[#ae1725]/20 text-lg font-serif">
+                <div className="absolute top-2 left-3 text-burgundy-old/20 text-lg font-serif">
                   {cornerDecor}
                 </div>
-                <div className="absolute top-2 right-3 text-[#ae1725]/20 text-lg font-serif transform scale-x-[-1]">
+                <div className="absolute top-2 right-3 text-burgundy-old/20 text-lg font-serif transform scale-x-[-1]">
                   {cornerDecor}
                 </div>
 
@@ -145,8 +145,8 @@ export function MessageList({ messages, isAdmin, onDelete }: MessageListProps) {
                 <div className="border-t border-charcoal/10 pt-4 mt-auto">
                   <div className="flex items-center justify-center gap-3">
                     {/* Author initial */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ae1725]/10 to-[#ae1725]/20 flex items-center justify-center">
-                      <span className="font-script text-xl text-[#ae1725]">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-burgundy-old/10 to-burgundy-old/20 flex items-center justify-center">
+                      <span className="font-script text-xl text-burgundy-old">
                         {msg.author.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -168,10 +168,10 @@ export function MessageList({ messages, isAdmin, onDelete }: MessageListProps) {
                 </div>
 
                 {/* Bottom corner decorations */}
-                <div className="absolute bottom-2 left-3 text-[#ae1725]/20 text-lg font-serif transform rotate-180">
+                <div className="absolute bottom-2 left-3 text-burgundy-old/20 text-lg font-serif transform rotate-180">
                   {cornerDecor}
                 </div>
-                <div className="absolute bottom-2 right-3 text-[#ae1725]/20 text-lg font-serif transform rotate-180 scale-x-[-1]">
+                <div className="absolute bottom-2 right-3 text-burgundy-old/20 text-lg font-serif transform rotate-180 scale-x-[-1]">
                   {cornerDecor}
                 </div>
 

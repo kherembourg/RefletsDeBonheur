@@ -6,7 +6,7 @@ interface SkeletonProps {
 export function Skeleton({ className = '', style }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-silver-mist/30 rounded ${className}`}
+      className={`animate-pulse bg-silver-mist/30 rounded-sm ${className}`}
       style={style}
       aria-live="polite"
       aria-busy="true"
@@ -30,7 +30,7 @@ export function GallerySkeleton() {
 // Message Skeleton
 export function MessageSkeleton() {
   return (
-    <div className="bg-ivory p-6 rounded-xl shadow-sm border border-silver-mist space-y-3">
+    <div className="bg-ivory p-6 rounded-xl shadow-xs border border-silver-mist space-y-3">
       <div className="flex items-start gap-4">
         <Skeleton className="w-10 h-10 rounded-full" />
         <div className="flex-1 space-y-2">

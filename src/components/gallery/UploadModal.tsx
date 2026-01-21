@@ -14,7 +14,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete, dataService }: 
 
   return (
     <div
-      className="fixed inset-0 bg-deep-charcoal/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 bg-deep-charcoal/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
     >
       <div

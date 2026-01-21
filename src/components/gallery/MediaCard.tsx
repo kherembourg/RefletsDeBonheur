@@ -78,21 +78,21 @@ export function MediaCard({
   return (
     <div
       className={`media-card break-inside-avoid relative group cursor-pointer ${
-        isSelected ? 'ring-2 ring-[#ae1725] ring-offset-2 ring-offset-cream' : ''
+        isSelected ? 'ring-2 ring-burgundy-old ring-offset-2 ring-offset-cream' : ''
       }`}
       onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Elegant frame container */}
-      <div className="relative overflow-hidden bg-white shadow-sm transition-all duration-500 ease-out group-hover:shadow-xl">
+      <div className="relative overflow-hidden bg-white shadow-xs transition-all duration-500 ease-out group-hover:shadow-xl">
         {/* Subtle border frame */}
-        <div className="absolute inset-0 border border-charcoal/5 z-10 pointer-events-none transition-all duration-500 group-hover:border-[#ae1725]/20" />
+        <div className="absolute inset-0 border border-charcoal/5 z-10 pointer-events-none transition-all duration-500 group-hover:border-burgundy-old/20" />
 
         {/* Image container with padding for frame effect */}
         <div className="relative p-2 sm:p-3">
           {/* Inner frame border */}
-          <div className="absolute inset-2 sm:inset-3 border border-charcoal/[0.03] pointer-events-none z-10" />
+          <div className="absolute inset-2 sm:inset-3 border border-charcoal/3 pointer-events-none z-10" />
 
           {/* Media Display */}
           {item.type === 'video' ? (
@@ -103,7 +103,7 @@ export function MediaCard({
                 className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                 poster={item.thumbnailUrl}
               />
-              <div className="absolute top-3 right-3 bg-charcoal/80 backdrop-blur-sm p-2 text-white z-20">
+              <div className="absolute top-3 right-3 bg-charcoal/80 backdrop-blur-xs p-2 text-white z-20">
                 <Video size={14} />
               </div>
             </div>
@@ -118,7 +118,7 @@ export function MediaCard({
 
               {/* Elegant hover overlay */}
               <div
-                className={`absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent transition-opacity duration-500 ${
+                className={`absolute inset-0 bg-linear-to-t from-charcoal/80 via-charcoal/20 to-transparent transition-opacity duration-500 ${
                   isHovered ? 'opacity-100' : 'opacity-0'
                 }`}
               />
@@ -129,7 +129,7 @@ export function MediaCard({
                   isHovered && !selectionMode ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                <div className="w-12 h-12 border border-white/50 flex items-center justify-center backdrop-blur-sm bg-white/10 transition-transform duration-300 group-hover:scale-110">
+                <div className="w-12 h-12 border border-white/50 flex items-center justify-center backdrop-blur-xs bg-white/10 transition-transform duration-300 group-hover:scale-110">
                   <Maximize2 className="w-5 h-5 text-white" />
                 </div>
               </div>
@@ -155,7 +155,7 @@ export function MediaCard({
             className="absolute bottom-16 left-3 right-3 z-20 animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white/95 backdrop-blur-sm p-2 shadow-lg">
+            <div className="bg-white/95 backdrop-blur-xs p-2 shadow-lg">
               <ReactionsPanel mediaId={item.id} dataService={dataService} compact={true} />
             </div>
           </div>
@@ -166,10 +166,10 @@ export function MediaCard({
           onClick={handleFavorite}
           className={`absolute top-4 right-4 sm:top-5 sm:right-5 p-2 transition-all duration-300 z-20 ${
             favorited
-              ? 'bg-[#ae1725] text-white shadow-md'
-              : `bg-white/90 backdrop-blur-sm text-charcoal/60 shadow-sm ${
+              ? 'bg-burgundy-old text-white shadow-md'
+              : `bg-white/90 backdrop-blur-xs text-charcoal/60 shadow-xs ${
                   isHovered ? 'opacity-100' : 'opacity-0'
-                } hover:bg-white hover:text-[#ae1725]`
+                } hover:bg-white hover:text-burgundy-old`
           }`}
           aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
         >
@@ -182,7 +182,7 @@ export function MediaCard({
 
         {/* Favorite Count Badge */}
         {favoriteCount > 0 && !selectionMode && (
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 translate-x-1/2 -translate-y-1/2 bg-[#ae1725] text-white text-[10px] font-medium w-5 h-5 flex items-center justify-center pointer-events-none z-30">
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 translate-x-1/2 -translate-y-1/2 bg-burgundy-old text-white text-[10px] font-medium w-5 h-5 flex items-center justify-center pointer-events-none z-30">
             {favoriteCount}
           </div>
         )}
@@ -191,11 +191,11 @@ export function MediaCard({
         {selectionMode && (
           <button
             onClick={handleSelection}
-            className="absolute top-4 left-4 sm:top-5 sm:left-5 p-1 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-white z-20"
+            className="absolute top-4 left-4 sm:top-5 sm:left-5 p-1 bg-white/90 backdrop-blur-xs shadow-xs transition-all duration-200 hover:bg-white z-20"
             aria-label={isSelected ? 'Désélectionner' : 'Sélectionner'}
           >
             {isSelected ? (
-              <CheckCircle size={20} className="text-[#ae1725]" fill="currentColor" />
+              <CheckCircle size={20} className="text-burgundy-old" fill="currentColor" />
             ) : (
               <Circle size={20} className="text-charcoal/40" />
             )}
@@ -206,7 +206,7 @@ export function MediaCard({
         {isAdmin && !selectionMode && (
           <button
             onClick={handleDelete}
-            className={`absolute top-4 left-4 sm:top-5 sm:left-5 bg-white/90 backdrop-blur-sm text-charcoal/60 p-2 transition-all duration-300 hover:bg-[#ae1725] hover:text-white shadow-sm z-20 ${
+            className={`absolute top-4 left-4 sm:top-5 sm:left-5 bg-white/90 backdrop-blur-xs text-charcoal/60 p-2 transition-all duration-300 hover:bg-burgundy-old hover:text-white shadow-xs z-20 ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
             aria-label="Supprimer"
