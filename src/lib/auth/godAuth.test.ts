@@ -25,42 +25,67 @@ Object.defineProperty(global, 'crypto', {
  * Create mock chain helper for Supabase query builder
  *
  * Creates a chainable mock that:
- * 1. Returns itself for all chain methods (select, update, eq, etc.)
- * 2. Can be awaited directly to get { data, error } for non-.single() operations
- * 3. Has .single() that returns a Promise resolving to { data, error }
- *
- * The key insight is that terminal methods like .eq() need to return something
- * that can be awaited. We achieve this by making each method return a Promise
- * that resolves to { data, error } but also has all the chain methods attached.
+ * 1. Every method returns the same chain link (for chaining like .eq().single())
+ * 2. The chain link is also thenable, so await chain works
+ * 3. The resolved value is always { data, error }
  */
 function createMockChain(returnData: unknown, error: Error | null = null) {
   // Ensure error is explicitly null, not undefined
-  const resolvedData = Object.freeze({ data: returnData, error: error === undefined ? null : error });
+  // Use a plain object literal to avoid any reference/closure issues
+  const resolvedData = { data: returnData, error: error === undefined ? null : error };
 
-  // Create a base promise that resolves to our data
-  // We'll attach chain methods to objects that return this promise
-  const createChainablePromise = (): Promise<typeof resolvedData> & Record<string, unknown> => {
-    const promise = Promise.resolve(resolvedData) as Promise<typeof resolvedData> & Record<string, unknown>;
+  // Type for our chainable mock - it's both an object with methods AND a thenable
+  interface ChainLink {
+    select: ReturnType<typeof vi.fn>;
+    insert: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+    eq: ReturnType<typeof vi.fn>;
+    neq: ReturnType<typeof vi.fn>;
+    gt: ReturnType<typeof vi.fn>;
+    lt: ReturnType<typeof vi.fn>;
+    is: ReturnType<typeof vi.fn>;
+    or: ReturnType<typeof vi.fn>;
+    order: ReturnType<typeof vi.fn>;
+    single: ReturnType<typeof vi.fn>;
+    then: (
+      onFulfilled?: ((value: typeof resolvedData) => unknown) | null,
+      onRejected?: ((reason: unknown) => unknown) | null
+    ) => Promise<unknown>;
+  }
 
-    // Attach chain methods to the promise
-    // Each method returns a new chainable promise
-    promise.select = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.insert = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.update = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.delete = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.eq = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.neq = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.gt = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.lt = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.is = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.or = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.order = vi.fn().mockImplementation(() => createChainablePromise());
-    promise.single = vi.fn().mockResolvedValue(resolvedData);
-
-    return promise;
+  // Create the chain link with all methods
+  const chain: ChainLink = {
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    eq: vi.fn(),
+    neq: vi.fn(),
+    gt: vi.fn(),
+    lt: vi.fn(),
+    is: vi.fn(),
+    or: vi.fn(),
+    order: vi.fn(),
+    single: vi.fn().mockResolvedValue(resolvedData),
+    // The then method makes this chain awaitable
+    then: (onFulfilled, onRejected) => Promise.resolve(resolvedData).then(onFulfilled, onRejected),
   };
 
-  return createChainablePromise();
+  // Make all chain methods return the chain itself for chaining
+  chain.select.mockReturnValue(chain);
+  chain.insert.mockReturnValue(chain);
+  chain.update.mockReturnValue(chain);
+  chain.delete.mockReturnValue(chain);
+  chain.eq.mockReturnValue(chain);
+  chain.neq.mockReturnValue(chain);
+  chain.gt.mockReturnValue(chain);
+  chain.lt.mockReturnValue(chain);
+  chain.is.mockReturnValue(chain);
+  chain.or.mockReturnValue(chain);
+  chain.order.mockReturnValue(chain);
+
+  return chain;
 }
 
 // Mock the supabase module
