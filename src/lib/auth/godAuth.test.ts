@@ -25,7 +25,13 @@ Object.defineProperty(global, 'crypto', {
 function createMockChain(returnData: unknown, error: Error | null = null) {
   const mockResolvedValue = { data: returnData, error };
 
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {};
+  // Define chain type to include thenable interface
+  type MockChain = Record<string, ReturnType<typeof vi.fn>> & {
+    then: (onFulfilled?: (value: typeof mockResolvedValue) => unknown) => Promise<unknown>;
+    catch: (onRejected?: (reason: unknown) => unknown) => Promise<unknown>;
+  };
+
+  const chain = {} as MockChain;
 
   chain.select = vi.fn().mockReturnValue(chain);
   chain.insert = vi.fn().mockReturnValue(chain);
@@ -40,8 +46,11 @@ function createMockChain(returnData: unknown, error: Error | null = null) {
   chain.order = vi.fn().mockReturnValue(chain);
   chain.single = vi.fn().mockResolvedValue(mockResolvedValue);
 
-  // Make chain itself a promise for non-single operations
-  Object.assign(chain, Promise.resolve(mockResolvedValue));
+  // Make chain thenable for non-.single() operations (e.g., update().eq())
+  // This allows `await chain` to resolve to mockResolvedValue
+  const promise = Promise.resolve(mockResolvedValue);
+  chain.then = (onFulfilled) => promise.then(onFulfilled);
+  chain.catch = (onRejected) => promise.catch(onRejected);
 
   return chain;
 }
