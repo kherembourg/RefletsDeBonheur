@@ -21,15 +21,14 @@ Object.defineProperty(global, 'crypto', {
   writable: true,
 });
 
-// Create mock chain helper
+// Create mock chain helper - implements proper PromiseLike interface
 function createMockChain(returnData: unknown, error: Error | null = null) {
-  const mockResolvedValue = { data: returnData, error };
+  // Ensure error is explicitly null, not undefined
+  const mockResolvedValue = { data: returnData, error: error ?? null };
 
-  // Define chain type to include thenable interface
-  type MockChain = Record<string, ReturnType<typeof vi.fn>> & {
-    then: (onFulfilled?: (value: typeof mockResolvedValue) => unknown) => Promise<unknown>;
-    catch: (onRejected?: (reason: unknown) => unknown) => Promise<unknown>;
-  };
+  // Define chain type to include full thenable interface (PromiseLike)
+  type ResolvedValue = { data: unknown; error: Error | null };
+  type MockChain = Record<string, ReturnType<typeof vi.fn>> & PromiseLike<ResolvedValue>;
 
   const chain = {} as MockChain;
 
@@ -48,9 +47,14 @@ function createMockChain(returnData: unknown, error: Error | null = null) {
 
   // Make chain thenable for non-.single() operations (e.g., update().eq())
   // This allows `await chain` to resolve to mockResolvedValue
+  // Implementation must match PromiseLike<T>.then signature exactly
   const promise = Promise.resolve(mockResolvedValue);
-  chain.then = (onFulfilled) => promise.then(onFulfilled);
-  chain.catch = (onRejected) => promise.catch(onRejected);
+  chain.then = function <TResult1 = ResolvedValue, TResult2 = never>(
+    onFulfilled?: ((value: ResolvedValue) => TResult1 | PromiseLike<TResult1>) | null | undefined,
+    onRejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null | undefined
+  ): Promise<TResult1 | TResult2> {
+    return promise.then(onFulfilled, onRejected);
+  };
 
   return chain;
 }
