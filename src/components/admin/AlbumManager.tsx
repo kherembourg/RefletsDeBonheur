@@ -131,7 +131,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 text-[#ae1725] animate-spin" />
+        <Loader2 className="w-6 h-6 text-burgundy-old animate-spin" />
         <span className="ml-2 text-charcoal/60 font-light">Chargement des albums...</span>
       </div>
     );
@@ -142,7 +142,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FolderOpen size={24} className="text-[#ae1725]" />
+          <FolderOpen size={24} className="text-burgundy-old" />
           <h2 className="text-xl font-bold font-serif text-deep-charcoal dark:text-ivory">
             Albums
           </h2>
@@ -166,7 +166,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
           <p>Aucun album créé</p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="mt-4 text-[#ae1725] hover:underline"
+            className="mt-4 text-burgundy-old hover:underline"
           >
             Créer votre premier album
           </button>
@@ -202,14 +202,14 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
                   <div className="flex items-center gap-1 ml-2">
                     <button
                       onClick={() => openEditModal(album)}
-                      className="p-1.5 hover:bg-silver-mist/30 rounded transition-colors"
+                      className="p-1.5 hover:bg-silver-mist/30 rounded-sm transition-colors"
                       title="Modifier"
                     >
-                      <Edit size={16} className="text-[#ae1725]" />
+                      <Edit size={16} className="text-burgundy-old" />
                     </button>
                     <button
                       onClick={() => handleDelete(album.id, album.name)}
-                      className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                      className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-sm transition-colors"
                       title="Supprimer"
                     >
                       <Trash2 size={16} className="text-red-500" />
@@ -229,7 +229,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
                 {onAlbumSelect && (
                   <button
                     onClick={() => onAlbumSelect(album.id)}
-                    className="mt-3 w-full text-sm text-center text-[#ae1725] hover:underline"
+                    className="mt-3 w-full text-sm text-center text-burgundy-old hover:underline"
                   >
                     Voir l'album →
                   </button>
@@ -242,7 +242,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-deep-charcoal/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-deep-charcoal/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-ivory dark:bg-deep-charcoal max-w-md w-full rounded-xl shadow-2xl">
             {/* Header */}
             <div className="p-6 border-b border-silver-mist/30">
@@ -262,7 +262,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Ex: Cérémonie, Réception..."
-                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] dark:bg-deep-charcoal/50 dark:text-ivory"
+                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old dark:bg-deep-charcoal/50 dark:text-ivory"
                 />
               </div>
 
@@ -275,7 +275,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Décrivez cet album..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] dark:bg-deep-charcoal/50 dark:text-ivory"
+                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old dark:bg-deep-charcoal/50 dark:text-ivory"
                 />
               </div>
 
@@ -334,7 +334,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
 
       {/* Edit Modal */}
       {showEditModal && selectedAlbum && (
-        <div className="fixed inset-0 bg-deep-charcoal/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-deep-charcoal/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-ivory dark:bg-deep-charcoal max-w-md w-full rounded-xl shadow-2xl">
             {/* Header */}
             <div className="p-6 border-b border-silver-mist/30">
@@ -354,7 +354,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Ex: Cérémonie, Réception..."
-                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] dark:bg-deep-charcoal/50 dark:text-ivory"
+                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old dark:bg-deep-charcoal/50 dark:text-ivory"
                 />
               </div>
 
@@ -367,7 +367,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Décrivez cet album..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] dark:bg-deep-charcoal/50 dark:text-ivory"
+                  className="w-full px-4 py-2 border border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old dark:bg-deep-charcoal/50 dark:text-ivory"
                 />
               </div>
 

@@ -53,14 +53,14 @@ export function GuestbookContainer({ weddingId, demoMode = false }: GuestbookCon
 
       {/* Decorative Divider */}
       <div className="flex items-center justify-center gap-4">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#ae1725]/20 to-transparent"></div>
-        <div className="text-[#ae1725]/40 text-2xl">❧</div>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#ae1725]/20 to-transparent"></div>
+        <div className="flex-1 h-px bg-linear-to-r from-transparent via-burgundy-old/20 to-transparent"></div>
+        <div className="text-burgundy-old/40 text-2xl">❧</div>
+        <div className="flex-1 h-px bg-linear-to-r from-transparent via-burgundy-old/20 to-transparent"></div>
       </div>
 
       {/* Messages Section Header */}
       <div className="text-center">
-        <span className="text-[#ae1725]/70 tracking-[0.2em] uppercase text-xs font-sans font-medium">
+        <span className="text-burgundy-old/70 tracking-[0.2em] uppercase text-xs font-sans font-medium">
           {loading ? '...' : `${messages.length} message${messages.length > 1 ? 's' : ''}`} de vœux
         </span>
         <h2 className="font-serif text-2xl sm:text-3xl font-light text-charcoal mt-2">
@@ -71,7 +71,7 @@ export function GuestbookContainer({ weddingId, demoMode = false }: GuestbookCon
       {/* Loading State */}
       {loading ? (
         <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 mx-auto mb-4 text-[#ae1725] animate-spin" />
+          <Loader2 className="w-8 h-8 mx-auto mb-4 text-burgundy-old animate-spin" />
           <p className="text-charcoal/60 font-light">Chargement des messages...</p>
         </div>
       ) : (

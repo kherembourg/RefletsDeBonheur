@@ -111,7 +111,7 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 text-[#ae1725] animate-spin" />
+        <Loader2 className="w-6 h-6 text-burgundy-old animate-spin" />
         <span className="ml-2 text-charcoal/60 font-light">Chargement...</span>
       </div>
     );
@@ -169,7 +169,7 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
       {subscription.status === 'trial' && !subscription.canUploadToCloud && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-3">
-            <CloudOff className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <CloudOff className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-amber-800">Mode essai gratuit</p>
               <p className="text-sm text-amber-700 mt-1">
@@ -228,7 +228,7 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
           <button
             onClick={handleUpgrade}
             disabled={checkoutLoading || demoMode}
-            className="w-full flex items-center justify-center gap-2 bg-[#ae1725] hover:bg-[#c92a38] text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 bg-burgundy-old hover:bg-[#c92a38] text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {checkoutLoading ? (
               <>

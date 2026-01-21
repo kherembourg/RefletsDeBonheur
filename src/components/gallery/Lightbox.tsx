@@ -173,7 +173,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
         )}
 
         {/* Action buttons bar */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-deep-charcoal/90 to-transparent p-6 rounded-b-lg">
+        <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-deep-charcoal/90 to-transparent p-6 rounded-b-lg">
           <div className="flex items-center justify-between text-ivory mb-4">
             <div className="flex-1">
               <p className="font-semibold text-lg mb-1">{currentItem.author}</p>
@@ -187,7 +187,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
                 <>
                   <button
                     onClick={() => setIsZoomed(!isZoomed)}
-                    className="p-2 bg-deep-charcoal/80 hover:bg-[#ae1725] hover:text-white rounded-lg transition-all duration-200"
+                    className="p-2 bg-deep-charcoal/80 hover:bg-burgundy-old hover:text-white rounded-lg transition-all duration-200"
                     aria-label={isZoomed ? 'Dézoomer' : 'Zoomer'}
                     title={isZoomed ? 'Dézoomer' : 'Zoomer'}
                   >
@@ -197,7 +197,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
               )}
               <button
                 onClick={handleDownload}
-                className="p-2 bg-deep-charcoal/80 hover:bg-[#ae1725] hover:text-white rounded-lg transition-all duration-200"
+                className="p-2 bg-deep-charcoal/80 hover:bg-burgundy-old hover:text-white rounded-lg transition-all duration-200"
                 aria-label="Télécharger"
                 title="Télécharger"
               >

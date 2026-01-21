@@ -61,7 +61,7 @@ export function WeddingTimeline({ timeline, primaryColor }: WeddingTimelineProps
                       isEven ? 'sm:pr-8 sm:text-right' : 'sm:pl-8 sm:text-left'
                     }`}
                   >
-                    <div className="bg-white dark:bg-deep-charcoal/50 rounded-xl p-5 shadow-sm border border-silver-mist/20 hover:shadow-md transition-shadow">
+                    <div className="bg-white dark:bg-deep-charcoal/50 rounded-xl p-5 shadow-xs border border-silver-mist/20 hover:shadow-md transition-shadow">
                       <div
                         className={`flex items-center gap-3 mb-2 ${
                           isEven ? 'sm:justify-end' : 'sm:justify-start'

@@ -230,8 +230,8 @@ describe('MessageList Component', () => {
         />
       );
 
-      // Cards should have gradient backgrounds
-      const gradientCards = container.querySelectorAll('[class*="bg-gradient"]');
+      // Cards should have gradient backgrounds (bg-linear-to-br in Tailwind v4)
+      const gradientCards = container.querySelectorAll('[class*="bg-linear"]');
       expect(gradientCards.length).toBeGreaterThan(0);
     });
   });

@@ -42,7 +42,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2 text-[#ae1725]">
+      <div className="flex items-center gap-2 text-burgundy-old">
         <BarChart3 size={24} />
         <h2 className="text-xl font-bold font-serif text-deep-charcoal dark:text-ivory">
           Statistiques Avancées
@@ -52,7 +52,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
       {/* Quick Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-ivory dark:bg-deep-charcoal/50 p-4 rounded-lg border border-silver-mist/30 text-center">
-          <div className="text-2xl font-bold text-[#ae1725]">
+          <div className="text-2xl font-bold text-burgundy-old">
             {stats.uniqueUploaders}
           </div>
           <div className="text-xs text-warm-taupe dark:text-silver-mist">
@@ -61,7 +61,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
         </div>
 
         <div className="bg-ivory dark:bg-deep-charcoal/50 p-4 rounded-lg border border-silver-mist/30 text-center">
-          <div className="text-2xl font-bold text-[#ae1725]">
+          <div className="text-2xl font-bold text-burgundy-old">
             {stats.totalReactions}
           </div>
           <div className="text-xs text-warm-taupe dark:text-silver-mist">
@@ -70,7 +70,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
         </div>
 
         <div className="bg-ivory dark:bg-deep-charcoal/50 p-4 rounded-lg border border-silver-mist/30 text-center">
-          <div className="text-2xl font-bold text-[#ae1725]">
+          <div className="text-2xl font-bold text-burgundy-old">
             {stats.peakUploadDay}
           </div>
           <div className="text-xs text-warm-taupe dark:text-silver-mist">
@@ -79,7 +79,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
         </div>
 
         <div className="bg-ivory dark:bg-deep-charcoal/50 p-4 rounded-lg border border-silver-mist/30 text-center">
-          <div className="text-2xl font-bold text-[#ae1725]">
+          <div className="text-2xl font-bold text-burgundy-old">
             {stats.peakUploadHour}
           </div>
           <div className="text-xs text-warm-taupe dark:text-silver-mist">
@@ -97,7 +97,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
             className="w-full flex items-center justify-between p-4 hover:bg-pearl-white dark:hover:bg-deep-charcoal/70 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <TrendingUp size={20} className="text-[#ae1725]" />
+              <TrendingUp size={20} className="text-burgundy-old" />
               <h3 className="font-semibold text-deep-charcoal dark:text-ivory">
                 Timeline des Uploads
               </h3>
@@ -123,7 +123,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
             className="w-full flex items-center justify-between p-4 hover:bg-pearl-white dark:hover:bg-deep-charcoal/70 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <HardDrive size={20} className="text-[#ae1725]" />
+              <HardDrive size={20} className="text-burgundy-old" />
               <h3 className="font-semibold text-deep-charcoal dark:text-ivory">
                 Stockage & Répartition
               </h3>
@@ -155,7 +155,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
             className="w-full flex items-center justify-between p-4 hover:bg-pearl-white dark:hover:bg-deep-charcoal/70 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <Users size={20} className="text-[#ae1725]" />
+              <Users size={20} className="text-burgundy-old" />
               <h3 className="font-semibold text-deep-charcoal dark:text-ivory">
                 Contributeurs les Plus Actifs
               </h3>
@@ -181,7 +181,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
             className="w-full flex items-center justify-between p-4 hover:bg-pearl-white dark:hover:bg-deep-charcoal/70 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <Heart size={20} className="text-[#ae1725]" />
+              <Heart size={20} className="text-burgundy-old" />
               <h3 className="font-semibold text-deep-charcoal dark:text-ivory">
                 Répartition des Réactions
               </h3>

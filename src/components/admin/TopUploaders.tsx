@@ -29,7 +29,7 @@ export function TopUploaders({ uploaders, limit = 5 }: TopUploadersProps) {
             key={uploader.name}
             className={`relative p-4 rounded-lg border transition-all ${
               isTop
-                ? 'bg-[#ae1725]/10 border-[#ae1725]'
+                ? 'bg-burgundy-old/10 border-burgundy-old'
                 : 'bg-pearl-white dark:bg-deep-charcoal/30 border-silver-mist/30'
             }`}
           >
@@ -38,7 +38,7 @@ export function TopUploaders({ uploaders, limit = 5 }: TopUploadersProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   {medal && <span className="text-xl">{medal}</span>}
-                  <User size={16} className="text-[#ae1725] flex-shrink-0" />
+                  <User size={16} className="text-burgundy-old shrink-0" />
                   <h3 className="font-semibold text-deep-charcoal dark:text-ivory truncate">
                     {uploader.name}
                   </h3>
@@ -60,8 +60,8 @@ export function TopUploaders({ uploaders, limit = 5 }: TopUploadersProps) {
               </div>
 
               {/* Right: Count & percentage */}
-              <div className="text-right flex-shrink-0">
-                <div className="text-2xl font-bold text-[#ae1725]">
+              <div className="text-right shrink-0">
+                <div className="text-2xl font-bold text-burgundy-old">
                   {uploader.totalCount}
                 </div>
                 <div className="text-xs text-warm-taupe dark:text-silver-mist">
@@ -75,7 +75,7 @@ export function TopUploaders({ uploaders, limit = 5 }: TopUploadersProps) {
               <div className="h-1.5 bg-silver-mist/30 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    isTop ? 'bg-[#ae1725]' : 'bg-[#ae1725]/60'
+                    isTop ? 'bg-burgundy-old' : 'bg-burgundy-old/60'
                   }`}
                   style={{ width: `${uploader.percentage}%` }}
                 />

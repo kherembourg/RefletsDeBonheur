@@ -194,7 +194,8 @@ describe('TopUploaders Component', () => {
     it('should highlight first uploader with special styling', () => {
       const { container } = render(<TopUploaders uploaders={mockUploaders} />);
 
-      const firstCard = container.querySelector('[class*="bg-\\[#ae1725\\]/10"]');
+      // First card should have burgundy-old styling
+      const firstCard = container.querySelector('[class*="bg-burgundy-old"]');
       expect(firstCard).toBeInTheDocument();
     });
   });

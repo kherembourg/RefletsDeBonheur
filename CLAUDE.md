@@ -40,6 +40,8 @@ npm run build    # Production build
 npm run preview  # Preview production build
 ```
 
+Always create a todo list when working on complex tasks to track progress and remain on track.
+
 # mgrep - Your Code Search Assistant
 
 **mgrep is your primary tool for exploring the codebase.** It gives you a natural language answer + the relevant source, all in one.

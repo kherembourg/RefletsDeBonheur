@@ -31,7 +31,7 @@ export function LoginForm() {
       <div className="bg-ivory p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-silver-mist">
         {/* Icon */}
         <div className="w-20 h-20 bg-soft-blush rounded-full flex items-center justify-center mx-auto mb-6">
-          <Camera className="text-[#ae1725]" size={40} strokeWidth={2} />
+          <Camera className="text-burgundy-old" size={40} strokeWidth={2} />
         </div>
 
         {/* Title */}
@@ -50,7 +50,7 @@ export function LoginForm() {
               placeholder="Code d'accès"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-all text-center text-lg tracking-widest uppercase placeholder:normal-case placeholder:tracking-normal bg-pearl-white"
+              className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all text-center text-lg tracking-widest uppercase placeholder:normal-case placeholder:tracking-normal bg-pearl-white"
               disabled={loading}
               required
             />
@@ -84,13 +84,13 @@ export function LoginForm() {
           <div className="flex gap-2 justify-center">
             <button
               onClick={() => setCode('MARIAGE2026')}
-              className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded text-xs transition-colors"
+              className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded-sm text-xs transition-colors"
             >
               MARIAGE2026
             </button>
             <button
               onClick={() => setCode('ADMIN123')}
-              className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded text-xs transition-colors"
+              className="font-mono bg-soft-blush/50 hover:bg-soft-blush px-3 py-1 rounded-sm text-xs transition-colors"
             >
               ADMIN123
             </button>

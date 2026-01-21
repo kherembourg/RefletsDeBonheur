@@ -37,7 +37,7 @@ export function AIAssistant({ onGenerate }: AIAssistantProps) {
         <select
           value={relation}
           onChange={(e) => setRelation(e.target.value as Relation)}
-          className="p-1.5 rounded border-violet-200 text-xs bg-ivory focus:ring-2 focus:ring-violet-400 focus:outline-none"
+          className="p-1.5 rounded-sm border-violet-200 text-xs bg-ivory focus:ring-2 focus:ring-violet-400 focus:outline-hidden"
         >
           <option>Amis</option>
           <option>Famille</option>
@@ -47,7 +47,7 @@ export function AIAssistant({ onGenerate }: AIAssistantProps) {
         <select
           value={tone}
           onChange={(e) => setTone(e.target.value as Tone)}
-          className="p-1.5 rounded border-violet-200 text-xs bg-ivory focus:ring-2 focus:ring-violet-400 focus:outline-none"
+          className="p-1.5 rounded-sm border-violet-200 text-xs bg-ivory focus:ring-2 focus:ring-violet-400 focus:outline-hidden"
         >
           <option>Joyeux</option>
           <option>Émouvant</option>
@@ -59,7 +59,7 @@ export function AIAssistant({ onGenerate }: AIAssistantProps) {
       <button
         onClick={handleGenerate}
         disabled={generating}
-        className="w-full bg-violet-500 hover:bg-violet-600 text-ivory py-1.5 rounded text-xs font-medium flex justify-center items-center gap-1 transition-colors disabled:opacity-50"
+        className="w-full bg-violet-500 hover:bg-violet-600 text-ivory py-1.5 rounded-sm text-xs font-medium flex justify-center items-center gap-1 transition-colors disabled:opacity-50"
       >
         {generating ? (
           <>

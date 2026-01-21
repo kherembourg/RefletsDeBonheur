@@ -186,9 +186,9 @@ describe('ReactionBreakdown Component', () => {
 
       // Check that bars have varying opacity classes
       const bars = container.querySelectorAll('.h-full.rounded-full');
-      expect(bars[0]).toHaveClass('bg-[#ae1725]');
-      expect(bars[1]).toHaveClass('bg-[#ae1725]/80');
-      expect(bars[2]).toHaveClass('bg-[#ae1725]/60');
+      expect(bars[0]).toHaveClass('bg-burgundy-old');
+      expect(bars[1]).toHaveClass('bg-burgundy-old/80');
+      expect(bars[2]).toHaveClass('bg-burgundy-old/60');
     });
   });
 });

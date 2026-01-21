@@ -150,7 +150,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
           placeholder="Ex: Sophie"
-          className="w-full px-3 py-2 border-2 border-silver-mist rounded-lg focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] focus:outline-none bg-pearl-white transition-colors"
+          className="w-full px-3 py-2 border-2 border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old focus:outline-hidden bg-pearl-white transition-colors"
         />
         <p className="text-xs text-warm-taupe mt-1">
           Sera mémorisé pour vos prochains envois.
@@ -201,7 +201,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
                       <CheckCircle2 size={14} className="text-green-500" />
                     )}
                     {item.uploadStatus === 'uploading' && (
-                      <Loader2 size={14} className="text-[#ae1725] animate-spin" />
+                      <Loader2 size={14} className="text-burgundy-old animate-spin" />
                     )}
                     {item.uploadStatus === 'error' && (
                       <XCircle size={14} className="text-red-500" />
@@ -227,7 +227,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
                           ? 'bg-green-500'
                           : item.uploadStatus === 'error'
                           ? 'bg-red-500'
-                          : 'bg-[#ae1725]'
+                          : 'bg-burgundy-old'
                       }`}
                       style={{ width: `${item.uploadProgress}%` }}
                     />
@@ -242,12 +242,12 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
                       value={item.caption}
                       onChange={(e) => updateCaption(item.id, e.target.value)}
                       placeholder="Légende..."
-                      className="flex-1 px-2 py-1 text-sm border border-silver-mist rounded focus:outline-none focus:ring-1 focus:ring-[#ae1725] bg-ivory"
+                      className="flex-1 px-2 py-1 text-sm border border-silver-mist rounded-sm focus:outline-hidden focus:ring-1 focus:ring-burgundy-old bg-ivory"
                     />
                     <button
                       onClick={() => generateAICaption(item.id)}
                       disabled={generatingFor === item.id}
-                      className="bg-violet-100 text-violet-600 p-1.5 rounded hover:bg-violet-200 transition-colors disabled:opacity-50"
+                      className="bg-violet-100 text-violet-600 p-1.5 rounded-sm hover:bg-violet-200 transition-colors disabled:opacity-50"
                       title="Générer une légende IA"
                     >
                       {generatingFor === item.id ? (
@@ -278,7 +278,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
                   </div>
                   <div className="w-full bg-silver-mist/30 rounded-full h-2.5 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#ae1725] to-[#ae1725]/80 transition-all duration-300 rounded-full"
+                      className="h-full bg-linear-to-r from-burgundy-old to-burgundy-old/80 transition-all duration-300 rounded-full"
                       style={{ width: `${overallProgress}%` }}
                     />
                   </div>

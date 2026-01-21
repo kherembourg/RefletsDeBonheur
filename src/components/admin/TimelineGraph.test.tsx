@@ -67,10 +67,10 @@ describe('TimelineGraph Component', () => {
       const bars = container.querySelectorAll('.w-full.rounded-t');
 
       // Third bar (2026-01-15) is today
-      expect(bars[2]).toHaveClass('bg-[#ae1725]');
+      expect(bars[2]).toHaveClass('bg-burgundy-old');
       // Other bars should have different opacity
-      expect(bars[0]).toHaveClass('bg-[#ae1725]/60');
-      expect(bars[1]).toHaveClass('bg-[#ae1725]/60');
+      expect(bars[0]).toHaveClass('bg-burgundy-old/60');
+      expect(bars[1]).toHaveClass('bg-burgundy-old/60');
     });
   });
 

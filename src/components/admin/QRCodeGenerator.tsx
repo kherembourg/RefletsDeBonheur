@@ -137,10 +137,10 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
   };
 
   return (
-    <div className="bg-ivory rounded-xl border border-silver-mist p-6 shadow-sm">
+    <div className="bg-ivory rounded-xl border border-silver-mist p-6 shadow-xs">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-[#ae1725]/20 rounded-lg">
-          <QrCode className="text-[#ae1725]" size={24} />
+        <div className="p-3 bg-burgundy-old/20 rounded-lg">
+          <QrCode className="text-burgundy-old" size={24} />
         </div>
         <div>
           <h3 className="font-serif font-bold text-deep-charcoal text-lg">
@@ -153,7 +153,7 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
       </div>
 
       {/* QR Code Preview */}
-      <div className="bg-white rounded-xl p-6 mb-6 border-2 border-[#ae1725]/30 text-center">
+      <div className="bg-white rounded-xl p-6 mb-6 border-2 border-burgundy-old/30 text-center">
         <img
           src={qrCodeUrl}
           alt="QR Code"
@@ -178,7 +178,7 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
           <select
             value={size}
             onChange={(e) => setSize(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-colors"
+            className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors"
           >
             <option value={200}>Petit (200x200)</option>
             <option value={300}>Moyen (300x300)</option>
@@ -195,7 +195,7 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
           <button
             onClick={() => setIncludeCode(!includeCode)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              includeCode ? 'bg-[#ae1725]' : 'bg-silver-mist'
+              includeCode ? 'bg-burgundy-old' : 'bg-silver-mist'
             }`}
           >
             <span
@@ -215,7 +215,7 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
               type="text"
               value={accessCode}
               onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-[#ae1725] focus:border-[#ae1725] transition-colors font-mono"
+              className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors font-mono"
               placeholder="MARIAGE2026"
             />
           </div>
@@ -226,7 +226,7 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button
           onClick={handleDownload}
-          className="flex items-center justify-center gap-2 bg-[#ae1725] hover:bg-[#c92a38] text-white px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-sm"
+          className="flex items-center justify-center gap-2 bg-burgundy-old hover:bg-[#c92a38] text-white px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
         >
           <Download size={18} />
           Télécharger
@@ -234,7 +234,7 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
 
         <button
           onClick={handlePrint}
-          className="flex items-center justify-center gap-2 bg-deep-charcoal hover:bg-deep-charcoal/90 text-ivory px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-sm"
+          className="flex items-center justify-center gap-2 bg-deep-charcoal hover:bg-deep-charcoal/90 text-ivory px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
         >
           <Printer size={18} />
           Imprimer
@@ -242,7 +242,7 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
 
         <button
           onClick={handleCopyUrl}
-          className="flex items-center justify-center gap-2 bg-ivory hover:bg-silver-mist/30 text-deep-charcoal border border-silver-mist px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-sm"
+          className="flex items-center justify-center gap-2 bg-ivory hover:bg-silver-mist/30 text-deep-charcoal border border-silver-mist px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
         >
           <Share2 size={18} />
           Copier URL

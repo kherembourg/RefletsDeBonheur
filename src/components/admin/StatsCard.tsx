@@ -8,13 +8,13 @@ interface StatsCardProps {
 
 export function StatsCard({ label, value, icon }: StatsCardProps) {
   return (
-    <div className="p-4 border-2 border-silver-mist rounded-lg text-center bg-ivory hover:border-[#ae1725] transition-colors">
+    <div className="p-4 border-2 border-silver-mist rounded-lg text-center bg-ivory hover:border-burgundy-old transition-colors">
       {icon && (
-        <div className="flex justify-center mb-2 text-[#ae1725]">
+        <div className="flex justify-center mb-2 text-burgundy-old">
           {icon}
         </div>
       )}
-      <p className="text-3xl font-bold text-[#ae1725]">
+      <p className="text-3xl font-bold text-burgundy-old">
         {value}
       </p>
       <p className="text-xs text-warm-taupe uppercase tracking-wide mt-1">

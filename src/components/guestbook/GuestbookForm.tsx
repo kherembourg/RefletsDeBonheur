@@ -38,14 +38,14 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
   return (
     <div className="relative">
       {/* Decorative frame */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#ae1725]/5 to-[#ae1725]/10 -m-2 sm:-m-3"></div>
+      <div className="absolute inset-0 bg-linear-to-br from-burgundy-old/5 to-burgundy-old/10 -m-2 sm:-m-3"></div>
 
       {/* Form container */}
       <div className="relative bg-white shadow-lg p-6 sm:p-8">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-14 h-14 mx-auto mb-4 border border-[#ae1725]/20 flex items-center justify-center">
-            <PenLine className="text-[#ae1725]" size={24} />
+          <div className="w-14 h-14 mx-auto mb-4 border border-burgundy-old/20 flex items-center justify-center">
+            <PenLine className="text-burgundy-old" size={24} />
           </div>
           <h3 className="font-serif text-xl sm:text-2xl text-charcoal font-light">
             Laissez un mot
@@ -65,7 +65,7 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
               type="text"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
-              className="w-full px-4 py-3 border border-charcoal/10 focus:border-[#ae1725]/50 focus:ring-1 focus:ring-[#ae1725]/20 focus:outline-none bg-cream/30 transition-all duration-300 font-light"
+              className="w-full px-4 py-3 border border-charcoal/10 focus:border-burgundy-old/50 focus:ring-1 focus:ring-burgundy-old/20 focus:outline-hidden bg-cream/30 transition-all duration-300 font-light"
               placeholder="Ex: Lucas"
               required
             />
@@ -98,7 +98,7 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
               rows={5}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-4 py-3 border border-charcoal/10 focus:border-[#ae1725]/50 focus:ring-1 focus:ring-[#ae1725]/20 focus:outline-none resize-none bg-cream/30 transition-all duration-300 font-light"
+              className="w-full px-4 py-3 border border-charcoal/10 focus:border-burgundy-old/50 focus:ring-1 focus:ring-burgundy-old/20 focus:outline-hidden resize-none bg-cream/30 transition-all duration-300 font-light"
               placeholder="Félicitations pour ce jour merveilleux..."
               required
             />
@@ -107,7 +107,7 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-[#ae1725] hover:bg-[#c92a38] text-white font-medium py-3.5 transition-all duration-300 flex items-center justify-center gap-2 tracking-wide text-sm uppercase"
+            className="w-full bg-burgundy-old hover:bg-[#c92a38] text-white font-medium py-3.5 transition-all duration-300 flex items-center justify-center gap-2 tracking-wide text-sm uppercase"
           >
             <Send size={16} />
             Envoyer mon message
@@ -116,9 +116,9 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
 
         {/* Decorative bottom element */}
         <div className="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-charcoal/5">
-          <div className="w-8 h-px bg-[#ae1725]/20"></div>
-          <span className="text-[#ae1725]/30 text-sm">❦</span>
-          <div className="w-8 h-px bg-[#ae1725]/20"></div>
+          <div className="w-8 h-px bg-burgundy-old/20"></div>
+          <span className="text-burgundy-old/30 text-sm">❦</span>
+          <div className="w-8 h-px bg-burgundy-old/20"></div>
         </div>
       </div>
     </div>

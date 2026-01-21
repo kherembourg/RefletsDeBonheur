@@ -30,8 +30,8 @@ export function ThemeSelector({ currentTheme, onThemeChange, weddingSlug }: Them
     <div className="bg-white dark:bg-deep-charcoal/50 rounded-xl p-6 border border-silver-mist/20">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-[#ae1725]/10 flex items-center justify-center">
-          <Palette className="w-5 h-5 text-[#ae1725]" />
+        <div className="w-10 h-10 rounded-full bg-burgundy-old/10 flex items-center justify-center">
+          <Palette className="w-5 h-5 text-burgundy-old" />
         </div>
         <div>
           <h3 className="text-lg font-semibold text-deep-charcoal dark:text-ivory">
@@ -64,7 +64,7 @@ export function ThemeSelector({ currentTheme, onThemeChange, weddingSlug }: Them
             href={`/${weddingSlug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-warm-taupe hover:text-[#ae1725] transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-warm-taupe hover:text-burgundy-old transition-colors"
           >
             <Eye className="w-4 h-4" />
             Voir le site
@@ -77,7 +77,7 @@ export function ThemeSelector({ currentTheme, onThemeChange, weddingSlug }: Them
           disabled={!hasChanges || isSaving}
           className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
             hasChanges
-              ? 'bg-[#ae1725] text-white hover:bg-[#c92a38]'
+              ? 'bg-burgundy-old text-white hover:bg-[#c92a38]'
               : 'bg-silver-mist/30 text-warm-taupe cursor-not-allowed'
           }`}
         >
@@ -109,13 +109,13 @@ function ThemeCard({ theme, isSelected, isCurrent, onSelect }: ThemeCardProps) {
       onClick={onSelect}
       className={`relative p-4 rounded-xl border-2 transition-all text-left ${
         isSelected
-          ? 'border-[#ae1725] bg-[#ae1725]/5'
+          ? 'border-burgundy-old bg-burgundy-old/5'
           : 'border-silver-mist/30 hover:border-silver-mist'
       }`}
     >
       {/* Selected Indicator */}
       {isSelected && (
-        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#ae1725] flex items-center justify-center">
+        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-burgundy-old flex items-center justify-center">
           <Check className="w-4 h-4 text-white" />
         </div>
       )}
@@ -137,7 +137,7 @@ function ThemeCard({ theme, isSelected, isCurrent, onSelect }: ThemeCardProps) {
           {/* Header simulation */}
           <div className="flex items-center justify-between mb-2">
             <div
-              className="h-2 w-16 rounded"
+              className="h-2 w-16 rounded-sm"
               style={{ backgroundColor: theme.colors.accent }}
             />
             {theme.layout.navStyle === 'floating' && (
@@ -150,22 +150,22 @@ function ThemeCard({ theme, isSelected, isCurrent, onSelect }: ThemeCardProps) {
           {/* Content simulation */}
           <div className="space-y-1">
             <div
-              className="h-3 w-20 rounded mx-auto"
+              className="h-3 w-20 rounded-sm mx-auto"
               style={{ backgroundColor: theme.colors.text, opacity: 0.2 }}
             />
             <div
-              className="h-2 w-14 rounded mx-auto"
+              className="h-2 w-14 rounded-sm mx-auto"
               style={{ backgroundColor: theme.colors.accent, opacity: 0.5 }}
             />
           </div>
           {/* Cards simulation */}
           <div className="flex gap-1 mt-2 justify-center">
             <div
-              className="h-6 w-8 rounded"
+              className="h-6 w-8 rounded-sm"
               style={{ backgroundColor: theme.colors.card, border: `1px solid ${theme.colors.border}` }}
             />
             <div
-              className="h-6 w-8 rounded"
+              className="h-6 w-8 rounded-sm"
               style={{ backgroundColor: theme.colors.card, border: `1px solid ${theme.colors.border}` }}
             />
           </div>

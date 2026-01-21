@@ -192,7 +192,7 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       {/* Elegant Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 pb-6 border-b border-charcoal/10">
         <div>
-          <p className="text-[#ae1725]/70 tracking-[0.2em] uppercase text-xs font-sans font-medium mb-2">
+          <p className="text-burgundy-old/70 tracking-[0.2em] uppercase text-xs font-sans font-medium mb-2">
             Collection
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl font-light text-charcoal">
@@ -239,7 +239,7 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
               onClick={toggleSelectionMode}
               className={`px-4 py-2.5 flex items-center gap-2 transition-all duration-300 font-medium text-sm tracking-wide ${
                 selectionMode
-                  ? 'bg-[#ae1725] text-white'
+                  ? 'bg-burgundy-old text-white'
                   : 'bg-white border border-charcoal/10 text-charcoal/70 hover:border-charcoal/30 hover:text-charcoal'
               }`}
               title={selectionMode ? 'Annuler la sélection' : 'Sélectionner des photos'}
@@ -265,7 +265,7 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
           {!selectionMode && (settings.allowUploads ? (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="px-4 py-2.5 bg-[#ae1725] text-white flex items-center gap-2 transition-all duration-300 hover:bg-[#c92a38] font-medium text-sm tracking-wide"
+              className="px-4 py-2.5 bg-burgundy-old text-white flex items-center gap-2 transition-all duration-300 hover:bg-[#c92a38] font-medium text-sm tracking-wide"
             >
               <Upload size={16} />
               <span className="hidden sm:inline">Partager</span>
@@ -301,7 +301,7 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       {/* Loading State */}
       {loading ? (
         <div className="text-center py-24">
-          <Loader2 className="w-8 h-8 mx-auto mb-4 text-[#ae1725] animate-spin" />
+          <Loader2 className="w-8 h-8 mx-auto mb-4 text-burgundy-old animate-spin" />
           <p className="text-charcoal/60 font-light">Chargement des photos...</p>
         </div>
       ) : media.length === 0 ? (
@@ -309,13 +309,13 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
         <div className="text-center py-16 sm:py-24 px-4">
           {/* Decorative illustration */}
           <div className="relative w-32 h-32 mx-auto mb-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#ae1725]/5 to-[#ae1725]/10 rounded-full"></div>
+            <div className="absolute inset-0 bg-linear-to-br from-burgundy-old/5 to-burgundy-old/10 rounded-full"></div>
             <div className="absolute inset-4 bg-white rounded-full shadow-inner flex items-center justify-center">
-              <ImageIcon className="text-[#ae1725]/40" size={36} />
+              <ImageIcon className="text-burgundy-old/40" size={36} />
             </div>
             {/* Decorative sparkles */}
-            <div className="absolute -top-2 -right-2 w-6 h-6 text-[#ae1725]/30">✨</div>
-            <div className="absolute -bottom-1 -left-3 w-4 h-4 text-[#ae1725]/20">✨</div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 text-burgundy-old/30">✨</div>
+            <div className="absolute -bottom-1 -left-3 w-4 h-4 text-burgundy-old/20">✨</div>
           </div>
 
           <h3 className="font-serif text-2xl sm:text-3xl text-charcoal mb-3">
@@ -329,7 +329,7 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
           {settings.allowUploads ? (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-[#ae1725] text-white rounded-none hover:bg-[#c92a38] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-burgundy-old text-white rounded-none hover:bg-[#c92a38] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <Upload size={20} />
               <span className="font-medium tracking-wide">Partager vos premiers souvenirs</span>
@@ -343,9 +343,9 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
 
           {/* Decorative bottom element */}
           <div className="flex items-center justify-center gap-4 mt-12">
-            <div className="w-16 h-px bg-gradient-to-r from-transparent to-[#ae1725]/20"></div>
-            <div className="text-[#ae1725]/30 text-lg">❧</div>
-            <div className="w-16 h-px bg-gradient-to-r from-[#ae1725]/20 to-transparent"></div>
+            <div className="w-16 h-px bg-linear-to-r from-transparent to-burgundy-old/20"></div>
+            <div className="text-burgundy-old/30 text-lg">❧</div>
+            <div className="w-16 h-px bg-linear-to-r from-burgundy-old/20 to-transparent"></div>
           </div>
         </div>
       ) : filteredMedia.length === 0 ? (

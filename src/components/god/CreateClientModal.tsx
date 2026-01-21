@@ -93,7 +93,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
       <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
@@ -111,7 +111,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
           {/* Error Alert */}
           {error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
-              <AlertCircle className="text-red-400 flex-shrink-0" size={20} />
+              <AlertCircle className="text-red-400 shrink-0" size={20} />
               <p className="text-sm text-red-300">{error}</p>
             </div>
           )}
@@ -136,7 +136,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
                     value={formData.wedding_name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
 
@@ -155,7 +155,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
                       value={formData.couple_names}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -173,7 +173,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
                       type="date"
                       value={formData.wedding_date}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -194,7 +194,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
                       onChange={handleChange}
                       required
                       pattern="[a-z0-9-]+"
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     />
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
@@ -225,7 +225,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
                       placeholder="marie.thomas"
                       value={formData.username}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
                         onChange={handleChange}
                         required
                         minLength={8}
-                        className="w-full pl-10 pr-12 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        className="w-full pl-10 pr-12 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                       />
                       <button
                         type="button"
@@ -291,7 +291,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
             {/* Info Box */}
             <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
               <div className="flex items-start gap-3">
-                <CheckCircle className="text-amber-400 flex-shrink-0 mt-0.5" size={18} />
+                <CheckCircle className="text-amber-400 shrink-0 mt-0.5" size={18} />
                 <div className="text-sm text-amber-200">
                   <p className="font-medium mb-1">Informations importantes</p>
                   <ul className="text-amber-300/80 space-y-1">
@@ -317,7 +317,7 @@ export function CreateClientModal({ onClose, onCreated }: CreateClientModalProps
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-2.5 bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>

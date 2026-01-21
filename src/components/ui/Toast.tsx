@@ -28,12 +28,12 @@ export function Toast({ type, message, onClose, duration = 3000 }: ToastProps) {
   const styles = {
     success: 'bg-sage-green text-ivory border-sage-green',
     error: 'bg-red-500 text-ivory border-red-500',
-    info: 'bg-[#ae1725] text-deep-charcoal border-[#ae1725]'
+    info: 'bg-burgundy-old text-deep-charcoal border-burgundy-old'
   };
 
   return (
     <div
-      className={`fixed top-4 right-4 z-[100] flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-2 ${styles[type]} animate-in slide-in-from-top-5 fade-in duration-300`}
+      className={`fixed top-4 right-4 z-100 flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-2 ${styles[type]} animate-in slide-in-from-top-5 fade-in duration-300`}
       role="alert"
     >
       {icons[type]}

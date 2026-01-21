@@ -28,7 +28,7 @@ export function StorageUsage({
     <div className="space-y-4">
       {/* Total Storage */}
       <div className="text-center p-6 bg-pearl-white dark:bg-deep-charcoal/30 rounded-lg">
-        <HardDrive className="w-12 h-12 text-[#ae1725] mx-auto mb-2" />
+        <HardDrive className="w-12 h-12 text-burgundy-old mx-auto mb-2" />
         <div className="text-4xl font-bold text-deep-charcoal dark:text-ivory">
           {displaySize}
         </div>
@@ -43,7 +43,7 @@ export function StorageUsage({
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm">
-              <Image size={16} className="text-[#ae1725]" />
+              <Image size={16} className="text-burgundy-old" />
               <span className="font-medium text-deep-charcoal dark:text-ivory">
                 Photos
               </span>
@@ -54,7 +54,7 @@ export function StorageUsage({
           </div>
           <div className="h-2 bg-silver-mist/30 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#ae1725] rounded-full transition-all duration-500"
+              className="h-full bg-burgundy-old rounded-full transition-all duration-500"
               style={{ width: `${photoPercentage}%` }}
             />
           </div>
@@ -64,7 +64,7 @@ export function StorageUsage({
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm">
-              <Video size={16} className="text-[#ae1725]" />
+              <Video size={16} className="text-burgundy-old" />
               <span className="font-medium text-deep-charcoal dark:text-ivory">
                 Vidéos
               </span>
@@ -75,7 +75,7 @@ export function StorageUsage({
           </div>
           <div className="h-2 bg-silver-mist/30 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#ae1725]/60 rounded-full transition-all duration-500"
+              className="h-full bg-burgundy-old/60 rounded-full transition-all duration-500"
               style={{ width: `${videoPercentage}%` }}
             />
           </div>
