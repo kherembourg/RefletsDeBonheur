@@ -17,7 +17,33 @@ The application is fully functional with:
 - Supabase Auth + profiles power client accounts
 - Client wedding pages (`/[slug]/*`) connect to Supabase when configured
 
-**Last Updated:** January 20, 2026
+**Last Updated:** January 21, 2026
+
+---
+
+## Architecture Documentation
+
+**IMPORTANT**: Detailed architecture documentation is available in `docs/architecture/`.
+
+**Always update this documentation when making architectural changes.**
+
+| Document | Description |
+|----------|-------------|
+| [README](docs/architecture/README.md) | Architecture overview and key decisions |
+| [Pages](docs/architecture/pages.md) | URL structure and routing |
+| [Components](docs/architecture/components.md) | Component hierarchy and patterns |
+| [Data Flow](docs/architecture/data-flow.md) | DataService, state, and persistence |
+| [Authentication](docs/architecture/authentication.md) | Auth flows for all user types |
+| [Website Editor](docs/architecture/website-editor.md) | Visual customization system |
+
+### When to Update Architecture Docs
+
+Update the relevant documentation when:
+- Adding new page routes or changing URL structure
+- Creating new components or changing component hierarchy
+- Modifying DataService or data flow patterns
+- Changing authentication flows
+- Updating the website editor system
 
 ---
 
@@ -379,8 +405,17 @@ reflets-de-bonheur/
 - **Upload Toggle**: Enable/disable guest uploads
 - **Content Moderation**: Delete inappropriate content
 
-### 6. Website Editor (NEW)
-- **Visual Editor**: Split-screen interface with real-time preview
+### 6. Website Editor
+- **Modern Dark Theme UI**: Professional editor interface inspired by Squarespace/Webflow
+  - Dark color scheme (#0f0f0f, #1a1a1a, #2a2a2a)
+  - Collapsible sidebar (340px) on left with options
+  - Large preview panel on right
+  - Top toolbar with controls
+- **Layout Components**:
+  - **Sidebar Tabs**: Thèmes, Couleurs, Contenu, Images
+  - **Device Preview**: Desktop/Tablet/Mobile toggles
+  - **Zoom Controls**: 100% zoom with +/- buttons
+  - **Publish Button**: Save and publish changes
 - **Theme Selection**: Choose between 6 predefined themes:
   - **Classic** - Elegant burgundy with timeless design
   - **Luxe** - Minimalist gold accents and sophistication
@@ -388,13 +423,17 @@ reflets-de-bonheur/
   - **Cobalt** - Bold electric blue with modern aesthetics
   - **Éditorial** - Magazine-style with high contrast and bold typography
   - **French Minimalist** - Ultra-clean Parisian elegance (Herembourg-inspired)
-- **Color Customization**: Override any theme color with custom palette
-- **Content Editor**: Edit all text content (hero, welcome, gallery, etc.)
-- **Image Management**: Upload/manage custom images (hero, logo, backgrounds)
-- **Live Preview**: Changes reflect instantly in preview pane
-- **Auto-save Detection**: Visual indicator for unsaved changes
+- **Color Customization**: Collapsible color groups (Primary, Backgrounds, Text, Other)
+- **Content Editor**: Section tabs (Hero, Bienvenue, À propos, Galerie, etc.) with character counts
+- **Image Management**: 6 customizable images (Hero, Background, Couple Photo, Gallery Placeholder, Logo, Favicon)
+- **Live Preview**: Preview panel shows current wedding page (⚠️ see known issues)
+- **Responsive Preview**: Test designs at desktop (100%), tablet (768px), mobile (375px) widths
 - Access: `/admin/website-editor` from admin dashboard
 - **Documentation**: See `WEBSITE_EDITOR.md` for full details
+- **Known Issues**:
+  - ⚠️ Live preview does not update in real-time when customizations are changed
+  - Customizations are tracked in state but not passed to iframe preview
+  - Workaround: Save changes and refresh to see updates
 
 ### 7. Wedding Microsites
 - Dynamic wedding pages at `/[slug]/`
@@ -661,10 +700,11 @@ God access tokens (for impersonation) have a **24-hour TTL** and are automatical
 2. ~~**R2 Media Storage**: Cloudflare R2 for file uploads~~ ✅ DONE
 3. ~~**Testing & God Token Fix**: Auth tests and 24h TTL~~ ✅ DONE
 4. ~~**Website Editor**: Visual customization for themes, colors, content, images~~ ✅ DONE
-5. **Increase Test Coverage**: Target 100% for critical paths
-6. **Payment Integration**: Stripe checkout for $199 package
-7. **Email Notifications**: Welcome emails, upload notifications
-8. **Image Processing**: Generate thumbnails and optimize images
+5. **Website Editor Live Preview**: Fix real-time preview updates (colors/content not reflecting)
+6. **Increase Test Coverage**: Target 100% for critical paths
+7. **Payment Integration**: Stripe checkout for $199 package
+8. **Email Notifications**: Welcome emails, upload notifications
+9. **Image Processing**: Generate thumbnails and optimize images
 
 ### Future Enhancements
 1. **Real-time sync**: WebSocket updates for gallery
@@ -700,7 +740,7 @@ Check that the file is in the `content` array in `tailwind.config.mjs`
 
 **Developer**: Kevin
 **Started**: January 2026
-**Last Updated**: January 19, 2026
+**Last Updated**: January 21, 2026
 
 ---
 

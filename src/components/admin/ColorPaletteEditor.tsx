@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Palette, RotateCcw, Check, AlertCircle } from 'lucide-react';
+import { Palette, RotateCcw, Check, AlertCircle, Info } from 'lucide-react';
 import type { CustomPalette } from '../../lib/customization';
 import { isValidHexColor } from '../../lib/customization';
 import { getTheme, type ThemeId } from '../../lib/themes';
@@ -22,45 +22,45 @@ const COLOR_FIELDS: ColorField[] = [
   {
     key: 'primary',
     label: 'Couleur principale',
-    description: 'Utilisée pour les boutons et liens',
+    description: 'Boutons et liens',
     group: 'primary',
   },
   {
     key: 'primaryHover',
     label: 'Survol principal',
-    description: 'Couleur au survol des boutons',
+    description: 'Au survol des boutons',
     group: 'primary',
   },
   {
     key: 'accent',
-    label: 'Couleur d\'accent',
-    description: 'Éléments décoratifs et highlights',
+    label: 'Accent',
+    description: 'Highlights',
     group: 'primary',
   },
   // Background colors
   {
     key: 'background',
     label: 'Arrière-plan',
-    description: 'Fond principal de la page',
+    description: 'Fond principal',
     group: 'background',
   },
   {
     key: 'backgroundAlt',
-    label: 'Arrière-plan alternatif',
+    label: 'Arrière-plan alt.',
     description: 'Sections alternées',
     group: 'background',
   },
   {
     key: 'card',
     label: 'Cartes',
-    description: 'Fond des cartes et panneaux',
+    description: 'Fond des cartes',
     group: 'background',
   },
   // Text colors
   {
     key: 'text',
     label: 'Texte principal',
-    description: 'Couleur du texte par défaut',
+    description: 'Texte par défaut',
     group: 'text',
   },
   {
@@ -72,7 +72,7 @@ const COLOR_FIELDS: ColorField[] = [
   {
     key: 'textMuted',
     label: 'Texte atténué',
-    description: 'Texte désactivé ou d\'aide',
+    description: 'Texte d\'aide',
     group: 'text',
   },
   // Other
@@ -80,12 +80,6 @@ const COLOR_FIELDS: ColorField[] = [
     key: 'border',
     label: 'Bordures',
     description: 'Couleur des bordures',
-    group: 'other',
-  },
-  {
-    key: 'glass',
-    label: 'Effet verre',
-    description: 'Effet glassmorphism',
     group: 'other',
   },
 ];
@@ -99,6 +93,7 @@ export function ColorPaletteEditor({
     customPalette || {}
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [expandedGroup, setExpandedGroup] = useState<string>('primary');
   const theme = getTheme(themeId);
 
   // Handle color change
@@ -121,7 +116,7 @@ export function ColorPaletteEditor({
     if (value && !isValidHexColor(value) && !value.startsWith('rgba')) {
       setErrors((prev) => ({
         ...prev,
-        [key]: 'Format de couleur invalide (utilisez #RRGGBB)',
+        [key]: 'Format invalide',
       }));
     } else {
       setErrors((prev) => {
@@ -160,185 +155,138 @@ export function ColorPaletteEditor({
     other: COLOR_FIELDS.filter((f) => f.group === 'other'),
   };
 
+  const groups = [
+    { id: 'primary', label: 'Couleurs principales', fields: groupedFields.primary },
+    { id: 'background', label: 'Arrière-plans', fields: groupedFields.background },
+    { id: 'text', label: 'Texte', fields: groupedFields.text },
+    { id: 'other', label: 'Autres', fields: groupedFields.other },
+  ];
+
   const hasCustomColors = Object.keys(editingPalette).length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-deep-charcoal flex items-center gap-2">
-            <Palette className="w-5 h-5 text-burgundy" />
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Palette className="w-4 h-4 text-burgundy" />
             Palette de couleurs
           </h3>
           {hasCustomColors && (
             <button
               onClick={handleReset}
-              className="text-sm text-warm-taupe hover:text-burgundy transition-colors flex items-center gap-1"
+              className="text-xs text-gray-500 hover:text-burgundy transition-colors flex items-center gap-1"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Réinitialiser
+              <RotateCcw className="w-3 h-3" />
+              Reset
             </button>
           )}
         </div>
-        <p className="text-sm text-warm-taupe">
-          Personnalisez les couleurs du thème <strong>{theme.name}</strong>
+        <p className="text-xs text-gray-500">
+          Personnalisez les couleurs du thème <span className="text-gray-400">{theme.name}</span>
         </p>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-        <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-        <div className="text-sm text-blue-900">
-          <p className="font-medium mb-1">Astuce</p>
-          <p>
-            Laissez un champ vide pour utiliser la couleur par défaut du thème.
-            Les modifications sont appliquées en temps réel dans l'aperçu.
-          </p>
-        </div>
+      {/* Info Tip */}
+      <div className="flex items-start gap-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+        <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+        <p className="text-xs text-blue-300">
+          Laissez vide pour utiliser la couleur par défaut du thème.
+        </p>
       </div>
 
       {/* Color Groups */}
-      <div className="space-y-6">
-        {/* Primary Colors */}
-        <ColorGroup
-          title="Couleurs principales"
-          fields={groupedFields.primary}
-          editingPalette={editingPalette}
-          errors={errors}
-          onColorChange={handleColorChange}
-          getEffectiveColor={getEffectiveColor}
-          isCustomized={isCustomized}
-        />
-
-        {/* Background Colors */}
-        <ColorGroup
-          title="Arrière-plans"
-          fields={groupedFields.background}
-          editingPalette={editingPalette}
-          errors={errors}
-          onColorChange={handleColorChange}
-          getEffectiveColor={getEffectiveColor}
-          isCustomized={isCustomized}
-        />
-
-        {/* Text Colors */}
-        <ColorGroup
-          title="Couleurs de texte"
-          fields={groupedFields.text}
-          editingPalette={editingPalette}
-          errors={errors}
-          onColorChange={handleColorChange}
-          getEffectiveColor={getEffectiveColor}
-          isCustomized={isCustomized}
-        />
-
-        {/* Other Colors */}
-        <ColorGroup
-          title="Autres"
-          fields={groupedFields.other}
-          editingPalette={editingPalette}
-          errors={errors}
-          onColorChange={handleColorChange}
-          getEffectiveColor={getEffectiveColor}
-          isCustomized={isCustomized}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ============================================
-// COLOR GROUP COMPONENT
-// ============================================
-
-interface ColorGroupProps {
-  title: string;
-  fields: ColorField[];
-  editingPalette: CustomPalette;
-  errors: Record<string, string>;
-  onColorChange: (key: keyof CustomPalette, value: string) => void;
-  getEffectiveColor: (key: keyof CustomPalette) => string;
-  isCustomized: (key: keyof CustomPalette) => boolean;
-}
-
-function ColorGroup({
-  title,
-  fields,
-  editingPalette,
-  errors,
-  onColorChange,
-  getEffectiveColor,
-  isCustomized,
-}: ColorGroupProps) {
-  return (
-    <div>
-      <h4 className="text-sm font-semibold text-deep-charcoal mb-3">{title}</h4>
-      <div className="space-y-3">
-        {fields.map((field) => {
-          const effectiveColor = getEffectiveColor(field.key);
-          const customized = isCustomized(field.key);
-          const error = errors[field.key];
+      <div className="space-y-2">
+        {groups.map((group) => {
+          const isExpanded = expandedGroup === group.id;
+          const customizedCount = group.fields.filter(f => isCustomized(f.key)).length;
 
           return (
-            <div key={field.key} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-deep-charcoal flex items-center gap-2">
-                  {field.label}
-                  {customized && (
-                    <span title="Personnalisé">
-                      <Check className="w-3.5 h-3.5 text-green-600" />
+            <div key={group.id} className="border border-[#2a2a2a] rounded-xl overflow-hidden">
+              <button
+                onClick={() => setExpandedGroup(isExpanded ? '' : group.id)}
+                className="w-full px-3 py-2.5 flex items-center justify-between bg-[#0f0f0f] hover:bg-[#151515] transition-colors"
+              >
+                <span className="text-sm font-medium text-white">{group.label}</span>
+                <div className="flex items-center gap-2">
+                  {customizedCount > 0 && (
+                    <span className="px-1.5 py-0.5 text-xs bg-burgundy/20 text-burgundy rounded-full">
+                      {customizedCount}
                     </span>
                   )}
-                </label>
-                <button
-                  onClick={() => onColorChange(field.key, '')}
-                  className="text-xs text-warm-taupe hover:text-burgundy transition-colors"
-                  disabled={!customized}
-                >
-                  Par défaut
-                </button>
-              </div>
-
-              <div className="flex gap-3">
-                {/* Color Picker */}
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={effectiveColor}
-                    onChange={(e) => onColorChange(field.key, e.target.value)}
-                    className="w-12 h-12 rounded-lg cursor-pointer border-2 border-silver-mist/30 hover:border-burgundy transition-colors"
-                    title={field.label}
-                  />
-                  {customized && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                  )}
+                  <svg
+                    className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
+              </button>
 
-                {/* Text Input */}
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={editingPalette[field.key] || ''}
-                    onChange={(e) => onColorChange(field.key, e.target.value)}
-                    placeholder={effectiveColor}
-                    className={`w-full px-4 py-2.5 rounded-lg border font-mono text-sm transition-colors ${
-                      error
-                        ? 'border-red-300 bg-red-50 text-red-900'
-                        : customized
-                        ? 'border-green-300 bg-green-50 text-deep-charcoal'
-                        : 'border-silver-mist/30 bg-white text-deep-charcoal hover:border-silver-mist'
-                    }`}
-                  />
-                  <p className="text-xs text-warm-taupe mt-1">{field.description}</p>
-                  {error && (
-                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {error}
-                    </p>
-                  )}
+              {isExpanded && (
+                <div className="p-3 space-y-3 bg-[#0a0a0a]">
+                  {group.fields.map((field) => {
+                    const effectiveColor = getEffectiveColor(field.key);
+                    const customized = isCustomized(field.key);
+                    const error = errors[field.key];
+
+                    return (
+                      <div key={field.key} className="flex items-center gap-3">
+                        {/* Color Picker */}
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={effectiveColor}
+                            onChange={(e) => handleColorChange(field.key, e.target.value)}
+                            className="w-10 h-10 rounded-lg cursor-pointer border-2 border-[#2a2a2a] hover:border-[#3a3a3a] transition-colors bg-transparent"
+                            title={field.label}
+                          />
+                          {customized && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-burgundy rounded-full border-2 border-[#0a0a0a]" />
+                          )}
+                        </div>
+
+                        {/* Label & Input */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <label className="text-xs font-medium text-gray-300">
+                              {field.label}
+                            </label>
+                            {customized && <Check className="w-3 h-3 text-burgundy" />}
+                          </div>
+                          <input
+                            type="text"
+                            value={editingPalette[field.key] || ''}
+                            onChange={(e) => handleColorChange(field.key, e.target.value)}
+                            placeholder={effectiveColor}
+                            className={`w-full px-2 py-1.5 rounded-md border text-xs font-mono transition-colors bg-[#1a1a1a] ${
+                              error
+                                ? 'border-red-500/50 text-red-400'
+                                : customized
+                                ? 'border-burgundy/50 text-white'
+                                : 'border-[#2a2a2a] text-gray-400 placeholder-gray-600'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Reset button */}
+                        {customized && (
+                          <button
+                            onClick={() => handleColorChange(field.key, '')}
+                            className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                            title="Réinitialiser"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              )}
             </div>
           );
         })}

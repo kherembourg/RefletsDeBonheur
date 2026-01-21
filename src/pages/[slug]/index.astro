@@ -11,6 +11,7 @@ import { LuxeGalleryPreview } from '../../components/wedding/LuxeGalleryPreview'
 import { LuxeNav } from '../../components/wedding/LuxeNav';
 import { WeddingTimeline } from '../../components/wedding/WeddingTimeline';
 import { WeddingInfo } from '../../components/wedding/WeddingInfo';
+import { PreviewCustomizationProvider } from '../../components/PreviewCustomizationProvider';
 import { getWeddingBySlugAsync } from '../../lib/weddingData';
 import { getTheme } from '../../lib/themes';
 import {
@@ -21,6 +22,9 @@ import {
 } from '../../lib/applyCustomization';
 
 const { slug } = Astro.params;
+
+// Check if in preview mode (from editor iframe)
+const isPreviewMode = Astro.url.searchParams.has('preview');
 const wedding = await getWeddingBySlugAsync(slug as string);
 
 // Redirect to 404 if wedding not found
@@ -167,4 +171,9 @@ const welcomeMessage = getEffectiveContent(customContent, 'welcomeMessage', conf
 <!-- Apply Custom Styles -->
 {customization && customization.customPalette && (
   <style is:inline set:html={generateCustomizationCSS(effectiveTheme, customization.customPalette)} />
+)}
+
+<!-- Preview Mode: Live customization updates -->
+{isPreviewMode && (
+  <PreviewCustomizationProvider weddingSlug={slug as string} client:only="react" />
 )}
