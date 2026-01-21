@@ -105,13 +105,47 @@ When launching an Explore subagent, copy-paste the mgrep instructions from this 
 
 ---
 
+# Context7 - Documentation Lookup
+
+**Always use Context7 when upgrading dependencies or working with external libraries.**
+
+Context7 provides up-to-date documentation for any library. Use it to:
+- Verify breaking changes during dependency upgrades
+- Look up correct API usage for libraries
+- Find migration guides and best practices
+
+## Usage
+
+1. First, resolve the library ID:
+```
+mcp__plugin_compound-engineering_context7__resolve-library-id
+- query: "what you're trying to do"
+- libraryName: "package-name"
+```
+
+2. Then query the docs:
+```
+mcp__plugin_compound-engineering_context7__query-docs
+- libraryId: "/org/project" (from step 1)
+- query: "specific question about the library"
+```
+
+## When to Use
+
+- **REQUIRED** before any major dependency upgrade (React, Tailwind, Astro, etc.)
+- When implementing features using external libraries
+- When debugging library-specific issues
+- When unsure about API changes between versions
+
+---
+
 ## Technology Stack
 
 ### Frontend
 - **Astro 5.16+**: Static site generation with islands architecture
-- **React 18**: Interactive components (islands only)
+- **React 19**: Interactive components (islands only)
 - **TypeScript 5.3+**: Type safety throughout
-- **Tailwind CSS 3.4**: Utility-first styling with custom brand tokens
+- **Tailwind CSS 4**: Utility-first styling with custom brand tokens
 - **Lucide React**: Icon system
 
 ### Infrastructure
