@@ -21,48 +21,46 @@ Object.defineProperty(global, 'crypto', {
   writable: true,
 });
 
-// Create mock chain helper - implements proper PromiseLike interface for awaiting
+/**
+ * Create mock chain helper for Supabase query builder
+ *
+ * Creates a chainable mock that:
+ * 1. Returns itself for all chain methods (select, update, eq, etc.)
+ * 2. Can be awaited directly to get { data, error } for non-.single() operations
+ * 3. Has .single() that returns a Promise resolving to { data, error }
+ *
+ * The key insight is that terminal methods like .eq() need to return something
+ * that can be awaited. We achieve this by making each method return a Promise
+ * that resolves to { data, error } but also has all the chain methods attached.
+ */
 function createMockChain(returnData: unknown, error: Error | null = null) {
-  // Ensure error is explicitly null, not undefined - critical for CI compatibility
-  const resolvedData = { data: returnData, error: error !== undefined ? error : null };
+  // Ensure error is explicitly null, not undefined
+  const resolvedData = Object.freeze({ data: returnData, error: error === undefined ? null : error });
 
-  // Create a fresh promise for each chain to avoid closure issues in forked processes
-  const makePromise = () => Promise.resolve(resolvedData);
+  // Create a base promise that resolves to our data
+  // We'll attach chain methods to objects that return this promise
+  const createChainablePromise = (): Promise<typeof resolvedData> & Record<string, unknown> => {
+    const promise = Promise.resolve(resolvedData) as Promise<typeof resolvedData> & Record<string, unknown>;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chain: any = {};
+    // Attach chain methods to the promise
+    // Each method returns a new chainable promise
+    promise.select = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.insert = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.update = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.delete = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.eq = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.neq = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.gt = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.lt = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.is = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.or = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.order = vi.fn().mockImplementation(() => createChainablePromise());
+    promise.single = vi.fn().mockResolvedValue(resolvedData);
 
-  // Chain methods that return the chain for further chaining
-  chain.select = vi.fn().mockReturnValue(chain);
-  chain.insert = vi.fn().mockReturnValue(chain);
-  chain.update = vi.fn().mockReturnValue(chain);
-  chain.delete = vi.fn().mockReturnValue(chain);
-  chain.eq = vi.fn().mockReturnValue(chain);
-  chain.neq = vi.fn().mockReturnValue(chain);
-  chain.gt = vi.fn().mockReturnValue(chain);
-  chain.lt = vi.fn().mockReturnValue(chain);
-  chain.is = vi.fn().mockReturnValue(chain);
-  chain.or = vi.fn().mockReturnValue(chain);
-  chain.order = vi.fn().mockReturnValue(chain);
-  chain.single = vi.fn().mockResolvedValue(resolvedData);
-
-  // Implement thenable interface for operations that don't end with .single()
-  // When code does `await supabase.from('x').update({}).eq('id', y)`, this allows
-  // the chain to resolve to { data, error } just like .single() would
-  // Use simple function form to avoid any generic/typing issues across environments
-  chain.then = (
-    onFulfilled?: ((value: { data: unknown; error: Error | null }) => unknown) | null,
-    onRejected?: ((reason: unknown) => unknown) | null
-  ) => {
-    return makePromise().then(onFulfilled, onRejected);
+    return promise;
   };
 
-  // Also implement catch for completeness
-  chain.catch = (onRejected?: ((reason: unknown) => unknown) | null) => {
-    return makePromise().catch(onRejected);
-  };
-
-  return chain;
+  return createChainablePromise();
 }
 
 // Mock the supabase module
