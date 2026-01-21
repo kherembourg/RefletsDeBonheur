@@ -637,13 +637,20 @@ describe('God Auth Module', () => {
   // ==========================================
   describe('updateClientStatus', () => {
     it('should update client status', async () => {
-      const chain = createMockChain(null);
-      const auditChain = createMockChain(null);
+      // Use explicit mock structure for update().eq() chain
+      const profilesChain = {
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      };
+      const auditChain = {
+        insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      };
 
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'profiles') return chain;
+        if (table === 'profiles') return profilesChain;
         if (table === 'audit_log') return auditChain;
-        return chain;
+        return profilesChain;
       });
 
       const result = await updateClientStatus('client-id', 'active');
@@ -728,9 +735,15 @@ describe('God Auth Module', () => {
   // ==========================================
   describe('createImpersonationToken', () => {
     it('should create impersonation token with 24h TTL', async () => {
+      // Wedding lookup uses .single() so createMockChain works
       const weddingChain = createMockChain({ id: 'wedding-id' });
-      const insertChain = createMockChain(null);
-      const auditChain = createMockChain(null);
+      // Insert without .single() needs explicit mock
+      const insertChain = {
+        insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      };
+      const auditChain = {
+        insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      };
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'weddings') return weddingChain;
@@ -761,6 +774,7 @@ describe('God Auth Module', () => {
     });
 
     it('should fail when wedding not found', async () => {
+      // select().eq().single() pattern - createMockChain works for .single()
       const chain = createMockChain(null, new Error('Not found'));
       mockFrom.mockReturnValue(chain);
 
@@ -841,18 +855,31 @@ describe('God Auth Module', () => {
     };
 
     it('should verify valid token', async () => {
-      const tokenChain = createMockChain(mockToken);
+      // Select chains use .single() so createMockChain works
+      const tokenSelectChain = createMockChain(mockToken);
       const weddingChain = createMockChain(mockWedding);
       const profileChain = createMockChain(mockProfile);
-      const updateChain = createMockChain(null);
-      const auditChain = createMockChain(null);
+      // Update without .single() needs explicit mock
+      const tokenUpdateChain = {
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      };
+      const auditChain = {
+        insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      };
 
+      // Track which call to god_access_tokens (first is select, second is update)
+      let tokenCallCount = 0;
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'god_access_tokens') return tokenChain;
+        if (table === 'god_access_tokens') {
+          tokenCallCount++;
+          return tokenCallCount === 1 ? tokenSelectChain : tokenUpdateChain;
+        }
         if (table === 'weddings') return weddingChain;
         if (table === 'profiles') return profileChain;
         if (table === 'audit_log') return auditChain;
-        return updateChain;
+        return tokenSelectChain;
       });
 
       const result = await verifyImpersonationToken('test-token');
@@ -863,6 +890,7 @@ describe('God Auth Module', () => {
     });
 
     it('should fail for invalid/expired token', async () => {
+      // Uses .single() so createMockChain works
       const chain = createMockChain(null, new Error('Not found'));
       mockFrom.mockReturnValue(chain);
 
@@ -873,6 +901,7 @@ describe('God Auth Module', () => {
     });
 
     it('should fail when max uses exceeded', async () => {
+      // Uses .single() so createMockChain works
       const usedToken = { ...mockToken, used_count: 1, max_uses: 1 };
       const tokenChain = createMockChain(usedToken);
 
@@ -885,6 +914,7 @@ describe('God Auth Module', () => {
     });
 
     it('should fail when wedding not found', async () => {
+      // Uses .single() so createMockChain works
       const tokenChain = createMockChain(mockToken);
       const weddingChain = createMockChain(null, new Error('Not found'));
 
@@ -901,6 +931,7 @@ describe('God Auth Module', () => {
     });
 
     it('should fail when profile not found', async () => {
+      // Uses .single() so createMockChain works
       const tokenChain = createMockChain(mockToken);
       const weddingChain = createMockChain(mockWedding);
       const profileChain = createMockChain(null, new Error('Not found'));
