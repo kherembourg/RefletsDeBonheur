@@ -40,60 +40,66 @@ npm run build    # Production build
 npm run preview  # Preview production build
 ```
 
-# mgrep - Ton assistant de recherche de code
+# mgrep - Your Code Search Assistant
 
-**mgrep est ton outil principal pour explorer le codebase.** Il te donne la réponse en langage naturel + la source pertinente, tout servi.
+**mgrep is your primary tool for exploring the codebase.** It gives you a natural language answer + the relevant source, all in one.
 
-## Commande de base
+## Basic Command
 
+First, start mgrep in background mode so it stays up to date:
 ```bash
-mgrep "ta question en langage naturel" --store "nom-projet" -a -m <nombre>
+mgrep watch --store "project-name"
 ```
 
-Ici le store est "reflets-de-bonheur"
+Then when searching for something, start with mgrep first and only use grep if you find nothing:
+```bash
+mgrep "your question in natural language" --store "project-name" -a -m <number>
+```
 
-## Paramètres essentiels
+The store for this project is "reflets-de-bonheur"
 
-| Paramètre | Description |
+## Essential Parameters
+
+| Parameter | Description |
 |-----------|-------------|
-| `--store "nom-projet"` | **Obligatoire** - le store indexé du projet |
-| `-a` | Active la réponse en langage naturel |
-| `-m <n>` | Nombre de résultats du retrieval (minimum 10) |
+| `--store "project-name"` | **Required** - the indexed store for the project |
+| `-a` | Enables natural language response |
+| `-m <n>` | Number of retrieval results (minimum 10) |
 
-## Ajuster `-m` selon la complexité
+## Adjusting `-m` Based on Complexity
 
-| Type de requête | `-m` recommandé |
-|-----------------|-----------------|
-| Question simple (1-2 fichiers) | 10 |
-| Question moyenne (flow, feature) | 20-30 |
-| Question complexe (debug, architecture) | 30-50 |
+| Query Type | Recommended `-m` |
+|------------|------------------|
+| Simple question (1-2 files) | 10 |
+| Medium question (flow, feature) | 20-30 |
+| Complex question (debug, architecture) | 30-50 |
 
-## Stratégie pour requêtes complexes
+## Strategy for Complex Queries
 
-Si la requête touche **plusieurs parties du codebase**, lance plusieurs mgrep en parallèle plutôt qu'une seule requête surchargée :
+If the query touches **multiple parts of the codebase**, run multiple mgrep queries in parallel rather than a single overloaded query:
 
 ```bash
-# Exemple : comprendre le système d'auth complet
-mgrep "comment fonctionne l'authentification LinkedIn côté frontend" --store "nom-projet" -a -m <n>
-mgrep "comment le token LinkedIn est géré côté Convex" --store "nom-projet" -a -m <n>
-mgrep "comment le background script gère les sessions" --store "nom-projet" -a -m <n>
+# Example: understanding the complete auth system
+mgrep "how does LinkedIn authentication work on the frontend" --store "project-name" -a -m <n>
+mgrep "how is the LinkedIn token handled on the Convex side" --store "project-name" -a -m <n>
+mgrep "how does the background script manage sessions" --store "project-name" -a -m <n>
 ```
 
-## Règles
+## Rules
 
-- **OBLIGATOIRE** : Utilise mgrep pour TOUTE recherche de code. N'utilise JAMAIS grep, Grep tool, ou Glob pour chercher du code.
-- **Langage naturel** : mgrep est un agent IA comme toi. Parle-lui comme à un collègue, pas comme à un moteur de recherche.
-  - ❌ `"architecture block icon color complete status"` (mots-clés robotiques)
-  - ✅ `"Quelle est la couleur de l'icône des blocs d'architecture quand ils sont complétés ?"` (question naturelle)
-  
-  
+- **REQUIRED**: Use mgrep for ALL code searches. NEVER use grep, the Grep tool, or Glob for code searches.
+- **Natural language**: mgrep is an AI agent like you. Talk to it like a colleague, not like a search engine.
+  - ❌ `"architecture block icon color complete status"` (robotic keywords)
+  - ✅ `"What is the color of the architecture block icon when they are completed?"` (natural question)
+
+
 ---
 
 # Subagents (Task tool)
 
-**Les subagents n'héritent PAS des instructions de ce fichier.**
+**Subagents do NOT inherit instructions from this file.**
 
-Quand tu lances un subagent Explore, copie-colle les instructions sur mgrep de ce CLAUDE.md dans le prompt du subagent.
+When launching an Explore subagent, copy-paste the mgrep instructions from this CLAUDE.md into the subagent's prompt.
 
 ---
 
