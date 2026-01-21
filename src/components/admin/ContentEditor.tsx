@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Type, RotateCcw, Check, AlertCircle, Sparkles } from 'lucide-react';
+import { Type, RotateCcw, Check, Info } from 'lucide-react';
 import type { CustomContent } from '../../lib/customization';
 
 interface ContentEditorProps {
@@ -55,7 +55,7 @@ const CONTENT_FIELDS: ContentField[] = [
   {
     key: 'welcomeMessage',
     label: 'Message de bienvenue',
-    placeholder: 'Nous sommes heureux de vous accueillir pour célébrer notre union.',
+    placeholder: 'Nous sommes heureux de vous accueillir...',
     type: 'textarea',
     maxLength: 500,
     section: 'welcome',
@@ -80,7 +80,7 @@ const CONTENT_FIELDS: ContentField[] = [
   // Gallery section
   {
     key: 'galleryTitle',
-    label: 'Titre de la galerie',
+    label: 'Titre galerie',
     placeholder: 'Galerie photos',
     type: 'text',
     maxLength: 100,
@@ -88,15 +88,15 @@ const CONTENT_FIELDS: ContentField[] = [
   },
   {
     key: 'galleryDescription',
-    label: 'Description de la galerie',
-    placeholder: 'Partagez vos plus beaux souvenirs de notre journée spéciale',
+    label: 'Description galerie',
+    placeholder: 'Partagez vos plus beaux souvenirs...',
     type: 'textarea',
     maxLength: 300,
     section: 'gallery',
   },
   {
     key: 'galleryCallToAction',
-    label: 'Appel à l\'action galerie',
+    label: 'Bouton galerie',
     placeholder: 'Téléchargez vos photos',
     type: 'text',
     maxLength: 50,
@@ -105,7 +105,7 @@ const CONTENT_FIELDS: ContentField[] = [
   // Guestbook section
   {
     key: 'guestbookTitle',
-    label: 'Titre du livre d\'or',
+    label: 'Titre livre d\'or',
     placeholder: 'Livre d\'or',
     type: 'text',
     maxLength: 100,
@@ -113,15 +113,15 @@ const CONTENT_FIELDS: ContentField[] = [
   },
   {
     key: 'guestbookDescription',
-    label: 'Description du livre d\'or',
-    placeholder: 'Laissez-nous un message pour immortaliser ce jour',
+    label: 'Description livre d\'or',
+    placeholder: 'Laissez-nous un message...',
     type: 'textarea',
     maxLength: 300,
     section: 'guestbook',
   },
   {
     key: 'guestbookCallToAction',
-    label: 'Appel à l\'action livre d\'or',
+    label: 'Bouton livre d\'or',
     placeholder: 'Écrire un message',
     type: 'text',
     maxLength: 50,
@@ -139,7 +139,7 @@ const CONTENT_FIELDS: ContentField[] = [
   {
     key: 'rsvpDescription',
     label: 'Description RSVP',
-    placeholder: 'Merci de confirmer votre présence avant le...',
+    placeholder: 'Merci de confirmer votre présence...',
     type: 'textarea',
     maxLength: 300,
     section: 'rsvp',
@@ -147,7 +147,7 @@ const CONTENT_FIELDS: ContentField[] = [
   // Footer
   {
     key: 'footerText',
-    label: 'Texte du pied de page',
+    label: 'Texte pied de page',
     placeholder: 'Avec amour, Marie & Jean',
     type: 'text',
     maxLength: 200,
@@ -156,13 +156,13 @@ const CONTENT_FIELDS: ContentField[] = [
 ];
 
 const SECTIONS = [
-  { id: 'hero' as const, label: 'Section Hero', icon: '✨' },
+  { id: 'hero' as const, label: 'Hero', icon: '✨' },
   { id: 'welcome' as const, label: 'Bienvenue', icon: '👋' },
   { id: 'about' as const, label: 'À propos', icon: '💕' },
   { id: 'gallery' as const, label: 'Galerie', icon: '📸' },
   { id: 'guestbook' as const, label: 'Livre d\'or', icon: '✍️' },
   { id: 'rsvp' as const, label: 'RSVP', icon: '✉️' },
-  { id: 'footer' as const, label: 'Pied de page', icon: '📄' },
+  { id: 'footer' as const, label: 'Footer', icon: '📄' },
 ];
 
 export function ContentEditor({
@@ -219,64 +219,62 @@ export function ContentEditor({
   const hasCustomContent = Object.keys(editingContent).length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-deep-charcoal flex items-center gap-2">
-            <Type className="w-5 h-5 text-burgundy" />
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Type className="w-4 h-4 text-burgundy" />
             Contenu textuel
           </h3>
           {hasCustomContent && (
             <button
               onClick={handleReset}
-              className="text-sm text-warm-taupe hover:text-burgundy transition-colors flex items-center gap-1"
+              className="text-xs text-gray-500 hover:text-burgundy transition-colors flex items-center gap-1"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Réinitialiser
+              <RotateCcw className="w-3 h-3" />
+              Reset
             </button>
           )}
         </div>
-        <p className="text-sm text-warm-taupe">
-          Personnalisez les textes de votre site de mariage
+        <p className="text-xs text-gray-500">
+          Personnalisez les textes de votre site
         </p>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex gap-3">
-        <Sparkles className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-        <div className="text-sm text-purple-900">
-          <p className="font-medium mb-1">Conseil</p>
-          <p>
-            Les champs vides utiliseront les textes par défaut. Personnalisez
-            uniquement ce que vous souhaitez modifier.
-          </p>
-        </div>
+      {/* Info Tip */}
+      <div className="flex items-start gap-2 p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+        <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+        <p className="text-xs text-purple-300">
+          Les champs vides utiliseront les textes par défaut.
+        </p>
       </div>
 
-      {/* Section Tabs */}
-      <div className="border-b border-silver-mist/30">
-        <div className="flex gap-2 overflow-x-auto pb-2">
+      {/* Section Tabs - Scrollable */}
+      <div className="relative">
+        <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide">
           {SECTIONS.map((section) => {
             const fields = getFieldsBySection(section.id);
-            const customizedCount = fields.filter((f) =>
-              isCustomized(f.key)
-            ).length;
+            const customizedCount = fields.filter((f) => isCustomized(f.key)).length;
 
             return (
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                   activeSection === section.id
-                    ? 'bg-burgundy text-white shadow-md'
-                    : 'bg-silver-mist/20 text-warm-taupe hover:bg-silver-mist/40'
+                    ? 'bg-burgundy text-white'
+                    : 'bg-[#1a1a1a] text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
                 }`}
               >
                 <span>{section.icon}</span>
                 {section.label}
                 {customizedCount > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
+                  <span className={`px-1 py-0.5 rounded text-[10px] ${
+                    activeSection === section.id
+                      ? 'bg-white/20'
+                      : 'bg-burgundy/30 text-burgundy'
+                  }`}>
                     {customizedCount}
                   </span>
                 )}
@@ -287,36 +285,22 @@ export function ContentEditor({
       </div>
 
       {/* Fields for Active Section */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {getFieldsBySection(activeSection).map((field) => {
           const customized = isCustomized(field.key);
           const charCount = getCharCount(field.key);
           const maxLength = field.maxLength || 500;
 
           return (
-            <div key={field.key} className="space-y-2">
+            <div key={field.key} className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-deep-charcoal flex items-center gap-2">
+                <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
                   {field.label}
-                  {customized && (
-                    <span title="Personnalisé">
-                      <Check className="w-3.5 h-3.5 text-green-600" />
-                    </span>
-                  )}
+                  {customized && <Check className="w-3 h-3 text-burgundy" />}
                 </label>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-warm-taupe">
-                    {charCount}/{maxLength}
-                  </span>
-                  {customized && (
-                    <button
-                      onClick={() => handleContentChange(field.key, '')}
-                      className="text-xs text-warm-taupe hover:text-burgundy transition-colors"
-                    >
-                      Par défaut
-                    </button>
-                  )}
-                </div>
+                <span className={`text-[10px] ${charCount > maxLength * 0.9 ? 'text-amber-400' : 'text-gray-600'}`}>
+                  {charCount}/{maxLength}
+                </span>
               </div>
 
               {field.type === 'text' ? (
@@ -326,10 +310,10 @@ export function ContentEditor({
                   onChange={(e) => handleContentChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
                   maxLength={maxLength}
-                  className={`w-full px-4 py-2.5 rounded-lg border transition-colors ${
+                  className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors bg-[#0f0f0f] placeholder-gray-600 ${
                     customized
-                      ? 'border-green-300 bg-green-50 text-deep-charcoal'
-                      : 'border-silver-mist/30 bg-white text-deep-charcoal hover:border-silver-mist'
+                      ? 'border-burgundy/50 text-white'
+                      : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
                   }`}
                 />
               ) : (
@@ -338,19 +322,22 @@ export function ContentEditor({
                   onChange={(e) => handleContentChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
                   maxLength={maxLength}
-                  rows={4}
-                  className={`w-full px-4 py-2.5 rounded-lg border transition-colors resize-none ${
+                  rows={3}
+                  className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors resize-none bg-[#0f0f0f] placeholder-gray-600 ${
                     customized
-                      ? 'border-green-300 bg-green-50 text-deep-charcoal'
-                      : 'border-silver-mist/30 bg-white text-deep-charcoal hover:border-silver-mist'
+                      ? 'border-burgundy/50 text-white'
+                      : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
                   }`}
                 />
               )}
 
-              {defaultValues[field.key] && (
-                <p className="text-xs text-warm-taupe">
-                  Défaut : {defaultValues[field.key]}
-                </p>
+              {customized && (
+                <button
+                  onClick={() => handleContentChange(field.key, '')}
+                  className="text-[10px] text-gray-500 hover:text-burgundy transition-colors"
+                >
+                  Réinitialiser ce champ
+                </button>
               )}
             </div>
           );

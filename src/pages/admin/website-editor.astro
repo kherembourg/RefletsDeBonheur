@@ -1,10 +1,16 @@
 ---
 import { WebsiteEditor } from '../../components/admin/WebsiteEditor';
+import '../../styles/global.css';
 
-// For demo purposes, we'll use hardcoded values
+import { isSupabaseConfigured } from '../../lib/supabase/client';
+
+// For demo purposes, we'll use a mock wedding from weddingData.ts
 // In production, these would come from authentication/session
-const weddingId = 'demo-wedding-id';
-const weddingSlug = 'demo_gallery'; // This should be the actual wedding slug
+const weddingId = 'w-001';
+const weddingSlug = 'julie-thomas'; // Uses the mock wedding microsite at /julie-thomas
+
+// Check if we're in demo mode (Supabase not configured)
+const demoMode = !isSupabaseConfigured();
 
 // Fetch initial customization from API (commented out for demo)
 // const response = await fetch(`${Astro.url.origin}/api/customization/get?weddingId=${weddingId}`);
@@ -19,11 +25,12 @@ const weddingSlug = 'demo_gallery'; // This should be the actual wedding slug
     <title>Éditeur de site web - Reflets de Bonheur</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
-  <body class="m-0 p-0 overflow-hidden">
+  <body class="m-0 p-0 overflow-hidden bg-[#0f0f0f]">
     <WebsiteEditor
       client:only="react"
       weddingId={weddingId}
       weddingSlug={weddingSlug}
+      demoMode={demoMode}
       onSave={async (customization) => {
         'use client';
         const response = await fetch('/api/customization/save', {
@@ -39,34 +46,5 @@ const weddingSlug = 'demo_gallery'; // This should be the actual wedding slug
         return response.json();
       }}
     />
-
-    <style is:global>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        overflow: hidden;
-      }
-
-      /* Animation for unsaved changes badge */
-      @keyframes slide-up {
-        from {
-          opacity: 0;
-          transform: translate(-50%, 20px);
-        }
-        to {
-          opacity: 1;
-          transform: translate(-50%, 0);
-        }
-      }
-
-      .animate-slide-up {
-        animation: slide-up 0.3s ease-out;
-      }
-    </style>
   </body>
 </html>

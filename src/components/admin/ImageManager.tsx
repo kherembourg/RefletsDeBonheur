@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Image, Upload, X, Check, AlertCircle, Link as LinkIcon } from 'lucide-react';
+import { Image, Upload, X, Check, AlertCircle, Link as LinkIcon, Info } from 'lucide-react';
 import type { CustomImages } from '../../lib/customization';
 
 interface ImageManagerProps {
@@ -19,44 +19,44 @@ interface ImageField {
 const IMAGE_FIELDS: ImageField[] = [
   {
     key: 'heroImage',
-    label: 'Image hero principale',
-    description: 'Grande image affichée en haut de la page d\'accueil',
-    recommendedSize: '1920x1080px',
+    label: 'Image hero',
+    description: 'Image principale en haut de page',
+    recommendedSize: '1920x1080',
     aspectRatio: '16:9',
   },
   {
     key: 'heroBackgroundImage',
     label: 'Arrière-plan hero',
-    description: 'Image d\'arrière-plan pour la section hero',
-    recommendedSize: '1920x1080px',
+    description: 'Image de fond pour la section hero',
+    recommendedSize: '1920x1080',
     aspectRatio: '16:9',
   },
   {
     key: 'couplePhoto',
     label: 'Photo du couple',
-    description: 'Photo affichée dans la section "À propos"',
-    recommendedSize: '800x800px',
+    description: 'Photo section "À propos"',
+    recommendedSize: '800x800',
     aspectRatio: '1:1',
   },
   {
     key: 'galleryPlaceholder',
     label: 'Placeholder galerie',
-    description: 'Image par défaut pour la galerie vide',
-    recommendedSize: '1200x800px',
+    description: 'Image par défaut galerie vide',
+    recommendedSize: '1200x800',
     aspectRatio: '3:2',
   },
   {
     key: 'logoImage',
     label: 'Logo',
-    description: 'Logo affiché dans l\'en-tête',
-    recommendedSize: '200x200px',
+    description: 'Logo dans l\'en-tête',
+    recommendedSize: '200x200',
     aspectRatio: '1:1',
   },
   {
     key: 'faviconUrl',
     label: 'Favicon',
-    description: 'Icône affichée dans l\'onglet du navigateur',
-    recommendedSize: '32x32px',
+    description: 'Icône de l\'onglet navigateur',
+    recommendedSize: '32x32',
     aspectRatio: '1:1',
   },
 ];
@@ -118,7 +118,7 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
       console.error('Upload error:', error);
       setErrors((prev) => ({
         ...prev,
-        [key]: 'Erreur lors de l\'upload. Veuillez réessayer.',
+        [key]: 'Erreur lors de l\'upload',
       }));
     } finally {
       setUploadingKey(null);
@@ -169,43 +169,39 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
   const hasCustomImages = Object.keys(editingImages).length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-deep-charcoal flex items-center gap-2">
-            <Image className="w-5 h-5 text-burgundy" />
-            Gestion des images
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Image className="w-4 h-4 text-burgundy" />
+            Images
           </h3>
           {hasCustomImages && (
             <button
               onClick={handleResetAll}
-              className="text-sm text-warm-taupe hover:text-burgundy transition-colors flex items-center gap-1"
+              className="text-xs text-gray-500 hover:text-burgundy transition-colors flex items-center gap-1"
             >
-              <X className="w-3.5 h-3.5" />
-              Tout réinitialiser
+              <X className="w-3 h-3" />
+              Reset tout
             </button>
           )}
         </div>
-        <p className="text-sm text-warm-taupe">
-          Personnalisez les images de votre site de mariage
+        <p className="text-xs text-gray-500">
+          Personnalisez les images de votre site
         </p>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
-        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <div className="text-sm text-amber-900">
-          <p className="font-medium mb-1">Formats recommandés</p>
-          <p>
-            Utilisez des images au format JPEG ou PNG. Pour de meilleures
-            performances, optimisez vos images avant de les télécharger (max 10 MB).
-          </p>
-        </div>
+      {/* Info Tip */}
+      <div className="flex items-start gap-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+        <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-300">
+          JPEG ou PNG recommandés. Max 10 MB.
+        </p>
       </div>
 
       {/* Image Fields */}
-      <div className="space-y-6">
+      <div className="space-y-3">
         {IMAGE_FIELDS.map((field) => {
           const customized = isCustomized(field.key);
           const isUploading = uploadingKey === field.key;
@@ -216,15 +212,15 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
           return (
             <div
               key={field.key}
-              className={`border-2 rounded-xl p-4 transition-all ${
+              className={`border rounded-xl p-3 transition-all ${
                 customized
-                  ? 'border-green-300 bg-green-50/50'
-                  : 'border-silver-mist/30 bg-white'
+                  ? 'border-burgundy/50 bg-burgundy/5'
+                  : 'border-[#2a2a2a] bg-[#0f0f0f]'
               }`}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex gap-3">
                 {/* Image Preview */}
-                <div className="w-32 h-32 rounded-lg bg-silver-mist/20 border-2 border-silver-mist/30 overflow-hidden shrink-0 relative">
+                <div className="w-20 h-20 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden shrink-0 relative">
                   {imageUrl ? (
                     <>
                       <img
@@ -233,36 +229,28 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                         className="w-full h-full object-cover"
                       />
                       {customized && (
-                        <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                          <Check className="w-4 h-4 text-white" />
+                        <div className="absolute top-1 right-1 w-4 h-4 bg-burgundy rounded-full flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5 text-white" />
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-warm-taupe">
-                      <Image className="w-8 h-8" />
+                    <div className="w-full h-full flex items-center justify-center text-gray-600">
+                      <Image className="w-6 h-6" />
                     </div>
                   )}
                 </div>
 
                 {/* Field Info & Actions */}
-                <div className="flex-1 space-y-3">
+                <div className="flex-1 min-w-0">
                   {/* Label */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-deep-charcoal flex items-center gap-2">
+                  <div className="mb-2">
+                    <h4 className="text-sm font-medium text-white flex items-center gap-1.5">
                       {field.label}
-                      {customized && (
-                        <span title="Personnalisé">
-                          <Check className="w-3.5 h-3.5 text-green-600" />
-                        </span>
-                      )}
+                      {customized && <Check className="w-3 h-3 text-burgundy" />}
                     </h4>
-                    <p className="text-xs text-warm-taupe mt-0.5">
-                      {field.description}
-                    </p>
-                    <p className="text-xs text-warm-taupe mt-0.5">
-                      <strong>Recommandé :</strong> {field.recommendedSize}
-                      {field.aspectRatio && ` (${field.aspectRatio})`}
+                    <p className="text-[10px] text-gray-500">
+                      {field.recommendedSize} {field.aspectRatio && `• ${field.aspectRatio}`}
                     </p>
                   </div>
 
@@ -271,82 +259,73 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                     <div className="flex gap-2">
                       <input
                         type="url"
-                        placeholder="https://example.com/image.jpg"
+                        placeholder="https://..."
                         defaultValue={imageUrl || ''}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            handleUrlSubmit(
-                              field.key,
-                              (e.target as HTMLInputElement).value
-                            );
+                            handleUrlSubmit(field.key, (e.target as HTMLInputElement).value);
+                          } else if (e.key === 'Escape') {
+                            setUrlInputMode(null);
                           }
                         }}
-                        className="flex-1 px-3 py-2 rounded-lg border border-silver-mist/30 text-sm"
+                        className="flex-1 px-2 py-1.5 rounded-md border border-[#2a2a2a] bg-[#1a1a1a] text-xs text-white placeholder-gray-600"
                         autoFocus
                       />
                       <button
                         onClick={(e) => {
-                          const input = (e.target as HTMLElement)
-                            .closest('div')
-                            ?.querySelector('input');
-                          if (input) {
-                            handleUrlSubmit(field.key, input.value);
-                          }
+                          const input = (e.target as HTMLElement).closest('div')?.querySelector('input');
+                          if (input) handleUrlSubmit(field.key, input.value);
                         }}
-                        className="px-4 py-2 bg-burgundy text-white rounded-lg hover:bg-burgundy-dark transition-colors text-sm"
+                        className="px-2 py-1.5 bg-burgundy text-white rounded-md text-xs hover:bg-burgundy-light transition-colors"
                       >
                         OK
                       </button>
                       <button
                         onClick={() => setUrlInputMode(null)}
-                        className="px-4 py-2 bg-silver-mist/30 text-warm-taupe rounded-lg hover:bg-silver-mist/50 transition-colors text-sm"
+                        className="px-2 py-1.5 bg-[#2a2a2a] text-gray-400 rounded-md text-xs hover:bg-[#3a3a3a] transition-colors"
                       >
-                        Annuler
+                        <X className="w-3 h-3" />
                       </button>
                     </div>
                   ) : (
-                    <>
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
-                        {/* Upload Button */}
-                        <button
-                          onClick={() => fileInputRefs.current[field.key]?.click()}
-                          disabled={isUploading}
-                          className="px-4 py-2 bg-burgundy text-white rounded-lg hover:bg-burgundy-dark transition-colors text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUploading ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              Upload...
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="w-4 h-4" />
-                              Télécharger
-                            </>
-                          )}
-                        </button>
-
-                        {/* URL Button */}
-                        <button
-                          onClick={() => setUrlInputMode(field.key)}
-                          className="px-4 py-2 bg-white border border-silver-mist/30 text-warm-taupe rounded-lg hover:border-silver-mist hover:text-deep-charcoal transition-colors text-sm flex items-center gap-2"
-                        >
-                          <LinkIcon className="w-4 h-4" />
-                          URL
-                        </button>
-
-                        {/* Remove Button */}
-                        {customized && (
-                          <button
-                            onClick={() => handleImageChange(field.key, '')}
-                            className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm flex items-center gap-2"
-                          >
-                            <X className="w-4 h-4" />
-                            Supprimer
-                          </button>
+                    <div className="flex flex-wrap gap-1.5">
+                      {/* Upload Button */}
+                      <button
+                        onClick={() => fileInputRefs.current[field.key]?.click()}
+                        disabled={isUploading}
+                        className="px-2.5 py-1.5 bg-burgundy text-white rounded-md text-xs hover:bg-burgundy-light transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        {isUploading ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Upload...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3 h-3" />
+                            Upload
+                          </>
                         )}
-                      </div>
+                      </button>
+
+                      {/* URL Button */}
+                      <button
+                        onClick={() => setUrlInputMode(field.key)}
+                        className="px-2.5 py-1.5 bg-[#2a2a2a] text-gray-300 rounded-md text-xs hover:bg-[#3a3a3a] transition-colors flex items-center gap-1.5"
+                      >
+                        <LinkIcon className="w-3 h-3" />
+                        URL
+                      </button>
+
+                      {/* Remove Button */}
+                      {customized && (
+                        <button
+                          onClick={() => handleImageChange(field.key, '')}
+                          className="px-2.5 py-1.5 bg-red-500/20 text-red-400 rounded-md text-xs hover:bg-red-500/30 transition-colors flex items-center gap-1.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
 
                       {/* Hidden File Input */}
                       <input
@@ -355,27 +334,18 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                         accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            handleFileUpload(field.key, file);
-                          }
+                          if (file) handleFileUpload(field.key, file);
                         }}
                         className="hidden"
                       />
-                    </>
+                    </div>
                   )}
 
                   {/* Error */}
                   {error && (
-                    <p className="text-xs text-red-600 flex items-center gap-1">
+                    <p className="text-[10px] text-red-400 flex items-center gap-1 mt-1.5">
                       <AlertCircle className="w-3 h-3" />
                       {error}
-                    </p>
-                  )}
-
-                  {/* Current URL */}
-                  {imageUrl && !isUrlMode && (
-                    <p className="text-xs text-warm-taupe truncate" title={imageUrl}>
-                      <strong>URL :</strong> {imageUrl}
                     </p>
                   )}
                 </div>

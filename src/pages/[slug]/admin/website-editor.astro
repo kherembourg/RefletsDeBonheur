@@ -1,0 +1,86 @@
+---
+// Enable SSR for dynamic slugs
+export const prerender = false;
+
+import { WebsiteEditor } from '../../../components/admin/WebsiteEditor';
+import { getWeddingBySlugAsync } from '../../../lib/weddingData';
+import { isSupabaseConfigured } from '../../../lib/supabase/client';
+import '../../../styles/global.css';
+
+const { slug } = Astro.params;
+const wedding = await getWeddingBySlugAsync(slug as string);
+
+// Redirect to 404 if wedding not found
+if (!wedding) {
+  return Astro.redirect('/404');
+}
+
+// Check if we're in demo mode
+// Demo mode is active if:
+// 1. Supabase is not configured, OR
+// 2. The wedding is mock data (IDs starting with 'w-' are mock)
+const isMockWedding = wedding.id.startsWith('w-');
+const demoMode = !isSupabaseConfigured() || isMockWedding;
+
+// In production, fetch existing customization from API
+// const response = await fetch(`${Astro.url.origin}/api/customization/get?weddingId=${wedding.id}`);
+// const { customization } = await response.json();
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Éditeur de site web - {wedding.name}</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  </head>
+  <body class="m-0 p-0 overflow-hidden bg-[#0f0f0f]">
+    <WebsiteEditor
+      client:only="react"
+      weddingId={wedding.id}
+      weddingSlug={slug as string}
+      demoMode={demoMode}
+    />
+  </body>
+</html>
+
+<script>
+  // Check authentication on client side
+  if (typeof window !== 'undefined') {
+    const clientToken = localStorage.getItem('reflets_client_token');
+    const clientSession = localStorage.getItem('reflets_client_session');
+    const godImpersonation = localStorage.getItem('reflets_god_impersonation');
+    const guestSession = localStorage.getItem('reflets_guest_session');
+
+    // Allow access if:
+    // 1. Client is logged in
+    // 2. God admin is impersonating
+    // 3. Guest has admin code access
+    let hasAccess = false;
+
+    if (clientToken && clientSession) {
+      hasAccess = true;
+    } else if (godImpersonation) {
+      hasAccess = true;
+    } else if (guestSession) {
+      try {
+        const session = JSON.parse(guestSession);
+        if (session.access_type === 'admin') {
+          hasAccess = true;
+        }
+      } catch (e) {}
+    }
+
+    // Also check old demo auth
+    const isAdmin = localStorage.getItem('reflets_is_admin');
+    if (isAdmin === 'true') {
+      hasAccess = true;
+    }
+
+    if (!hasAccess) {
+      // Redirect to login
+      window.location.href = '/connexion';
+    }
+  }
+</script>

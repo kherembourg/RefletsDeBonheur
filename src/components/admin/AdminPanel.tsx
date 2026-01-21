@@ -15,11 +15,12 @@ import type { ThemeId } from '../../lib/themes';
 
 interface AdminPanelProps {
   weddingId?: string;
+  weddingSlug?: string;
   profileId?: string;
   demoMode?: boolean;
 }
 
-export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPanelProps) {
+export function AdminPanel({ weddingId, weddingSlug, profileId, demoMode = false }: AdminPanelProps) {
   // Create service once using ref
   const serviceRef = useRef<DataService | null>(null);
   if (!serviceRef.current) {
@@ -313,7 +314,7 @@ export function AdminPanel({ weddingId, profileId, demoMode = false }: AdminPane
                     Personnalisez en profondeur l'apparence de votre site : couleurs, textes, images et bien plus encore avec l'éditeur visuel.
                   </p>
                   <a
-                    href="/admin/website-editor"
+                    href={weddingSlug ? `/${weddingSlug}/admin/website-editor` : '/admin/website-editor'}
                     className="inline-flex items-center gap-2 px-6 py-2.5 bg-burgundy text-white rounded-lg hover:bg-burgundy-dark transition-all shadow-md hover:shadow-lg"
                   >
                     <Edit3 className="w-4 h-4" />
