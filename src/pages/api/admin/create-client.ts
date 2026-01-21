@@ -83,9 +83,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const userId = authResult.data.user.id;
-    // Set trial period to 1 month (30 days)
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    // Set trial period to 31 days
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 31);
 
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
@@ -95,7 +95,7 @@ export const POST: APIRoute = async ({ request }) => {
           email,
           full_name: couple_names,
           subscription_status: 'trial',
-          subscription_end_date: expiresAt.toISOString(),
+          subscription_end_date: trialEndDate.toISOString(),
           stripe_customer_id: null,
         },
         { onConflict: 'id' }
@@ -189,7 +189,7 @@ export const POST: APIRoute = async ({ request }) => {
       custom_domain: null,
       status: 'trial',
       subscription_started_at: new Date().toISOString(),
-      subscription_expires_at: expiresAt.toISOString(),
+      subscription_expires_at: trialEndDate.toISOString(),
       created_at: profile.created_at,
       updated_at: profile.updated_at,
       last_login_at: null,
