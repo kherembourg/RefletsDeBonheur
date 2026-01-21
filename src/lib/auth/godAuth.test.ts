@@ -28,62 +28,48 @@ Object.defineProperty(global, 'crypto', {
  * 1. Every method returns the same chain link (for chaining like .eq().single())
  * 2. The chain link is also thenable, so await chain works
  * 3. The resolved value is always { data, error }
+ *
+ * Note: This function MUST use regular function syntax for `then`/`catch` methods,
+ * not arrow functions, to ensure proper thenable detection in all environments.
  */
 function createMockChain(returnData: unknown, error: Error | null = null) {
   // Ensure error is explicitly null, not undefined
-  // Use a plain object literal to avoid any reference/closure issues
-  const resolvedData = { data: returnData, error: error === undefined ? null : error };
+  const errorValue: Error | null = error === undefined ? null : error;
 
-  // Type for our chainable mock - it's both an object with methods AND a thenable
-  interface ChainLink {
-    select: ReturnType<typeof vi.fn>;
-    insert: ReturnType<typeof vi.fn>;
-    update: ReturnType<typeof vi.fn>;
-    delete: ReturnType<typeof vi.fn>;
-    eq: ReturnType<typeof vi.fn>;
-    neq: ReturnType<typeof vi.fn>;
-    gt: ReturnType<typeof vi.fn>;
-    lt: ReturnType<typeof vi.fn>;
-    is: ReturnType<typeof vi.fn>;
-    or: ReturnType<typeof vi.fn>;
-    order: ReturnType<typeof vi.fn>;
-    single: ReturnType<typeof vi.fn>;
-    then: (
-      onFulfilled?: ((value: typeof resolvedData) => unknown) | null,
-      onRejected?: ((reason: unknown) => unknown) | null
-    ) => Promise<unknown>;
-  }
+  // Create the resolved data object - freeze it to prevent modification
+  const resolvedData = Object.freeze({ data: returnData, error: errorValue });
 
-  // Create the chain link with all methods
-  const chain: ChainLink = {
-    select: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    eq: vi.fn(),
-    neq: vi.fn(),
-    gt: vi.fn(),
-    lt: vi.fn(),
-    is: vi.fn(),
-    or: vi.fn(),
-    order: vi.fn(),
-    single: vi.fn().mockResolvedValue(resolvedData),
-    // The then method makes this chain awaitable
-    then: (onFulfilled, onRejected) => Promise.resolve(resolvedData).then(onFulfilled, onRejected),
+  // Create the chain object
+  const chain: Record<string, unknown> = {};
+
+  // Chain methods (created as mock functions that return the chain)
+  chain.select = vi.fn().mockReturnValue(chain);
+  chain.insert = vi.fn().mockReturnValue(chain);
+  chain.update = vi.fn().mockReturnValue(chain);
+  chain.delete = vi.fn().mockReturnValue(chain);
+  chain.eq = vi.fn().mockReturnValue(chain);
+  chain.neq = vi.fn().mockReturnValue(chain);
+  chain.gt = vi.fn().mockReturnValue(chain);
+  chain.lt = vi.fn().mockReturnValue(chain);
+  chain.is = vi.fn().mockReturnValue(chain);
+  chain.or = vi.fn().mockReturnValue(chain);
+  chain.order = vi.fn().mockReturnValue(chain);
+  chain.single = vi.fn().mockResolvedValue(resolvedData);
+
+  // Make chain thenable by adding then/catch methods
+  // Using regular function declaration to ensure proper `this` binding if needed
+  // and to match the standard PromiseLike interface more closely
+  chain.then = function then(
+    onFulfilled?: ((value: typeof resolvedData) => unknown) | null,
+    onRejected?: ((reason: unknown) => unknown) | null
+  ) {
+    // Create a fresh promise each time then is called
+    return Promise.resolve(resolvedData).then(onFulfilled, onRejected);
   };
 
-  // Make all chain methods return the chain itself for chaining
-  chain.select.mockReturnValue(chain);
-  chain.insert.mockReturnValue(chain);
-  chain.update.mockReturnValue(chain);
-  chain.delete.mockReturnValue(chain);
-  chain.eq.mockReturnValue(chain);
-  chain.neq.mockReturnValue(chain);
-  chain.gt.mockReturnValue(chain);
-  chain.lt.mockReturnValue(chain);
-  chain.is.mockReturnValue(chain);
-  chain.or.mockReturnValue(chain);
-  chain.order.mockReturnValue(chain);
+  chain.catch = function catchFn(onRejected?: ((reason: unknown) => unknown) | null) {
+    return Promise.resolve(resolvedData).catch(onRejected);
+  };
 
   return chain;
 }
