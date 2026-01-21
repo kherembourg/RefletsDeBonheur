@@ -1,0 +1,156 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  # Validate PR title follows conventional commit format
+  pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Types allowed in PR titles
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          # Scopes allowed (optional)
+          scopes: |
+            auth
+            gallery
+            guestbook
+            admin
+            ui
+            api
+            db
+            i18n
+            pwa
+            deps
+          # Require scope
+          requireScope: false
+          # Subject must not be capitalized
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            should start with a lowercase letter.
+
+  # Check PR description is not empty
+  pr-description:
+    name: Check PR Description
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR has description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr.body || pr.body.trim().length < 20) {
+              core.setFailed('PR description is too short or missing. Please provide a meaningful description (minimum 20 characters).');
+              return;
+            }
+            console.log('✅ PR description looks good!');
+
+  # Check that PR doesn't have too many changed files
+  pr-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check changed files count
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const changedFiles = pr.changed_files;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+
+            console.log(`Changed files: ${changedFiles}`);
+            console.log(`Additions: +${additions}`);
+            console.log(`Deletions: -${deletions}`);
+
+            // Warning thresholds (won't fail, just warn)
+            if (changedFiles > 50) {
+              core.warning(`This PR changes ${changedFiles} files. Consider splitting into smaller PRs for easier review.`);
+            }
+
+            if (additions + deletions > 1000) {
+              core.warning(`This PR has ${additions + deletions} line changes. Large PRs are harder to review.`);
+            }
+
+            // Set as output for summary
+            core.summary
+              .addHeading('PR Size Analysis')
+              .addTable([
+                [{data: 'Metric', header: true}, {data: 'Value', header: true}, {data: 'Status', header: true}],
+                ['Changed Files', String(changedFiles), changedFiles > 50 ? '⚠️ Large' : '✅ OK'],
+                ['Lines Added', String(additions), additions > 500 ? '⚠️ Many' : '✅ OK'],
+                ['Lines Deleted', String(deletions), deletions > 500 ? '⚠️ Many' : '✅ OK'],
+                ['Total Changes', String(additions + deletions), (additions + deletions) > 1000 ? '⚠️ Very Large' : '✅ OK']
+              ])
+              .write();
+
+  # Check for WIP or Draft indicators
+  pr-status:
+    name: Check PR Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for WIP indicators
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const title = pr.title.toLowerCase();
+            const isDraft = pr.draft;
+
+            // Check for WIP indicators in title
+            const wipIndicators = ['wip', 'work in progress', 'do not merge', 'dnm', '[draft]'];
+            const hasWipIndicator = wipIndicators.some(indicator => title.includes(indicator));
+
+            if (hasWipIndicator && !isDraft) {
+              core.warning('PR title contains WIP indicator but PR is not marked as draft. Consider converting to draft PR.');
+            }
+
+            if (isDraft) {
+              console.log('ℹ️ This is a draft PR - CI will run but merging is not expected yet.');
+            }
+
+  # Link to related issues
+  pr-linked-issues:
+    name: Check Linked Issues
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR links to issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            // Check for issue references (Fixes #123, Closes #456, etc.)
+            const issuePattern = /(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#\d+/gi;
+            const relatedPattern = /related\s+to\s+#\d+/gi;
+
+            const hasFixesIssue = issuePattern.test(body);
+            const hasRelatedIssue = relatedPattern.test(body);
+
+            if (!hasFixesIssue && !hasRelatedIssue) {
+              core.warning('PR does not reference any issues. Consider linking to related issues using "Fixes #123" or "Related to #456".');
+            } else {
+              console.log('✅ PR is linked to issues');
+            }

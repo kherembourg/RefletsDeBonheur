@@ -1,8 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let adminClient: SupabaseClient<Database> | null = null;
+let adminClient: SupabaseClient | null = null;
 
 export function isSupabaseServiceRoleConfigured(): boolean {
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || '';
@@ -10,7 +8,7 @@ export function isSupabaseServiceRoleConfigured(): boolean {
   return Boolean(supabaseUrl && serviceRoleKey);
 }
 
-export function getSupabaseAdminClient(): SupabaseClient<Database> {
+export function getSupabaseAdminClient(): SupabaseClient {
   if (adminClient) return adminClient;
 
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || '';
@@ -20,7 +18,7 @@ export function getSupabaseAdminClient(): SupabaseClient<Database> {
     throw new Error('Supabase service role key not configured. Set SUPABASE_SERVICE_ROLE_KEY in your environment.');
   }
 
-  adminClient = createClient<Database>(supabaseUrl, serviceRoleKey, {
+  adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

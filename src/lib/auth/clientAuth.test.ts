@@ -53,7 +53,7 @@ import {
 } from './clientAuth';
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>;
-const mockAuth = supabase.auth as {
+const mockAuth = supabase.auth as unknown as {
   signInWithPassword: ReturnType<typeof vi.fn>;
   getUser: ReturnType<typeof vi.fn>;
   signOut: ReturnType<typeof vi.fn>;

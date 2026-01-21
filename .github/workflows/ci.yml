@@ -1,0 +1,215 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: [main, master]
+
+jobs:
+  # Job 1: Type checking
+  typecheck:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript compiler
+        run: npx astro check
+
+  # Job 2: Unit and Integration Tests
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage -- --pool=forks --isolate
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Generate coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat coverage/coverage-summary.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Job 3: Build Verification
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+        env:
+          # Provide dummy env vars for build (optional secrets not required)
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co' }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY || 'dummy-key' }}
+
+      - name: Check build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist directory not found"
+            exit 1
+          fi
+          echo "✅ Build successful: dist directory created"
+          echo "## Build Output" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Build completed successfully. Output directory size:" >> $GITHUB_STEP_SUMMARY
+          du -sh dist >> $GITHUB_STEP_SUMMARY
+
+  # Job 4: Dependency Audit
+  security:
+    name: Security & Dependency Audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha || github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+  # Job 5: Code Quality Checks
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for console.log statements
+        continue-on-error: true
+        run: |
+          echo "Checking for console.log statements..."
+          if grep -r "console\.log" src --exclude-dir=node_modules --exclude="*.test.*" --exclude="test" --exclude="*.spec.*" 2>/dev/null; then
+            echo "⚠️ Warning: console.log statements found in source code"
+            echo "Consider removing or replacing with proper logging"
+          else
+            echo "✅ No console.log statements found"
+          fi
+
+      - name: Check for TODO comments
+        run: |
+          echo "## TODO Comments Found" >> $GITHUB_STEP_SUMMARY
+          grep -r "TODO\|FIXME\|HACK" src --exclude-dir=node_modules || echo "None found" >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Check bundle size
+        run: |
+          npm run build
+          if [ -d "dist" ]; then
+            echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            find dist \( -name "*.js" -o -name "*.css" \) -exec du -h {} \; | sort -h >> $GITHUB_STEP_SUMMARY || echo "No JS/CSS files found" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Job 6: All checks passed
+  all-checks-passed:
+    name: All CI Checks Passed
+    runs-on: ubuntu-latest
+    needs: [typecheck, test, build, security, quality]
+    if: always()
+    steps:
+      - name: Check critical jobs status
+        run: |
+          echo "Checking critical job statuses..."
+          echo "TypeCheck: ${{ needs.typecheck.result }}"
+          echo "Tests: ${{ needs.test.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Security: ${{ needs.security.result }} (optional)"
+          echo "Quality: ${{ needs.quality.result }} (optional)"
+
+          # Only require critical jobs to pass
+          if [ "${{ needs.typecheck.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ One or more critical CI checks failed"
+            exit 1
+          fi
+
+          # Warn about optional jobs
+          if [ "${{ needs.security.result }}" != "success" ]; then
+            echo "⚠️ Security checks had issues (non-blocking)"
+          fi
+          if [ "${{ needs.quality.result }}" != "success" ]; then
+            echo "⚠️ Quality checks had issues (non-blocking)"
+          fi
+
+          echo "✅ All critical CI checks passed successfully!"

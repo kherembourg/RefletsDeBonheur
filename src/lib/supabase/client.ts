@@ -1,5 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Environment variables (set in .env file)
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || '';
@@ -14,7 +13,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create a single supabase client for the browser
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Note: Using untyped client for flexibility with auth tables
+// Type safety is handled via explicit type assertions in queries
+export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -61,5 +62,5 @@ export function onAuthStateChange(callback: (event: string, session: any) => voi
   return supabase.auth.onAuthStateChange(callback);
 }
 
-// Export types
-export type { Database } from './types';
+// Export types for use in other files
+export type { Database, Profile, Wedding, Media, GuestbookMessage, Album } from './types';

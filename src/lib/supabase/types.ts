@@ -197,6 +197,32 @@ export interface GuestSession {
   expires_at: string;
   created_at: string;
   last_active_at: string;
+  last_used_at?: string;
+}
+
+export interface AuthSession {
+  id: string;
+  user_id: string;
+  user_type: 'god' | 'client';
+  token: string;
+  refresh_token: string;
+  expires_at: string;
+  refresh_expires_at: string;
+  revoked_at: string | null;
+  revoked_reason: string | null;
+  last_used_at: string;
+  created_at: string;
+}
+
+export interface AuditLog {
+  id: string;
+  action: string;
+  actor_type: 'god' | 'client' | 'guest' | 'system';
+  actor_id: string | null;
+  details: Json;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
 }
 
 // ============================================
@@ -233,6 +259,7 @@ export interface Database {
         Row: Profile;
         Insert: Omit<Profile, 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>;
+        Relationships: [];
       };
       weddings: {
         Row: Wedding;
@@ -241,12 +268,12 @@ export interface Database {
       };
       media: {
         Row: Media;
-        Insert: Omit<Media, 'id' | 'created_at' | 'updated_at'>;
+        Insert: Partial<Omit<Media, 'id' | 'created_at' | 'updated_at'>> & Pick<Media, 'wedding_id' | 'original_url' | 'type'>;
         Update: Partial<Omit<Media, 'id' | 'created_at'>>;
       };
       guestbook_messages: {
         Row: GuestbookMessage;
-        Insert: Omit<GuestbookMessage, 'id' | 'created_at'>;
+        Insert: Partial<Omit<GuestbookMessage, 'id' | 'created_at'>> & Pick<GuestbookMessage, 'wedding_id' | 'author_name' | 'message'>;
         Update: Partial<Omit<GuestbookMessage, 'id' | 'created_at'>>;
       };
       reactions: {
@@ -266,7 +293,7 @@ export interface Database {
       };
       albums: {
         Row: Album;
-        Insert: Omit<Album, 'id' | 'created_at' | 'updated_at'>;
+        Insert: Partial<Omit<Album, 'id' | 'created_at' | 'updated_at'>> & Pick<Album, 'wedding_id' | 'name'>;
         Update: Partial<Omit<Album, 'id' | 'created_at'>>;
       };
       album_media: {
@@ -276,8 +303,18 @@ export interface Database {
       };
       guest_sessions: {
         Row: GuestSession;
-        Insert: Omit<GuestSession, 'id' | 'session_token' | 'created_at' | 'last_active_at'>;
+        Insert: Omit<GuestSession, 'id' | 'created_at'>;
         Update: Partial<Omit<GuestSession, 'id' | 'created_at'>>;
+      };
+      auth_sessions: {
+        Row: AuthSession;
+        Insert: Omit<AuthSession, 'id' | 'created_at' | 'last_used_at'>;
+        Update: Partial<Omit<AuthSession, 'id' | 'created_at'>>;
+      };
+      audit_log: {
+        Row: AuditLog;
+        Insert: Omit<AuditLog, 'id' | 'created_at'>;
+        Update: never;
       };
     };
     Views: {

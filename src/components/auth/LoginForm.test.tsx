@@ -38,7 +38,7 @@ describe('LoginForm Component', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    (window as any).location = originalLocation;
   });
 
   describe('Rendering', () => {

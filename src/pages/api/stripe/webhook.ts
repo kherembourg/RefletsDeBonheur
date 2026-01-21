@@ -86,7 +86,9 @@ export const POST: APIRoute = async ({ request }) => {
 
         if (profile) {
           const status = mapStripeStatus(subscription.status);
-          const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+          // Access current_period_end with type assertion - property exists in Stripe API but may not be in types
+          const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
+          const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000) : new Date();
 
           await adminClient
             .from('profiles')

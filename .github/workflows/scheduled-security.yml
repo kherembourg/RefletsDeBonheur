@@ -1,0 +1,122 @@
+name: Scheduled Security Audit
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  security-audit:
+    name: Weekly Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: audit
+        run: |
+          npm audit --audit-level=low --json > audit-report.json || true
+          cat audit-report.json
+
+      - name: Check for vulnerabilities
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let auditData;
+
+            try {
+              const auditReport = fs.readFileSync('audit-report.json', 'utf8');
+              auditData = JSON.parse(auditReport);
+            } catch (e) {
+              console.log('Could not parse audit report');
+              return;
+            }
+
+            const vulnerabilities = auditData.metadata?.vulnerabilities || {};
+            const total = vulnerabilities.total || 0;
+            const critical = vulnerabilities.critical || 0;
+            const high = vulnerabilities.high || 0;
+            const moderate = vulnerabilities.moderate || 0;
+            const low = vulnerabilities.low || 0;
+
+            core.summary
+              .addHeading('🔒 Security Audit Report')
+              .addTable([
+                [{data: 'Severity', header: true}, {data: 'Count', header: true}],
+                ['Critical', String(critical)],
+                ['High', String(high)],
+                ['Moderate', String(moderate)],
+                ['Low', String(low)],
+                ['**Total**', `**${total}**`]
+              ])
+              .write();
+
+            if (critical > 0 || high > 0) {
+              core.warning(`Found ${critical} critical and ${high} high severity vulnerabilities!`);
+            }
+
+      - name: Check for outdated dependencies
+        run: |
+          echo "## Outdated Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          npm outdated || true >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Create issue if vulnerabilities found
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🔒 Security Vulnerabilities Detected';
+            const body = `## Security Audit Alert
+
+            The weekly security audit has detected vulnerabilities in dependencies.
+
+            **Action Required**: Review the [workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId}) and update vulnerable packages.
+
+            ### Next Steps
+            1. Review the audit report in the workflow summary
+            2. Update vulnerable packages: \`npm update\`
+            3. For breaking changes, check package changelogs
+            4. Run tests after updates: \`npm test\`
+            5. Create a PR with the fixes
+
+            ---
+            *This issue was automatically created by the scheduled security audit workflow.*
+            `;
+
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security'
+            });
+
+            const existingIssue = issues.data.find(issue => issue.title === title);
+
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['security', 'dependencies', 'automated']
+              });
+              console.log('Created security issue');
+            } else {
+              console.log('Security issue already exists:', existingIssue.html_url);
+            }

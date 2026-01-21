@@ -21,12 +21,50 @@ Object.defineProperty(global, 'crypto', {
   writable: true,
 });
 
-// Create mock chain helper
+// Mock fetch for API-based functions
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
+// Use vi.hoisted to ensure mocks are available in both the mock factory and tests
+const { mockFrom, mockRpc, mockAuth } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+  mockRpc: vi.fn(),
+  mockAuth: {
+    getUser: vi.fn(),
+    signInWithPassword: vi.fn(),
+    signOut: vi.fn(),
+  },
+}));
+
+// Mock the supabase module using hoisted mocks
+vi.mock('../supabase/client', () => ({
+  supabase: {
+    from: mockFrom,
+    rpc: mockRpc,
+    auth: mockAuth,
+  },
+}));
+
+/**
+ * Create mock chain helper for Supabase query builder
+ *
+ * Creates a chainable mock for operations that END with .single()
+ * The chain is NOT thenable - only .single() returns a promise.
+ *
+ * IMPORTANT: For operations without .single() (update().eq(), insert(), delete().eq()),
+ * use explicit mock structures instead. See updateClientStatus tests for examples.
+ */
 function createMockChain(returnData: unknown, error: Error | null = null) {
-  const mockResolvedValue = { data: returnData, error };
+  // Ensure error is explicitly null, not undefined
+  const errorValue: Error | null = error === undefined ? null : error;
 
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {};
+  // Create the resolved data object
+  const resolvedData = { data: returnData, error: errorValue };
 
+  // Create the chain object - NOT thenable, only .single() returns a promise
+  const chain: Record<string, unknown> = {};
+
+  // Chain methods (created as mock functions that return the chain)
   chain.select = vi.fn().mockReturnValue(chain);
   chain.insert = vi.fn().mockReturnValue(chain);
   chain.update = vi.fn().mockReturnValue(chain);
@@ -38,31 +76,12 @@ function createMockChain(returnData: unknown, error: Error | null = null) {
   chain.is = vi.fn().mockReturnValue(chain);
   chain.or = vi.fn().mockReturnValue(chain);
   chain.order = vi.fn().mockReturnValue(chain);
-  chain.single = vi.fn().mockResolvedValue(mockResolvedValue);
 
-  // Make chain itself a promise for non-single operations
-  Object.assign(chain, Promise.resolve(mockResolvedValue));
+  // Only .single() returns a resolved promise
+  chain.single = vi.fn().mockResolvedValue(resolvedData);
 
   return chain;
 }
-
-// Mock the supabase module
-vi.mock('../supabase/client', () => {
-  const mockFrom = vi.fn();
-  const mockRpc = vi.fn();
-
-  return {
-    supabase: {
-      from: mockFrom,
-      rpc: mockRpc,
-      auth: {
-        getUser: vi.fn(),
-        signInWithPassword: vi.fn(),
-        signOut: vi.fn(),
-      },
-    },
-  };
-});
 
 // Import after mocking
 import { supabase } from '../supabase/client';
@@ -84,10 +103,6 @@ import {
   GOD_TOKEN_TTL_HOURS,
   GOD_SESSION_TTL_HOURS,
 } from './godAuth';
-
-// Cast supabase.from and supabase.rpc to mock functions for testing
-const mockFrom = supabase.from as ReturnType<typeof vi.fn>;
-const mockRpc = supabase.rpc as ReturnType<typeof vi.fn>;
 
 describe('God Auth Module', () => {
   beforeEach(() => {
@@ -608,29 +623,51 @@ describe('God Auth Module', () => {
   // updateClientStatus Tests
   // ==========================================
   describe('updateClientStatus', () => {
-    it('should update client status', async () => {
-      const chain = createMockChain(null);
-      const auditChain = createMockChain(null);
+    beforeEach(() => {
+      mockFetch.mockReset();
+      global.fetch = mockFetch;
+    });
 
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'profiles') return chain;
-        if (table === 'audit_log') return auditChain;
-        return chain;
+    it('should update client status', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
       });
 
       const result = await updateClientStatus('client-id', 'active');
 
       expect(result).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith('/api/god/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: 'client-id', status: 'active' }),
+      });
     });
 
     it('should return false on error', async () => {
-      // For update operations, the chain resolves via update().eq()
-      const updateChain = {
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: new Error('Update failed') }),
-        }),
-      };
-      mockFrom.mockReturnValue(updateChain);
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ success: false, error: 'Update failed' }),
+      });
+
+      const result = await updateClientStatus('client-id', 'active');
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await updateClientStatus('client-id', 'active');
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when response ok but success is false', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: false, error: 'Some error' }),
+      });
 
       const result = await updateClientStatus('client-id', 'active');
 
@@ -699,23 +736,28 @@ describe('God Auth Module', () => {
   // createImpersonationToken Tests
   // ==========================================
   describe('createImpersonationToken', () => {
-    it('should create impersonation token with 24h TTL', async () => {
-      const weddingChain = createMockChain({ id: 'wedding-id' });
-      const insertChain = createMockChain(null);
-      const auditChain = createMockChain(null);
+    beforeEach(() => {
+      mockFetch.mockReset();
+      global.fetch = mockFetch;
+    });
 
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'weddings') return weddingChain;
-        if (table === 'god_access_tokens') return insertChain;
-        if (table === 'audit_log') return auditChain;
-        return insertChain;
+    it('should create impersonation token', async () => {
+      const mockToken = 'generated-token-12345678901234567890123456789012345678901234567890123456789012';
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true, token: mockToken }),
       });
 
       const result = await createImpersonationToken('god-id', 'client-id');
 
       expect(result.success).toBe(true);
-      expect(result.token).toBeDefined();
-      expect(result.token?.length).toBe(64); // 32 bytes * 2 hex chars
+      expect(result.token).toBe(mockToken);
+      expect(mockFetch).toHaveBeenCalledWith('/api/god/create-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ godAdminId: 'god-id', clientId: 'client-id' }),
+      });
     });
 
     it('should fail with invalid god admin ID', async () => {
@@ -723,6 +765,7 @@ describe('God Auth Module', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Invalid god admin ID or client ID');
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it('should fail with invalid client ID', async () => {
@@ -730,11 +773,14 @@ describe('God Auth Module', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Invalid god admin ID or client ID');
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should fail when wedding not found', async () => {
-      const chain = createMockChain(null, new Error('Not found'));
-      mockFrom.mockReturnValue(chain);
+    it('should fail when API returns error', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ success: false, error: 'Wedding not found' }),
+      });
 
       const result = await createImpersonationToken('god-id', 'client-id');
 
@@ -742,17 +788,10 @@ describe('God Auth Module', () => {
       expect(result.error).toBe('Wedding not found');
     });
 
-    it('should fail on token insert error', async () => {
-      const weddingChain = createMockChain({ id: 'wedding-id' });
-      // For insert operations, the chain resolves directly (no .single())
-      const insertChain = {
-        insert: vi.fn().mockResolvedValue({ data: null, error: new Error('Insert error') }),
-      };
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'weddings') return weddingChain;
-        if (table === 'god_access_tokens') return insertChain;
-        return weddingChain;
+    it('should fail on token creation error', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: false, error: 'Failed to create access token' }),
       });
 
       const result = await createImpersonationToken('god-id', 'client-id');
@@ -762,14 +801,24 @@ describe('God Auth Module', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await createImpersonationToken('god-id', 'client-id');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('An unexpected error occurred');
+    });
+
+    it('should use default error message when API returns no error', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ success: false }),
+      });
+
+      const result = await createImpersonationToken('god-id', 'client-id');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Failed to create access token');
     });
   });
 
@@ -777,54 +826,41 @@ describe('God Auth Module', () => {
   // verifyImpersonationToken Tests
   // ==========================================
   describe('verifyImpersonationToken', () => {
-    const mockToken = {
-      id: 'token-id',
-      god_admin_id: 'god-id',
-      wedding_id: 'wedding-id',
-      token: 'test-token',
-      expires_at: new Date(Date.now() + 86400000).toISOString(),
-      used_count: 0,
-      max_uses: 1,
-    };
-
-    const mockWedding = {
-      id: 'wedding-id',
-      owner_id: 'owner-id',
-      slug: 'marie-thomas',
-      bride_name: 'Marie',
-      groom_name: 'Thomas',
-      wedding_date: '2026-06-20',
-      name: null,
-      pin_code: 'ABC123',
-      magic_token: 'magic-token',
-      config: {
-        theme: { name: 'classic' },
-        features: { gallery: true, guestbook: true },
-      },
-    };
-
-    const mockProfile = {
+    const mockClient = {
       id: 'owner-id',
+      wedding_name: 'Mariage de Marie & Thomas',
+      couple_names: 'Marie & Thomas',
+      wedding_date: '2026-06-20',
+      wedding_slug: 'marie-thomas',
+      username: 'marie@test.com',
       email: 'marie@test.com',
-      subscription_status: 'active',
+      guest_code: 'ABC123',
+      admin_code: 'magic-token',
+      allow_uploads: true,
+      allow_guestbook: true,
+      theme: 'classic',
+      custom_domain: null,
+      status: 'active',
+      subscription_started_at: '2024-01-01T00:00:00Z',
+      subscription_expires_at: null,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      subscription_end_date: null,
+      last_login_at: null,
+      photo_count: 0,
+      video_count: 0,
+      message_count: 0,
+      storage_used_mb: 0,
     };
 
-    it('should verify valid token', async () => {
-      const tokenChain = createMockChain(mockToken);
-      const weddingChain = createMockChain(mockWedding);
-      const profileChain = createMockChain(mockProfile);
-      const updateChain = createMockChain(null);
-      const auditChain = createMockChain(null);
+    beforeEach(() => {
+      mockFetch.mockReset();
+      global.fetch = mockFetch;
+    });
 
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'god_access_tokens') return tokenChain;
-        if (table === 'weddings') return weddingChain;
-        if (table === 'profiles') return profileChain;
-        if (table === 'audit_log') return auditChain;
-        return updateChain;
+    it('should verify valid token', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ valid: true, client: mockClient }),
       });
 
       const result = await verifyImpersonationToken('test-token');
@@ -832,11 +868,18 @@ describe('God Auth Module', () => {
       expect(result.valid).toBe(true);
       expect(result.client).toBeDefined();
       expect(result.client?.wedding_slug).toBe('marie-thomas');
+      expect(mockFetch).toHaveBeenCalledWith('/api/god/verify-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: 'test-token' }),
+      });
     });
 
     it('should fail for invalid/expired token', async () => {
-      const chain = createMockChain(null, new Error('Not found'));
-      mockFrom.mockReturnValue(chain);
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ valid: false, error: 'Invalid or expired access token' }),
+      });
 
       const result = await verifyImpersonationToken('invalid-token');
 
@@ -845,10 +888,10 @@ describe('God Auth Module', () => {
     });
 
     it('should fail when max uses exceeded', async () => {
-      const usedToken = { ...mockToken, used_count: 1, max_uses: 1 };
-      const tokenChain = createMockChain(usedToken);
-
-      mockFrom.mockReturnValue(tokenChain);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ valid: false, error: 'Access token has been used' }),
+      });
 
       const result = await verifyImpersonationToken('test-token');
 
@@ -857,13 +900,9 @@ describe('God Auth Module', () => {
     });
 
     it('should fail when wedding not found', async () => {
-      const tokenChain = createMockChain(mockToken);
-      const weddingChain = createMockChain(null, new Error('Not found'));
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'god_access_tokens') return tokenChain;
-        if (table === 'weddings') return weddingChain;
-        return weddingChain;
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ valid: false, error: 'Wedding not found' }),
       });
 
       const result = await verifyImpersonationToken('test-token');
@@ -873,15 +912,9 @@ describe('God Auth Module', () => {
     });
 
     it('should fail when profile not found', async () => {
-      const tokenChain = createMockChain(mockToken);
-      const weddingChain = createMockChain(mockWedding);
-      const profileChain = createMockChain(null, new Error('Not found'));
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'god_access_tokens') return tokenChain;
-        if (table === 'weddings') return weddingChain;
-        if (table === 'profiles') return profileChain;
-        return profileChain;
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ valid: false, error: 'Profile not found' }),
       });
 
       const result = await verifyImpersonationToken('test-token');
@@ -891,14 +924,36 @@ describe('God Auth Module', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await verifyImpersonationToken('test-token');
 
       expect(result.valid).toBe(false);
       expect(result.error).toBe('An unexpected error occurred');
+    });
+
+    it('should use default error message when response not ok and no error provided', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ valid: false }),
+      });
+
+      const result = await verifyImpersonationToken('test-token');
+
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Failed to verify token');
+    });
+
+    it('should use default error message when valid is false and no error provided', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ valid: false }),
+      });
+
+      const result = await verifyImpersonationToken('test-token');
+
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Invalid token');
     });
   });
 
