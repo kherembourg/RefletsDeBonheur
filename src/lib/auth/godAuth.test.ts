@@ -24,22 +24,20 @@ Object.defineProperty(global, 'crypto', {
 /**
  * Create mock chain helper for Supabase query builder
  *
- * Creates a chainable mock that:
- * 1. Every method returns the same chain link (for chaining like .eq().single())
- * 2. The chain link is also thenable, so await chain works
- * 3. The resolved value is always { data, error }
+ * Creates a chainable mock for operations that END with .single()
+ * The chain is NOT thenable - only .single() returns a promise.
  *
- * Note: This function MUST use regular function syntax for `then`/`catch` methods,
- * not arrow functions, to ensure proper thenable detection in all environments.
+ * IMPORTANT: For operations without .single() (update().eq(), insert(), delete().eq()),
+ * use explicit mock structures instead. See updateClientStatus tests for examples.
  */
 function createMockChain(returnData: unknown, error: Error | null = null) {
   // Ensure error is explicitly null, not undefined
   const errorValue: Error | null = error === undefined ? null : error;
 
-  // Create the resolved data object - freeze it to prevent modification
-  const resolvedData = Object.freeze({ data: returnData, error: errorValue });
+  // Create the resolved data object
+  const resolvedData = { data: returnData, error: errorValue };
 
-  // Create the chain object
+  // Create the chain object - NOT thenable, only .single() returns a promise
   const chain: Record<string, unknown> = {};
 
   // Chain methods (created as mock functions that return the chain)
@@ -54,22 +52,9 @@ function createMockChain(returnData: unknown, error: Error | null = null) {
   chain.is = vi.fn().mockReturnValue(chain);
   chain.or = vi.fn().mockReturnValue(chain);
   chain.order = vi.fn().mockReturnValue(chain);
+
+  // Only .single() returns a resolved promise
   chain.single = vi.fn().mockResolvedValue(resolvedData);
-
-  // Make chain thenable by adding then/catch methods
-  // Using regular function declaration to ensure proper `this` binding if needed
-  // and to match the standard PromiseLike interface more closely
-  chain.then = function then(
-    onFulfilled?: ((value: typeof resolvedData) => unknown) | null,
-    onRejected?: ((reason: unknown) => unknown) | null
-  ) {
-    // Create a fresh promise each time then is called
-    return Promise.resolve(resolvedData).then(onFulfilled, onRejected);
-  };
-
-  chain.catch = function catchFn(onRejected?: ((reason: unknown) => unknown) | null) {
-    return Promise.resolve(resolvedData).catch(onRejected);
-  };
 
   return chain;
 }
