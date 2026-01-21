@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Run TypeScript compiler
-        run: npx tsc --noEmit
+        run: npx astro check
 
   # Job 2: Unit and Integration Tests
   test:
@@ -45,7 +45,7 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test:coverage
+        run: npm run test:coverage -- --pool=forks --isolate
         env:
           NODE_ENV: test
 
