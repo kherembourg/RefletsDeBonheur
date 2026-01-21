@@ -21,17 +21,18 @@ Object.defineProperty(global, 'crypto', {
   writable: true,
 });
 
-// Create mock chain helper - implements proper PromiseLike interface
+// Create mock chain helper - implements proper PromiseLike interface for awaiting
 function createMockChain(returnData: unknown, error: Error | null = null) {
-  // Ensure error is explicitly null, not undefined
-  const mockResolvedValue = { data: returnData, error: error ?? null };
+  // Ensure error is explicitly null, not undefined - critical for CI compatibility
+  const resolvedData = { data: returnData, error: error !== undefined ? error : null };
 
-  // Define chain type to include full thenable interface (PromiseLike)
-  type ResolvedValue = { data: unknown; error: Error | null };
-  type MockChain = Record<string, ReturnType<typeof vi.fn>> & PromiseLike<ResolvedValue>;
+  // Create a fresh promise for each chain to avoid closure issues in forked processes
+  const makePromise = () => Promise.resolve(resolvedData);
 
-  const chain = {} as MockChain;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chain: any = {};
 
+  // Chain methods that return the chain for further chaining
   chain.select = vi.fn().mockReturnValue(chain);
   chain.insert = vi.fn().mockReturnValue(chain);
   chain.update = vi.fn().mockReturnValue(chain);
@@ -43,17 +44,22 @@ function createMockChain(returnData: unknown, error: Error | null = null) {
   chain.is = vi.fn().mockReturnValue(chain);
   chain.or = vi.fn().mockReturnValue(chain);
   chain.order = vi.fn().mockReturnValue(chain);
-  chain.single = vi.fn().mockResolvedValue(mockResolvedValue);
+  chain.single = vi.fn().mockResolvedValue(resolvedData);
 
-  // Make chain thenable for non-.single() operations (e.g., update().eq())
-  // This allows `await chain` to resolve to mockResolvedValue
-  // Implementation must match PromiseLike<T>.then signature exactly
-  const promise = Promise.resolve(mockResolvedValue);
-  chain.then = function <TResult1 = ResolvedValue, TResult2 = never>(
-    onFulfilled?: ((value: ResolvedValue) => TResult1 | PromiseLike<TResult1>) | null | undefined,
-    onRejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null | undefined
-  ): Promise<TResult1 | TResult2> {
-    return promise.then(onFulfilled, onRejected);
+  // Implement thenable interface for operations that don't end with .single()
+  // When code does `await supabase.from('x').update({}).eq('id', y)`, this allows
+  // the chain to resolve to { data, error } just like .single() would
+  // Use simple function form to avoid any generic/typing issues across environments
+  chain.then = (
+    onFulfilled?: ((value: { data: unknown; error: Error | null }) => unknown) | null,
+    onRejected?: ((reason: unknown) => unknown) | null
+  ) => {
+    return makePromise().then(onFulfilled, onRejected);
+  };
+
+  // Also implement catch for completeness
+  chain.catch = (onRejected?: ((reason: unknown) => unknown) | null) => {
+    return makePromise().catch(onRejected);
   };
 
   return chain;
