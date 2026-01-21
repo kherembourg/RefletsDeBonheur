@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pkill -f 'mgrep watch.*reflets-de-bonheur' 2>/dev/null; setsid /opt/homebrew/bin/mgrep watch --store \"reflets-de-bonheur\" > /dev/null 2>&1 &"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pkill -f 'mgrep watch.*reflets-de-bonheur' 2>/dev/null"
+          }
+        ]
+      }
+    ]
+  }
+}
