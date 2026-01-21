@@ -561,6 +561,9 @@ npm run preview
 
 ## Testing
 
+Always add tests for every new feature or bug fix.
+Always run tests before committing.
+
 ### Test Framework
 - **Vitest**: Test runner with fast execution
 - **React Testing Library**: Component testing
