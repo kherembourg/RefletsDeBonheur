@@ -21,6 +21,26 @@ Object.defineProperty(global, 'crypto', {
   writable: true,
 });
 
+// Use vi.hoisted to ensure mocks are available in both the mock factory and tests
+const { mockFrom, mockRpc, mockAuth } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+  mockRpc: vi.fn(),
+  mockAuth: {
+    getUser: vi.fn(),
+    signInWithPassword: vi.fn(),
+    signOut: vi.fn(),
+  },
+}));
+
+// Mock the supabase module using hoisted mocks
+vi.mock('../supabase/client', () => ({
+  supabase: {
+    from: mockFrom,
+    rpc: mockRpc,
+    auth: mockAuth,
+  },
+}));
+
 /**
  * Create mock chain helper for Supabase query builder
  *
@@ -59,24 +79,6 @@ function createMockChain(returnData: unknown, error: Error | null = null) {
   return chain;
 }
 
-// Mock the supabase module
-vi.mock('../supabase/client', () => {
-  const mockFrom = vi.fn();
-  const mockRpc = vi.fn();
-
-  return {
-    supabase: {
-      from: mockFrom,
-      rpc: mockRpc,
-      auth: {
-        getUser: vi.fn(),
-        signInWithPassword: vi.fn(),
-        signOut: vi.fn(),
-      },
-    },
-  };
-});
-
 // Import after mocking
 import { supabase } from '../supabase/client';
 import {
@@ -97,10 +99,6 @@ import {
   GOD_TOKEN_TTL_HOURS,
   GOD_SESSION_TTL_HOURS,
 } from './godAuth';
-
-// Cast supabase.from and supabase.rpc to mock functions for testing
-const mockFrom = supabase.from as ReturnType<typeof vi.fn>;
-const mockRpc = supabase.rpc as ReturnType<typeof vi.fn>;
 
 describe('God Auth Module', () => {
   beforeEach(() => {
