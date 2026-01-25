@@ -5,7 +5,7 @@
  * from a user's perspective. They cover the main user flows and edge cases.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { RSVPService } from '../../lib/rsvp/rsvpService';
 import {
   createTextQuestion,
@@ -14,36 +14,17 @@ import {
   RSVP_LIMITS,
 } from '../../lib/rsvp/types';
 
-// Mock localStorage
-const localStorageMock = {
-  store: {} as Record<string, string>,
-  getItem: vi.fn((key: string) => localStorageMock.store[key] || null),
-  setItem: vi.fn((key: string, value: string) => {
-    localStorageMock.store[key] = value;
-  }),
-  removeItem: vi.fn((key: string) => {
-    delete localStorageMock.store[key];
-  }),
-  clear: vi.fn(() => {
-    localStorageMock.store = {};
-  }),
-};
+// Note: localStorage mock is provided by the global test setup (src/test/setup.ts)
+// which clears it before each test
 
-Object.defineProperty(global, 'localStorage', {
-  value: localStorageMock,
-  writable: true,
-});
+// Helper to create unique wedding IDs for each test
+const createUniqueWeddingId = () => `scenario-wedding-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
 describe('RSVP Management - Functional Scenarios', () => {
-  const weddingId = 'scenario-wedding-123';
-
-  beforeEach(() => {
-    localStorageMock.clear();
-    vi.clearAllMocks();
-  });
 
   describe('Scenario: Admin configures RSVP for their wedding', () => {
     it('should allow enabling/disabling the RSVP feature', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       // Initially enabled
@@ -62,6 +43,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow setting a deadline', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
       const deadline = '2024-12-15T00:00:00Z';
 
@@ -75,6 +57,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow customizing welcome and thank you messages', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       await service.saveConfig({
@@ -89,6 +72,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow configuring plus-one and dietary settings', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       await service.saveConfig({
@@ -107,6 +91,7 @@ describe('RSVP Management - Functional Scenarios', () => {
 
   describe('Scenario: Admin creates custom questions', () => {
     it('should allow adding a text question', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const question = createTextQuestion(weddingId, 0);
@@ -122,6 +107,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow adding a single choice question', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const question = createSingleChoiceQuestion(weddingId, 0);
@@ -142,6 +128,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow adding a multiple choice question', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const question = createMultipleChoiceQuestion(weddingId, 0);
@@ -160,6 +147,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should enforce the maximum question limit', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       // Add max questions
@@ -177,6 +165,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow reordering questions', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const q1 = createTextQuestion(weddingId, 0);
@@ -200,6 +189,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow editing a question', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const question = createTextQuestion(weddingId, 0);
@@ -218,6 +208,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow deleting a question', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const q1 = createTextQuestion(weddingId, 0);
@@ -236,6 +227,7 @@ describe('RSVP Management - Functional Scenarios', () => {
 
   describe('Scenario: Guest submits RSVP response', () => {
     it('should allow submitting a basic response', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const response = await service.submitResponse({
@@ -253,6 +245,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow submitting with plus-ones', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const response = await service.submitResponse({
@@ -272,6 +265,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow answering custom questions', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       // First add a question
@@ -295,6 +289,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow submitting a decline', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const response = await service.submitResponse({
@@ -311,6 +306,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should allow submitting a maybe', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const response = await service.submitResponse({
@@ -327,8 +323,10 @@ describe('RSVP Management - Functional Scenarios', () => {
 
   describe('Scenario: Admin views and manages responses', () => {
     let service: RSVPService;
+    let weddingId: string;
 
     beforeEach(async () => {
+      weddingId = createUniqueWeddingId();
       service = new RSVPService({ weddingId, demoMode: true });
 
       // Add sample responses
@@ -418,6 +416,7 @@ describe('RSVP Management - Functional Scenarios', () => {
 
   describe('Scenario: Data validation and limits', () => {
     it('should enforce text answer length limits', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const question = createTextQuestion(weddingId, 0);
@@ -435,6 +434,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should enforce maximum options per question', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const question = createSingleChoiceQuestion(weddingId, 0);
@@ -455,6 +455,7 @@ describe('RSVP Management - Functional Scenarios', () => {
 
   describe('Scenario: Error handling', () => {
     it('should handle updating non-existent question', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const fakeQuestion = createTextQuestion(weddingId, 0);
@@ -464,6 +465,7 @@ describe('RSVP Management - Functional Scenarios', () => {
     });
 
     it('should handle getting non-existent response', async () => {
+      const weddingId = createUniqueWeddingId();
       const service = new RSVPService({ weddingId, demoMode: true });
 
       const response = await service.getResponse('non-existent-id');

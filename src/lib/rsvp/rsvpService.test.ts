@@ -9,33 +9,18 @@ import {
   type RSVPResponse,
 } from './types';
 
-// Mock localStorage
-const localStorageMock = {
-  store: {} as Record<string, string>,
-  getItem: vi.fn((key: string) => localStorageMock.store[key] || null),
-  setItem: vi.fn((key: string, value: string) => {
-    localStorageMock.store[key] = value;
-  }),
-  removeItem: vi.fn((key: string) => {
-    delete localStorageMock.store[key];
-  }),
-  clear: vi.fn(() => {
-    localStorageMock.store = {};
-  }),
-};
-
-Object.defineProperty(global, 'localStorage', {
-  value: localStorageMock,
-  writable: true,
-});
+// Note: localStorage mock is provided by the global test setup (src/test/setup.ts)
+// which clears it before each test
 
 describe('RSVPService', () => {
   let service: RSVPService;
-  const weddingId = 'test-wedding-123';
+  let weddingId: string;
 
   beforeEach(() => {
-    localStorageMock.clear();
-    vi.clearAllMocks();
+    // Use a unique weddingId for each test to ensure complete isolation
+    weddingId = `test-wedding-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    // localStorage is cleared by the global setup's beforeEach
+    // Create a fresh service instance for each test
     service = new RSVPService({ weddingId, demoMode: true });
   });
 

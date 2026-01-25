@@ -75,7 +75,13 @@ export class RSVPService {
   async getConfig(): Promise<RSVPConfig> {
     if (this.demoMode) {
       const data = getDemoData();
-      return data.configs[this.weddingId] || { ...DEFAULT_RSVP_CONFIG };
+      // IMPORTANT: Create a fresh config with a new questions array to avoid
+      // shared state between different wedding configs. Shallow spread would
+      // share the same questions array reference across all default configs.
+      return data.configs[this.weddingId] || {
+        ...DEFAULT_RSVP_CONFIG,
+        questions: [], // Fresh array for each wedding
+      };
     }
 
     try {
