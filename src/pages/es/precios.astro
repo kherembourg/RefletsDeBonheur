@@ -9,40 +9,40 @@ const lang = 'es';
 
 <MainLayout
   title="Precios - Reflets de Bonheur"
-  description="Precios simples y transparentes: 99€ por 2 años con tu dominio personalizado incluido."
+  description="Experiencia premium: 99€ por 2 años con dominio privado incluido."
   showHeader={true}
 >
   <Header slot="header" />
 
   <!-- Hero Section -->
-  <section class="py-20 bg-cream">
+  <section class="py-24 bg-cream dark:bg-[#0f0f0f]">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-burgundy-old">
+        <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
           Precios
         </span>
-        <h1 class="font-serif text-4xl sm:text-5xl font-light text-charcoal mt-4 mb-6">
-          Precios simples y transparentes
+        <h1 class="font-serif text-4xl sm:text-5xl font-light text-charcoal dark:text-cream mt-4 mb-6">
+          Precios premium, sin sorpresas
         </h1>
         <div class="w-16 h-px mx-auto mb-6" style="background-color: #ae1725;"></div>
-        <p class="text-charcoal-light font-light">
-          Todo lo que necesitas para inmortalizar tu boda, sin sorpresas
+        <p class="text-charcoal-light dark:text-cream/70 font-light">
+          Un espacio privado y elegante para cada recuerdo.
         </p>
       </div>
 
       <!-- Pricing Card -->
       <div class="max-w-3xl mx-auto">
-        <div class="bg-white border p-8 sm:p-12 relative" style="border-color: rgba(174, 23, 37, 0.2);">
+        <div class="bg-white dark:bg-[#141414] border p-8 sm:p-12 relative" style="border-color: rgba(174, 23, 37, 0.2);">
           <!-- Badge -->
           <div class="absolute -top-4 left-1/2 -translate-x-1/2">
             <span class="text-white text-xs font-sans font-medium tracking-wider uppercase px-4 py-2" style="background-color: #ae1725;">
-              Oferta de Lanzamiento
+              Colección limitada
             </span>
           </div>
 
           <div class="text-center mb-10 pt-4">
-            <h2 class="font-serif text-2xl text-charcoal mb-2">Paquete Completo</h2>
-            <p class="text-charcoal-light font-light text-sm">Todos los servicios incluidos</p>
+            <h2 class="font-serif text-2xl text-charcoal dark:text-cream mb-2">Paquete Completo</h2>
+            <p class="text-charcoal-light dark:text-cream/70 font-light text-sm">Todos los servicios premium incluidos</p>
           </div>
 
           <!-- Price -->
@@ -51,13 +51,13 @@ const lang = 'es';
               <span class="text-2xl text-charcoal-light/50 line-through font-light">149€</span>
               <span class="font-serif text-6xl sm:text-7xl font-light text-burgundy-old">99€</span>
             </div>
-            <p class="text-charcoal-light mb-2">
-              por <strong class="text-charcoal">2 años</strong>
+            <p class="text-charcoal-light dark:text-cream/70 mb-2">
+              por <strong class="text-charcoal dark:text-cream">2 años</strong>
               <span class="ml-2 font-medium text-burgundy-old">(Ahorra 50€)</span>
             </p>
             <div class="inline-flex items-center gap-2 px-4 py-2 mt-2" style="background-color: rgba(174, 23, 37, 0.05);">
-              <span class="text-sm text-charcoal-light">
-                Luego <strong class="text-burgundy-old">19,99€/año</strong> para mantener tu galería
+              <span class="text-sm text-charcoal-light dark:text-cream/70">
+                Luego <strong class="text-burgundy-old">19,99€/año</strong> para conservar el acceso
               </span>
             </div>
           </div>
@@ -73,31 +73,31 @@ const lang = 'es';
           <div class="grid md:grid-cols-3 gap-6 mb-10">
             <div class="text-center p-4">
               <Camera class="w-6 h-6 mx-auto mb-3 text-burgundy-old" />
-              <h4 class="font-medium text-charcoal text-sm mb-2">Galería de Fotos</h4>
-              <ul class="text-xs text-charcoal-light space-y-1 font-light">
-                <li>Carga ilimitada</li>
-                <li>Álbumes organizados</li>
-                <li>Descarga ZIP</li>
+              <h4 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Galería de Fotos</h4>
+              <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
+                <li>Subidas ilimitadas</li>
+                <li>Álbumes por momentos</li>
+                <li>Archivo ZIP</li>
               </ul>
             </div>
 
             <div class="text-center p-4 border-x" style="border-color: rgba(174, 23, 37, 0.1);">
               <BookHeart class="w-6 h-6 mx-auto mb-3 text-burgundy-old" />
-              <h4 class="font-medium text-charcoal text-sm mb-2">Libro de Visitas</h4>
-              <ul class="text-xs text-charcoal-light space-y-1 font-light">
+              <h4 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Libro de Visitas</h4>
+              <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
                 <li>Mensajes ilimitados</li>
-                <li>Moderación admin</li>
-                <li>Exportar PDF</li>
+                <li>Moderación sencilla</li>
+                <li>PDF imprimible</li>
               </ul>
             </div>
 
             <div class="text-center p-4">
               <Globe class="w-6 h-6 mx-auto mb-3 text-burgundy-old" />
-              <h4 class="font-medium text-charcoal text-sm mb-2">Sitio Web de Boda</h4>
-              <ul class="text-xs text-charcoal-light space-y-1 font-light">
-                <li>Dominio personalizado</li>
-                <li>Programa y lugar</li>
-                <li>RSVP integrado</li>
+              <h4 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Sitio Web de Boda</h4>
+              <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
+                <li>Dominio privado</li>
+                <li>Agenda y lugar</li>
+                <li>RSVP con seguimiento</li>
               </ul>
             </div>
           </div>
@@ -112,7 +112,7 @@ const lang = 'es';
               Comenzar ahora
               <ArrowRight class="ml-2 w-4 h-4" />
             </a>
-            <p class="mt-4 text-charcoal-light text-sm font-light">
+            <p class="mt-4 text-charcoal-light dark:text-cream/70 text-sm font-light">
               Garantía de devolución de 30 días
             </p>
           </div>
@@ -122,13 +122,13 @@ const lang = 'es';
   </section>
 
   <!-- Features List -->
-  <section class="py-20" style="background-color: rgba(174, 23, 37, 0.03);">
+  <section class="py-24 dark:bg-[#141414]" style="background-color: rgba(174, 23, 37, 0.03);">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-burgundy-old">
+        <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
           Incluido en la oferta
         </span>
-        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-4">
+        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-4">
           Todo lo que necesitas
         </h2>
       </div>
@@ -136,23 +136,23 @@ const lang = 'es';
       <div class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-4">
         {[
           "Galería de fotos y videos ilimitada",
-          "Nombre de dominio personalizado",
+          "Nombre de dominio privado",
           "Libro de visitas digital",
-          "Sitio web de boda",
+          "Sitio web y RSVP",
           "Aplicación móvil (PWA)",
           "Modo sin conexión",
           "Descarga masiva (ZIP)",
-          "Exportar libro de visitas a PDF",
+          "PDF imprimible del libro",
           "Álbumes por categorías",
           "Reacciones y favoritos",
           "Modo presentación",
           "Soporte por email"
         ].map(feature => (
-          <div class="flex items-center gap-3 p-3 bg-white">
+          <div class="flex items-center gap-3 p-3 bg-white dark:bg-[#1b1b1b] border border-white/10">
             <div class="w-5 h-5 flex items-center justify-center shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
               <Check class="w-3 h-3" />
             </div>
-            <span class="text-charcoal font-light text-sm">{feature}</span>
+            <span class="text-charcoal dark:text-cream font-light text-sm">{feature}</span>
           </div>
         ))}
       </div>
@@ -160,27 +160,27 @@ const lang = 'es';
   </section>
 
   <!-- FAQ Section -->
-  <section class="py-20 bg-cream">
+  <section class="py-24 bg-cream dark:bg-[#0f0f0f]">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-burgundy-old">
+        <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
           Preguntas frecuentes
         </span>
-        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-4">
+        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-4">
           Respondemos a tus preguntas
         </h2>
       </div>
 
       <div class="max-w-3xl mx-auto space-y-4">
         <!-- FAQ Item 1 -->
-        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>
-              <h3 class="font-medium text-charcoal mb-2">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
                 ¿Cómo funciona el dominio personalizado?
               </h3>
-              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
                 Eliges tu nombre durante el registro (ej: maria-jose.reflets-bonheur.fr).
                 Esta será la dirección única de tu espacio de boda, accesible para todos tus invitados.
               </p>
@@ -189,14 +189,14 @@ const lang = 'es';
         </div>
 
         <!-- FAQ Item 2 -->
-        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>
-              <h3 class="font-medium text-charcoal mb-2">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
                 ¿Cómo funciona la renovación?
               </h3>
-              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
                 Después de 2 años, si quieres mantener tu galería en línea (modo solo lectura, sin nuevas cargas),
                 cuesta solo 19,99€/año. La renovación es opcional - puedes descargar tus datos en cualquier momento.
               </p>
@@ -205,30 +205,30 @@ const lang = 'es';
         </div>
 
         <!-- FAQ Item 3 -->
-        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>
-              <h3 class="font-medium text-charcoal mb-2">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
                 ¿Mis fotos están seguras?
               </h3>
-              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
                 Sí, tus datos están encriptados y respaldados automáticamente.
-                Solo las personas con el código de acceso pueden ver tu galería.
+                Solo las personas con el enlace privado pueden ver tu galería.
               </p>
             </div>
           </div>
         </div>
 
         <!-- FAQ Item 4 -->
-        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>
-              <h3 class="font-medium text-charcoal mb-2">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
                 ¿Cuánto tiempo permanece mi sitio en línea?
               </h3>
-              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
                 Tu sitio es accesible durante 2 años como mínimo. Después, puedes renovarlo o recuperar
                 todos tus datos. Conservamos tus archivos durante 90 días después de la expiración.
               </p>
@@ -237,14 +237,14 @@ const lang = 'es';
         </div>
 
         <!-- FAQ Item 5 -->
-        <div class="bg-white border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>
-              <h3 class="font-medium text-charcoal mb-2">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
                 ¿Puedo descargar mis fotos?
               </h3>
-              <p class="text-charcoal-light font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
                 En cualquier momento, puedes descargar todas tus fotos y videos en un clic (formato ZIP).
                 El libro de visitas se puede exportar como PDF.
               </p>
@@ -256,19 +256,19 @@ const lang = 'es';
   </section>
 
   <!-- Comparison Section -->
-  <section class="py-20" style="background-color: rgba(174, 23, 37, 0.03);">
+  <section class="py-24 dark:bg-[#141414]" style="background-color: rgba(174, 23, 37, 0.03);">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <span class="tracking-[0.2em] uppercase text-xs font-sans font-medium text-burgundy-old">
+        <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
           Comparación
         </span>
-        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-4">
+        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-4">
           ¿Por qué elegirnos?
         </h2>
       </div>
 
       <div class="max-w-5xl mx-auto overflow-x-auto">
-        <table class="w-full bg-white">
+        <table class="w-full bg-white dark:bg-[#1b1b1b]">
           <thead>
             <tr style="background-color: #ae1725;">
               <th class="px-4 py-4 text-left text-sm font-medium tracking-wide text-white">Característica</th>
@@ -279,40 +279,40 @@ const lang = 'es';
           </thead>
           <tbody class="divide-y" style="--tw-divide-opacity: 0.1; border-color: rgba(174, 23, 37, 0.1);">
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal">Precio</td>
+              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Precio</td>
               <td class="px-4 py-4 text-center font-medium text-sm text-burgundy-old">99€/2 años</td>
-              <td class="px-4 py-4 text-center text-charcoal-light text-sm">Gratis (limitado)</td>
-              <td class="px-4 py-4 text-center text-charcoal-light text-sm">12€/mes</td>
+              <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">Gratis (limitado)</td>
+              <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">12€/mes</td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal">Dominio personalizado</td>
-              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
-            </tr>
-            <tr>
-              <td class="px-4 py-4 text-sm text-charcoal">Libro de visitas</td>
+              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Dominio personalizado</td>
               <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
               <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
               <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal">Sitio web de boda</td>
+              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Libro de visitas</td>
               <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
               <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
               <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal">Calidad original</td>
+              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Sitio web de boda</td>
               <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
-              <td class="px-4 py-4 text-center text-charcoal-light text-sm">Comprimido</td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Calidad original</td>
+              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
+              <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">Comprimido</td>
               <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal">Sin anuncios</td>
+              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Sin anuncios</td>
               <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
               <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
-              <td class="px-4 py-4 text-center text-charcoal-light text-sm">Versión Pro</td>
+              <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">Versión Pro</td>
             </tr>
           </tbody>
         </table>
@@ -321,18 +321,18 @@ const lang = 'es';
   </section>
 
   <!-- Final CTA -->
-  <section class="py-20" style="background-color: #ae1725;">
+  <section class="py-24" style="background-color: #ae1725;">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-2xl mx-auto">
         <h2 class="font-serif text-3xl sm:text-4xl font-light mb-6 text-white">
-          ¿Listo para comenzar?
+          ¿Listo para guardar tus recuerdos?
         </h2>
         <p class="text-white/80 font-light mb-4">
           <span class="line-through text-white/50">149€</span>
           <strong class="text-white ml-2">99€</strong> por 2 años completos.
         </p>
         <p class="text-white/70 font-light text-sm mb-8">
-          Dominio personalizado incluido • Luego 19,99€/año para renovación
+          Dominio privado incluido • Luego 19,99€/año para renovación
         </p>
         <a
           href="/connexion"

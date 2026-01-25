@@ -4,32 +4,38 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
+const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+if (!isConfigured) {
   console.warn(
     'Supabase credentials not found. Running in demo mode. ' +
     'Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY in your .env file.'
   );
 }
 
-// Create a single supabase client for the browser
+// Create a single supabase client for the browser when configured.
 // Note: Using untyped client for flexibility with auth tables
 // Type safety is handled via explicit type assertions in queries
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-});
+export const supabase: SupabaseClient = isConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    })
+  : (null as unknown as SupabaseClient);
 
 // Check if Supabase is configured
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && supabaseAnonKey);
+  return isConfigured;
 }
 
 // Get current user
 export async function getCurrentUser() {
+  if (!isConfigured) {
+    return null;
+  }
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error) {
     console.error('Error getting user:', error);
@@ -40,6 +46,9 @@ export async function getCurrentUser() {
 
 // Get current session
 export async function getSession() {
+  if (!isConfigured) {
+    return null;
+  }
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error) {
     console.error('Error getting session:', error);
@@ -50,6 +59,9 @@ export async function getSession() {
 
 // Sign out
 export async function signOut() {
+  if (!isConfigured) {
+    return;
+  }
   const { error } = await supabase.auth.signOut();
   if (error) {
     console.error('Error signing out:', error);
@@ -59,6 +71,9 @@ export async function signOut() {
 
 // Subscribe to auth changes
 export function onAuthStateChange(callback: (event: string, session: any) => void) {
+  if (!isConfigured) {
+    return { data: { subscription: null } };
+  }
   return supabase.auth.onAuthStateChange(callback);
 }
 

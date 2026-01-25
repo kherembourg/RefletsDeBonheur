@@ -11,19 +11,19 @@ const testimonials = [
   {
     name: "María & Carlos",
     location: "Madrid, España",
-    text: "Nuestros invitados no pararon de subir fotos durante toda la noche. ¡Recogimos más de 400 recuerdos que nunca habríamos tenido de otra manera!",
+    text: "Una experiencia de lujo para nuestros recuerdos. Cada foto llegó al instante y con calidad original.",
     avatar: "MC"
   },
   {
     name: "Ana & Diego",
     location: "Ciudad de México",
-    text: "El libro de visitas digital fue una sorpresa increíble. Leer los mensajes de nuestros seres queridos nos emociona cada vez que los vemos.",
+    text: "El libro de visitas es nuestro tesoro. Elegante, sencillo para los invitados, precioso de releer.",
     avatar: "AD"
   },
   {
     name: "Lucía & Pablo",
     location: "Buenos Aires, Argentina",
-    text: "Super fácil de usar para nuestros abuelos y super moderno para nuestros amigos. ¡La solución perfecta para todos!",
+    text: "Premium, simple y rápido. El QR en las mesas lo hizo perfecto para todos.",
     avatar: "LP"
   }
 ];
@@ -32,33 +32,33 @@ const testimonials = [
 const faqs = [
   {
     question: "¿Cuánto tiempo tenemos acceso?",
-    answer: "Su espacio está garantizado por 2 años completos desde la activación. Después de este período, puede renovar o descargar todos sus archivos."
-  },
-  {
-    question: "¿Cuántas fotos pueden subir los invitados?",
-    answer: "No hay límite de número de fotos. Solo hay un límite de almacenamiento total de 50GB, lo que equivale a varios miles de fotos en alta calidad."
+    answer: "Tu espacio está disponible durante 2 años completos. Después, puedes renovar por 19,99€/año o descargar todo con un solo clic."
   },
   {
     question: "¿Mis invitados necesitan crear una cuenta?",
-    answer: "No, solo necesitan el código PIN de su boda. Pueden subir fotos y dejar mensajes en segundos sin ningún registro."
+    answer: "No. Acceden mediante un enlace privado o un QR. Sin registro, sin app, sin fricción."
   },
   {
-    question: "¿Puedo moderar el contenido?",
-    answer: "Por supuesto. Como administrador, tiene control total sobre todo el contenido. Puede eliminar fotos o mensajes inapropiados en cualquier momento."
+    question: "¿Puedo descargar todas las fotos?",
+    answer: "Sí, cuando quieras. Descarga ZIP en calidad original y exportación PDF del libro de visitas."
+  },
+  {
+    question: "¿Funciona como app en móvil?",
+    answer: "Sí. Se añade a la pantalla de inicio en un toque y funciona incluso sin conexión."
   }
 ];
 ---
 
 <MainLayout
-  title="Reflets de Bonheur - Tu Boda, Inmortalizada"
-  description="La solución elegante para tu boda: galería de fotos colaborativa, libro de visitas digital y sitio web personalizado. 99€ por 2 años."
+  title="Reflets de Bonheur - El espacio privado para tu historia de boda"
+  description="Experiencia premium para bodas: galería colaborativa, libro de visitas digital y sitio web a medida. Cada recuerdo, en un solo lugar."
   showHeader={true}
 >
   <Header slot="header" />
 
   <main class="page-enter">
     <!-- Hero Section -->
-    <section class="relative min-h-[90vh] flex items-center overflow-hidden bg-linear-to-br from-cream via-blush/30 to-cream">
+    <section class="relative min-h-[90vh] flex items-center overflow-hidden bg-linear-to-br from-cream via-blush/30 to-cream dark:from-[#0f0f0f] dark:via-[#1b1b1b]/60 dark:to-[#0f0f0f]">
       <!-- Background decoration -->
       <div class="absolute inset-0 opacity-5">
         <div class="absolute top-20 left-10 w-64 h-64 bg-burgundy rounded-full blur-3xl"></div>
@@ -79,34 +79,34 @@ const faqs = [
             <span class="text-xl opacity-70">💫</span>
             <span class="text-2xl opacity-80">🌸</span>
           </div>
-          <span class="text-charcoal-light text-sm italic">(Reflejos de Felicidad)</span>
+          <span class="text-charcoal-light dark:text-cream/70 text-sm italic">(Reflejos de Felicidad)</span>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <!-- Left Column: Text -->
           <div class="text-center lg:text-left">
             <!-- Social proof badge -->
-            <div class="inline-flex items-center gap-2 bg-white/80 backdrop-blur-xs rounded-full px-4 py-2 mb-6 shadow-xs border border-burgundy/10">
+            <div class="inline-flex items-center gap-2 bg-white/80 dark:bg-white/10 backdrop-blur-xs rounded-full px-4 py-2 mb-6 shadow-xs border border-burgundy/10 dark:border-white/10">
               <div class="flex -space-x-2">
                 <div class="w-6 h-6 rounded-full bg-burgundy/20 flex items-center justify-center text-xs font-medium text-burgundy">M</div>
                 <div class="w-6 h-6 rounded-full bg-rose-gold/20 flex items-center justify-center text-xs font-medium text-rose-gold">C</div>
                 <div class="w-6 h-6 rounded-full bg-burgundy/20 flex items-center justify-center text-xs font-medium text-burgundy">A</div>
               </div>
-              <span class="text-sm text-charcoal">Más de <strong class="text-burgundy">500+ parejas</strong> confían en nosotros</span>
+              <span class="text-sm text-charcoal dark:text-cream">Más de <strong class="text-burgundy">500+ parejas</strong> confían en nosotros</span>
             </div>
 
-            <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-light text-charcoal leading-tight mb-6">
-              Tu boda merece más que un
+            <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-light text-charcoal dark:text-cream leading-tight mb-6">
+              Un espacio privado para
               <span class="relative inline-block">
-                <span class="relative z-10 text-burgundy font-medium">álbum de Facebook</span>
+                <span class="relative z-10 text-burgundy font-medium">contar tu boda</span>
                 <svg class="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none">
                   <path d="M2 10C50 4 150 4 198 10" stroke="#B76E79" stroke-width="3" stroke-linecap="round"/>
                 </svg>
               </span>
             </h1>
 
-            <p class="text-lg sm:text-xl text-charcoal-light mb-8 max-w-xl mx-auto lg:mx-0">
-              Un espacio privado y elegante donde tus invitados comparten sus fotos y sus palabras más bonitas. Sin cuenta que crear, sin app que descargar.
+            <p class="text-lg sm:text-xl text-charcoal-light dark:text-cream/70 mb-8 max-w-xl mx-auto lg:mx-0">
+              Un espacio de lujo donde tus invitados comparten fotos y mensajes en segundos. Galería, libro de visitas y web a medida en un solo lugar.
             </p>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
@@ -115,22 +115,22 @@ const faqs = [
                 class="group inline-flex items-center justify-center px-8 py-4 bg-burgundy text-white font-sans font-semibold text-base rounded-lg shadow-lg hover:bg-burgundy-light hover:shadow-xl hover:scale-105 transition-all duration-300"
               >
                 <Play className="w-5 h-5 mr-2" />
-                Ver la demo en vivo
+                Ver la demo premium
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
               <a
                 href="/es/precios"
                 class="inline-flex items-center justify-center px-8 py-4 border-2 border-burgundy text-burgundy font-sans font-semibold text-base rounded-lg hover:bg-burgundy/5 transition-all"
               >
-                Ver tarifas
+                Ver precios
               </a>
             </div>
 
             <!-- Trust indicators -->
-            <div class="flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-charcoal-light">
+            <div class="flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-charcoal-light dark:text-cream/70">
               <div class="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-burgundy" />
-                <span>Datos protegidos</span>
+                <span>Datos privados</span>
               </div>
               <div class="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-burgundy" />
@@ -138,33 +138,33 @@ const faqs = [
               </div>
               <div class="flex items-center gap-2">
                 <Download className="w-4 h-4 text-burgundy" />
-                <span>Descarga ilimitada</span>
+                <span>Descarga total</span>
               </div>
             </div>
           </div>
 
           <!-- Right Column: Demo Preview -->
           <div class="relative">
-            <div class="relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+            <div class="relative bg-white dark:bg-[#141414] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-white/10">
               <!-- Browser mockup header -->
-              <div class="bg-gray-100 px-4 py-3 flex items-center gap-2">
+              <div class="bg-gray-100 dark:bg-[#1b1b1b] px-4 py-3 flex items-center gap-2">
                 <div class="flex gap-1.5">
                   <div class="w-3 h-3 rounded-full bg-red-400"></div>
                   <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
                   <div class="w-3 h-3 rounded-full bg-green-400"></div>
                 </div>
                 <div class="flex-1 mx-4">
-                  <div class="bg-white rounded-md px-3 py-1 text-xs text-gray-500 text-center">
+                  <div class="bg-white dark:bg-[#141414] rounded-md px-3 py-1 text-xs text-gray-500 dark:text-cream/60 text-center">
                     reflets-de-bonheur.com/maria-y-carlos
                   </div>
                 </div>
               </div>
               <!-- Preview content -->
-              <div class="aspect-4/3 bg-linear-to-br from-blush/50 to-cream p-6">
-                <div class="h-full rounded-lg bg-white/80 backdrop-blur-xs shadow-inner p-4 flex flex-col">
+              <div class="aspect-4/3 bg-linear-to-br from-blush/50 to-cream dark:from-[#1b1b1b]/60 dark:to-[#0f0f0f] p-6">
+                <div class="h-full rounded-lg bg-white/80 dark:bg-[#141414]/80 backdrop-blur-xs shadow-inner p-4 flex flex-col">
                   <div class="text-center mb-4">
                     <p class="font-script text-2xl text-burgundy">María & Carlos</p>
-                    <p class="text-sm text-charcoal-light">15 de Junio 2026</p>
+                    <p class="text-sm text-charcoal-light dark:text-cream/70">15 de Junio 2026</p>
                   </div>
                   <!-- Mini gallery grid -->
                   <div class="flex-1 grid grid-cols-3 gap-2">
@@ -179,16 +179,16 @@ const faqs = [
               </div>
             </div>
             <!-- Floating elements -->
-            <div class="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-3 animate-bounce-soft">
+            <div class="absolute -top-4 -right-4 bg-white dark:bg-[#141414] rounded-xl shadow-lg p-3 animate-bounce-soft border border-white/10">
               <div class="flex items-center gap-2">
                 <Camera className="w-5 h-5 text-burgundy" />
-                <span class="text-sm font-medium">+47 fotos hoy</span>
+                <span class="text-sm font-medium text-charcoal dark:text-cream">+47 fotos hoy</span>
               </div>
             </div>
-            <div class="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-3" style="animation: bounceSoft 0.8s ease-in-out infinite; animation-delay: 0.4s;">
+            <div class="absolute -bottom-4 -left-4 bg-white dark:bg-[#141414] rounded-xl shadow-lg p-3 border border-white/10" style="animation: bounceSoft 0.8s ease-in-out infinite; animation-delay: 0.4s;">
               <div class="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-rose-gold" />
-                <span class="text-sm font-medium">12 nuevos mensajes</span>
+                <span class="text-sm font-medium text-charcoal dark:text-cream">12 nuevos mensajes</span>
               </div>
             </div>
           </div>
@@ -202,38 +202,38 @@ const faqs = [
     </section>
 
     <!-- Services Section -->
-    <section class="py-24 bg-white">
+    <section class="py-24 bg-white dark:bg-[#141414]">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <span class="text-burgundy font-medium text-sm tracking-wider uppercase">Todo incluido</span>
-          <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-2 mb-4">
-            Tres herramientas, una experiencia mágica
+          <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-2 mb-4">
+            Tres servicios premium, una experiencia única
           </h2>
-          <p class="text-charcoal-light max-w-2xl mx-auto">
-            Todo lo que necesitas para capturar y conservar los recuerdos de tu día especial, en un espacio elegante y fácil de usar.
+          <p class="text-charcoal-light dark:text-cream/70 max-w-2xl mx-auto">
+            Todo lo necesario para guardar los recuerdos con una estética elegante y sin esfuerzo.
           </p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
           <!-- Gallery Card -->
-          <div class="group relative bg-linear-to-br from-cream to-blush/30 rounded-2xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-burgundy/5">
+          <div class="group relative bg-linear-to-br from-cream to-blush/30 dark:from-[#1b1b1b] dark:to-[#141414] rounded-2xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-burgundy/5 dark:border-white/10">
             <div class="absolute top-0 right-0 w-32 h-32 bg-burgundy/5 rounded-full blur-2xl group-hover:bg-burgundy/10 transition-colors"></div>
             <div class="relative">
               <div class="w-16 h-16 bg-burgundy/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-burgundy/20 transition-colors">
                 <Camera className="w-8 h-8 text-burgundy" />
               </div>
-              <h3 class="font-serif text-2xl text-charcoal mb-3">Galería colaborativa</h3>
-              <p class="text-charcoal-light mb-6">
-                Tus invitados suben sus fotos y videos en segundos. Tú recuperas todos los ángulos de tu boda.
+              <h3 class="font-serif text-2xl text-charcoal dark:text-cream mb-3">Galería colaborativa</h3>
+              <p class="text-charcoal-light dark:text-cream/70 mb-6">
+                Tus invitados suben sus fotos y vídeos al instante. Tú recuperas cada ángulo con calidad original.
               </p>
-              <ul class="space-y-2 text-sm text-charcoal-light">
+              <ul class="space-y-2 text-sm text-charcoal-light dark:text-cream/70">
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-burgundy rounded-full"></div>
-                  Upload sin cuenta
+                  Subida sin cuenta
                 </li>
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-burgundy rounded-full"></div>
-                  Fotos y videos HD
+                  Calidad original
                 </li>
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-burgundy rounded-full"></div>
@@ -244,24 +244,24 @@ const faqs = [
           </div>
 
           <!-- Guestbook Card -->
-          <div class="group relative bg-linear-to-br from-cream to-blush/30 rounded-2xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-burgundy/5">
+          <div class="group relative bg-linear-to-br from-cream to-blush/30 dark:from-[#1b1b1b] dark:to-[#141414] rounded-2xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-burgundy/5 dark:border-white/10">
             <div class="absolute top-0 right-0 w-32 h-32 bg-rose-gold/5 rounded-full blur-2xl group-hover:bg-rose-gold/10 transition-colors"></div>
             <div class="relative">
               <div class="w-16 h-16 bg-rose-gold/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-rose-gold/20 transition-colors">
                 <BookHeart className="w-8 h-8 text-rose-gold" />
               </div>
-              <h3 class="font-serif text-2xl text-charcoal mb-3">Libro de visitas digital</h3>
-              <p class="text-charcoal-light mb-6">
-                Mensajes sinceros que conservarás toda la vida. Mucho más personal que una simple firma.
+              <h3 class="font-serif text-2xl text-charcoal dark:text-cream mb-3">Libro de visitas digital</h3>
+              <p class="text-charcoal-light dark:text-cream/70 mb-6">
+                Mensajes auténticos en un formato elegante para conservarlos toda la vida.
               </p>
-              <ul class="space-y-2 text-sm text-charcoal-light">
+              <ul class="space-y-2 text-sm text-charcoal-light dark:text-cream/70">
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-rose-gold rounded-full"></div>
-                  Asistente de escritura IA
+                  Mensajes ilimitados
                 </li>
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-rose-gold rounded-full"></div>
-                  Mensajes con emociones
+                  Moderación sencilla
                 </li>
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-rose-gold rounded-full"></div>
@@ -272,28 +272,28 @@ const faqs = [
           </div>
 
           <!-- Website Card -->
-          <div class="group relative bg-linear-to-br from-cream to-blush/30 rounded-2xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-burgundy/5">
+          <div class="group relative bg-linear-to-br from-cream to-blush/30 dark:from-[#1b1b1b] dark:to-[#141414] rounded-2xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-burgundy/5 dark:border-white/10">
             <div class="absolute top-0 right-0 w-32 h-32 bg-burgundy/5 rounded-full blur-2xl group-hover:bg-burgundy/10 transition-colors"></div>
             <div class="relative">
               <div class="w-16 h-16 bg-burgundy/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-burgundy/20 transition-colors">
                 <Globe className="w-8 h-8 text-burgundy" />
               </div>
-              <h3 class="font-serif text-2xl text-charcoal mb-3">Tu mini-sitio de boda</h3>
-              <p class="text-charcoal-light mb-6">
-                Una dirección única para compartir con tus invitados. Elegante, simple, a tu imagen.
+              <h3 class="font-serif text-2xl text-charcoal dark:text-cream mb-3">Tu sitio de boda</h3>
+              <p class="text-charcoal-light dark:text-cream/70 mb-6">
+                Una dirección personalizada para tu evento, con estilo y detalles prácticos.
               </p>
-              <ul class="space-y-2 text-sm text-charcoal-light">
+              <ul class="space-y-2 text-sm text-charcoal-light dark:text-cream/70">
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-burgundy rounded-full"></div>
-                  URL personalizada
+                  Dominio personalizado
                 </li>
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-burgundy rounded-full"></div>
-                  Acceso por código PIN
+                  Acceso privado
                 </li>
                 <li class="flex items-center gap-2">
                   <div class="w-1.5 h-1.5 bg-burgundy rounded-full"></div>
-                  Código QR para compartir
+                  QR para compartir
                 </li>
               </ul>
             </div>
@@ -303,11 +303,11 @@ const faqs = [
     </section>
 
     <!-- Testimonials Section -->
-    <section class="py-24 bg-linear-to-b from-white to-cream">
+    <section class="py-24 bg-linear-to-b from-white to-cream dark:from-[#141414] dark:to-[#0f0f0f]">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <span class="text-burgundy font-medium text-sm tracking-wider uppercase">Ellos lo han vivido</span>
-          <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-2 mb-4">
+          <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-2 mb-4">
             Parejas que nos recomiendan
           </h2>
         </div>
@@ -315,7 +315,7 @@ const faqs = [
         <div class="grid md:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
             <div
-              class="bg-white rounded-2xl p-8 shadow-xs hover:shadow-lg transition-all duration-300 border border-burgundy/5"
+              class="bg-white dark:bg-[#1b1b1b] rounded-2xl p-8 shadow-xs hover:shadow-lg transition-all duration-300 border border-burgundy/5 dark:border-white/10"
               style={`animation-delay: ${index * 0.1}s`}
             >
               <div class="flex items-center gap-1 mb-4">
@@ -323,14 +323,14 @@ const faqs = [
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <p class="text-charcoal-light mb-6 italic">"{testimonial.text}"</p>
+              <p class="text-charcoal-light dark:text-cream/70 mb-6 italic">"{testimonial.text}"</p>
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-medium">
                   {testimonial.avatar}
                 </div>
                 <div>
-                  <p class="font-medium text-charcoal">{testimonial.name}</p>
-                  <p class="text-sm text-charcoal-light">{testimonial.location}</p>
+                  <p class="font-medium text-charcoal dark:text-cream">{testimonial.name}</p>
+                  <p class="text-sm text-charcoal-light dark:text-cream/70">{testimonial.location}</p>
                 </div>
               </div>
             </div>
@@ -340,53 +340,53 @@ const faqs = [
     </section>
 
     <!-- Benefits Section -->
-    <section class="py-24 bg-cream">
+    <section class="py-24 bg-cream dark:bg-[#0f0f0f]">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <span class="text-burgundy font-medium text-sm tracking-wider uppercase">¿Por qué nosotros?</span>
-          <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-2 mb-4">
-            Diseñado para simplificarte la vida
+          <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-2 mb-4">
+            Diseñado para un día perfecto
           </h2>
         </div>
 
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div class="text-center">
-            <div class="w-16 h-16 bg-white rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4">
+            <div class="w-16 h-16 bg-white dark:bg-[#141414] rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4 border border-white/10">
               <Users className="w-8 h-8 text-burgundy" />
             </div>
-            <h3 class="font-medium text-charcoal mb-2">Sin cuenta para los invitados</h3>
-            <p class="text-sm text-charcoal-light">
-              Tus invitados suben fotos en segundos con un simple código PIN. Sin fricción.
+            <h3 class="font-medium text-charcoal dark:text-cream mb-2">Sin cuentas para invitados</h3>
+            <p class="text-sm text-charcoal-light dark:text-cream/70">
+              Tus invitados suben fotos en segundos con un enlace o QR privado.
             </p>
           </div>
 
           <div class="text-center">
-            <div class="w-16 h-16 bg-white rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4">
+            <div class="w-16 h-16 bg-white dark:bg-[#141414] rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4 border border-white/10">
               <Shield className="w-8 h-8 text-burgundy" />
             </div>
-            <h3 class="font-medium text-charcoal mb-2">Privado y seguro</h3>
-            <p class="text-sm text-charcoal-light">
-              Solo las personas con tu código pueden acceder. Tus recuerdos están protegidos.
+            <h3 class="font-medium text-charcoal dark:text-cream mb-2">Privado y seguro</h3>
+            <p class="text-sm text-charcoal-light dark:text-cream/70">
+              Acceso solo para invitados con enlace privado. Tus recuerdos están protegidos.
             </p>
           </div>
 
           <div class="text-center">
-            <div class="w-16 h-16 bg-white rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4">
+            <div class="w-16 h-16 bg-white dark:bg-[#141414] rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4 border border-white/10">
               <Smartphone className="w-8 h-8 text-burgundy" />
             </div>
-            <h3 class="font-medium text-charcoal mb-2">Accesible desde móvil</h3>
-            <p class="text-sm text-charcoal-light">
-              Añade el sitio a tu pantalla de inicio en un clic. Funciona como una app sin instalación.
+            <h3 class="font-medium text-charcoal dark:text-cream mb-2">Experiencia móvil premium</h3>
+            <p class="text-sm text-charcoal-light dark:text-cream/70">
+              Añade el sitio a tu pantalla de inicio y úsalo como una app, incluso sin conexión.
             </p>
           </div>
 
           <div class="text-center">
-            <div class="w-16 h-16 bg-white rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4">
+            <div class="w-16 h-16 bg-white dark:bg-[#141414] rounded-2xl shadow-xs flex items-center justify-center mx-auto mb-4 border border-white/10">
               <Download className="w-8 h-8 text-burgundy" />
             </div>
-            <h3 class="font-medium text-charcoal mb-2">Todo descargable</h3>
-            <p class="text-sm text-charcoal-light">
-              Descarga todas las fotos y mensajes cuando quieras. Tus recuerdos te pertenecen.
+            <h3 class="font-medium text-charcoal dark:text-cream mb-2">Descarga total</h3>
+            <p class="text-sm text-charcoal-light dark:text-cream/70">
+              Descarga fotos y mensajes cuando quieras. Tus recuerdos siempre son tuyos.
             </p>
           </div>
         </div>
@@ -394,24 +394,24 @@ const faqs = [
     </section>
 
     <!-- FAQ Section -->
-    <section class="py-24 bg-white">
+    <section class="py-24 bg-white dark:bg-[#141414]">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="max-w-3xl mx-auto">
           <div class="text-center mb-16">
             <span class="text-burgundy font-medium text-sm tracking-wider uppercase">FAQ</span>
-            <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal mt-2">
+            <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-2">
               Tus preguntas frecuentes
             </h2>
           </div>
 
           <div class="space-y-4">
             {faqs.map((faq, index) => (
-              <details class="group bg-cream rounded-xl overflow-hidden">
-                <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-blush/30 transition-colors">
-                  <span class="font-medium text-charcoal">{faq.question}</span>
+              <details class="group bg-cream dark:bg-[#1b1b1b] rounded-xl overflow-hidden border border-white/10">
+                <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-blush/30 dark:hover:bg-white/5 transition-colors">
+                  <span class="font-medium text-charcoal dark:text-cream">{faq.question}</span>
                   <ChevronDown className="w-5 h-5 text-burgundy group-open:rotate-180 transition-transform" />
                 </summary>
-                <div class="px-6 pb-6 text-charcoal-light">
+                <div class="px-6 pb-6 text-charcoal-light dark:text-cream/70">
                   {faq.answer}
                 </div>
               </details>
@@ -425,10 +425,10 @@ const faqs = [
     <section class="py-24 bg-linear-to-br from-burgundy to-burgundy-dark text-white">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="font-serif text-3xl sm:text-4xl font-light mb-6">
-          ¿Listos para capturar cada momento?
+          ¿Listos para guardar cada momento?
         </h2>
         <p class="text-white/80 max-w-2xl mx-auto mb-8">
-          Únase a las parejas que ya confían en nosotros para conservar los recuerdos de su día especial.
+          Únete a las parejas que eligieron un espacio premium para cada foto y mensaje.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <a
@@ -443,7 +443,7 @@ const faqs = [
             href="/es/precios"
             class="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white font-sans font-semibold text-base rounded-lg hover:bg-white/10 transition-all"
           >
-            Ver tarifas - desde 99€
+            Ver precios - desde 99€
           </a>
         </div>
       </div>
