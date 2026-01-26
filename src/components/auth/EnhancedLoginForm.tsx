@@ -3,7 +3,7 @@
  * Supports both guest code access and client username/password login
  */
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Camera, User, Lock, Eye, EyeOff, AlertCircle, Sparkles } from 'lucide-react';
 import { authenticate } from '../../lib/auth';
 import { clientLogin, guestLogin } from '../../lib/auth/clientAuth';
@@ -25,6 +25,40 @@ export function EnhancedLoginForm() {
   // Shared state
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const hasUnsavedChanges = Boolean(code || guestName || username || password);
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.focus();
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const paramMode = params.get('mode');
+    if (paramMode === 'client' || paramMode === 'code') {
+      setMode(paramMode);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', mode);
+    window.history.replaceState({}, '', url);
+  }, [mode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !hasUnsavedChanges || loading) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, loading]);
 
   const handleCodeSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -79,7 +113,7 @@ export function EnhancedLoginForm() {
         // Redirect to client admin dashboard
         window.location.href = `/${result.client.wedding_slug}/admin`;
       } else {
-        setError(result.error || 'Identifiants incorrects.');
+        setError(result.error || 'Identifiants incorrects. Vérifiez votre email et votre mot de passe.');
       }
     } catch (err) {
       console.error('Client login error:', err);
@@ -94,7 +128,7 @@ export function EnhancedLoginForm() {
       <div className="bg-ivory p-8 rounded-2xl shadow-xl max-w-md w-full border border-silver-mist">
         {/* Icon */}
         <div className="w-20 h-20 bg-soft-blush rounded-full flex items-center justify-center mx-auto mb-6">
-          <Camera className="text-burgundy-old" size={40} strokeWidth={2} />
+          <Camera className="text-burgundy-old" size={40} strokeWidth={2} aria-hidden="true" />
         </div>
 
         {/* Title */}
@@ -106,11 +140,15 @@ export function EnhancedLoginForm() {
         </p>
 
         {/* Mode Tabs */}
-        <div className="flex rounded-lg bg-soft-blush/30 p-1 mb-6">
+        <div className="flex rounded-lg bg-soft-blush/30 p-1 mb-6" role="tablist" aria-label="Mode de connexion">
           <button
             type="button"
             onClick={() => setMode('code')}
-            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
+            id="login-tab-code"
+            role="tab"
+            aria-selected={mode === 'code'}
+            aria-controls="login-panel-code"
+            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors transition-shadow ${
               mode === 'code'
                 ? 'bg-white text-deep-charcoal shadow-xs'
                 : 'text-warm-taupe hover:text-deep-charcoal'
@@ -121,7 +159,11 @@ export function EnhancedLoginForm() {
           <button
             type="button"
             onClick={() => setMode('client')}
-            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
+            id="login-tab-client"
+            role="tab"
+            aria-selected={mode === 'client'}
+            aria-controls="login-panel-client"
+            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors transition-shadow ${
               mode === 'client'
                 ? 'bg-white text-deep-charcoal shadow-xs'
                 : 'text-warm-taupe hover:text-deep-charcoal'
@@ -131,37 +173,64 @@ export function EnhancedLoginForm() {
           </button>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-            <AlertCircle className="text-red-500 shrink-0" size={18} />
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        )}
-
         {/* Code Login Form */}
         {mode === 'code' && (
-          <form onSubmit={handleCodeSubmit} className="space-y-4">
+          <form
+            onSubmit={handleCodeSubmit}
+            className="space-y-4"
+            role="tabpanel"
+            id="login-panel-code"
+            aria-labelledby="login-tab-code"
+            aria-busy={loading}
+          >
             <div>
+              <label htmlFor="access-code" className="sr-only">Code d'accès</label>
               <input
+                id="access-code"
+                name="accessCode"
                 type="text"
-                placeholder="Code d'accès"
+                placeholder="Ex. MARIAGE2026…"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all text-center text-lg tracking-widest uppercase placeholder:normal-case placeholder:tracking-normal bg-pearl-white"
+                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-old focus-visible:border-burgundy-old transition-colors transition-shadow text-center text-lg tracking-widest uppercase placeholder:normal-case placeholder:tracking-normal bg-pearl-white text-deep-charcoal"
                 disabled={loading}
                 required
+                autoComplete="one-time-code"
+                autoCapitalize="characters"
+                spellCheck={false}
+                inputMode="text"
+                aria-describedby={error ? 'login-error' : undefined}
+                aria-invalid={Boolean(error)}
               />
             </div>
+            {error && (
+              <div
+                className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+                role="alert"
+                aria-live="polite"
+                aria-atomic="true"
+                tabIndex={-1}
+                ref={errorRef}
+                id="login-error"
+              >
+                <AlertCircle className="text-red-500 shrink-0" size={18} aria-hidden="true" />
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
 
             <div>
+              <label htmlFor="guest-name" className="sr-only">Votre prénom (optionnel)</label>
               <input
+                id="guest-name"
+                name="guestName"
                 type="text"
-                placeholder="Votre prénom (optionnel)"
+                placeholder="Ex. Marie…"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all bg-pearl-white"
+                className="w-full px-4 py-3 border-2 border-silver-mist rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-old focus-visible:border-burgundy-old transition-colors transition-shadow bg-pearl-white text-deep-charcoal"
                 disabled={loading}
+                autoComplete="off"
+                inputMode="text"
               />
             </div>
 
@@ -172,11 +241,11 @@ export function EnhancedLoginForm() {
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin motion-reduce:animate-none h-5 w-5" fill="none" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Vérification...</span>
+                  <span>Vérification…</span>
                 </>
               ) : (
                 'Entrer'
@@ -208,23 +277,36 @@ export function EnhancedLoginForm() {
 
         {/* Client Login Form */}
         {mode === 'client' && (
-          <form onSubmit={handleClientSubmit} className="space-y-4">
+          <form
+            onSubmit={handleClientSubmit}
+            className="space-y-4"
+            role="tabpanel"
+            id="login-panel-client"
+            aria-labelledby="login-tab-client"
+            aria-busy={loading}
+          >
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-warm-taupe mb-1.5">
                 Email
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-mist" size={18} />
+              <div className="relative focus-within:ring-2 focus-within:ring-burgundy-old focus-within:rounded-lg">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-mist" size={18} aria-hidden="true" />
                 <input
                   id="username"
+                  name="username"
                   type="email"
-                  placeholder="marie@example.com"
+                  placeholder="marie@example.com…"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all bg-pearl-white"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-silver-mist rounded-lg focus-visible:outline-none focus-visible:border-burgundy-old transition-colors transition-shadow bg-pearl-white text-deep-charcoal"
                   disabled={loading}
                   required
                   autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  inputMode="email"
+                  aria-describedby={error ? 'login-error' : undefined}
+                  aria-invalid={Boolean(error)}
                 />
               </div>
             </div>
@@ -233,28 +315,47 @@ export function EnhancedLoginForm() {
               <label htmlFor="password" className="block text-sm font-medium text-warm-taupe mb-1.5">
                 Mot de passe
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-mist" size={18} />
+              <div className="relative focus-within:ring-2 focus-within:ring-burgundy-old focus-within:rounded-lg">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-mist" size={18} aria-hidden="true" />
                 <input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="••••••••…"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border-2 border-silver-mist rounded-lg focus:outline-hidden focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-all bg-pearl-white"
+                  className="w-full pl-10 pr-12 py-3 border-2 border-silver-mist rounded-lg focus-visible:outline-none focus-visible:border-burgundy-old transition-colors transition-shadow bg-pearl-white text-deep-charcoal"
                   disabled={loading}
                   required
                   autoComplete="current-password"
+                  aria-describedby={error ? 'login-error' : undefined}
+                  aria-invalid={Boolean(error)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-silver-mist hover:text-warm-taupe transition-colors"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  aria-pressed={showPassword}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                 </button>
               </div>
             </div>
+            {error && (
+              <div
+                className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+                role="alert"
+                aria-live="polite"
+                aria-atomic="true"
+                tabIndex={-1}
+                ref={errorRef}
+                id="login-error"
+              >
+                <AlertCircle className="text-red-500 shrink-0" size={18} aria-hidden="true" />
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -263,11 +364,11 @@ export function EnhancedLoginForm() {
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin motion-reduce:animate-none h-5 w-5" fill="none" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Connexion...</span>
+                  <span>Connexion…</span>
                 </>
               ) : (
                 'Se connecter'
@@ -277,7 +378,7 @@ export function EnhancedLoginForm() {
             {/* Info */}
             <div className="pt-4 border-t border-silver-mist/30">
               <div className="flex items-start gap-2 text-xs text-warm-taupe">
-                <Sparkles className="shrink-0 mt-0.5" size={14} />
+                <Sparkles className="shrink-0 mt-0.5" size={14} aria-hidden="true" />
                 <p>
                   L'espace client est réservé aux mariés. Si vous êtes invité,
                   utilisez le code d'accès fourni par les mariés.

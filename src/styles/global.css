@@ -108,11 +108,11 @@
 }
 
 @utility btn-primary {
-  @apply bg-burgundy text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 hover:bg-burgundy-light hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95;
+  @apply bg-burgundy text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-colors transition-shadow transition-transform duration-200 hover:bg-burgundy-light hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-old focus-visible:ring-offset-2 focus-visible:ring-offset-cream dark:focus-visible:ring-offset-[#141414];
 }
 
 @utility card {
-  @apply bg-ivory border border-silver-mist rounded-xl p-6 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  @apply bg-ivory border border-silver-mist rounded-xl p-6 shadow-xs transition-transform transition-shadow transition-colors duration-200 hover:shadow-md hover:-translate-y-0.5;
 }
 
 @utility page-enter {
@@ -190,6 +190,7 @@
   /* Heading defaults */
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif font-bold;
+    text-wrap: balance;
   }
 
   /* Link defaults */
@@ -201,6 +202,55 @@
   button {
     @apply font-sans;
   }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  :root {
+    -webkit-tap-highlight-color: rgba(174, 23, 37, 0.2);
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--burgundy-dark);
+    outline-offset: 2px;
+  }
+
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 50;
+  padding: 0.5rem 0.75rem;
+  background: var(--burgundy);
+  color: #ffffff;
+  border-radius: 0.5rem;
+  transform: translateY(-200%);
+  transition: transform 0.2s ease-in-out;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @layer components {
