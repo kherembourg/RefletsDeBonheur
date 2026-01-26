@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Trash2, Video, Heart, CheckCircle, Circle, Maximize2 } from 'lucide-react';
 import type { MediaItem, DataService } from '../../lib/services/dataService';
 import ReactionsPanel from './ReactionsPanel';
@@ -16,7 +16,7 @@ interface MediaCardProps {
   dataService?: DataService;
 }
 
-export function MediaCard({
+export const MediaCard = memo(function MediaCard({
   item,
   isAdmin,
   onDelete,
@@ -217,4 +217,4 @@ export function MediaCard({
       </div>
     </div>
   );
-}
+});

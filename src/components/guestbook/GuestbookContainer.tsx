@@ -71,7 +71,9 @@ export function GuestbookContainer({ weddingId, demoMode = false }: GuestbookCon
       {/* Loading State */}
       {loading ? (
         <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 mx-auto mb-4 text-burgundy-old animate-spin" />
+          <div className="w-8 h-8 mx-auto mb-4 animate-spin">
+            <Loader2 className="w-full h-full text-burgundy-old" />
+          </div>
           <p className="text-charcoal/60 font-light">Chargement des messages...</p>
         </div>
       ) : (

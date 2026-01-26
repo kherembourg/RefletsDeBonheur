@@ -113,7 +113,9 @@ export function RSVPManager({ weddingId, demoMode = false }: RSVPManagerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-burgundy-old animate-spin" />
+        <div className="w-8 h-8 animate-spin">
+          <Loader2 className="w-full h-full text-burgundy-old" />
+        </div>
         <span className="ml-3 text-charcoal/60 font-light">Chargement...</span>
       </div>
     );

@@ -130,6 +130,9 @@
 @utility gallery-item {
   /* Gallery item entrance animation */
   animation: galleryItemIn 0.6s ease-out backwards;
+  /* Performance: Skip rendering off-screen items */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 350px;
 }
 
 @utility animate-fade-in {

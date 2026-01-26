@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { Upload, Lock, ImageIcon, Play, CheckSquare, Grid3X3, LayoutGrid, Loader2 } from 'lucide-react';
 import { MediaCard } from './MediaCard';
 import { UploadModal } from './UploadModal';
-import { Lightbox } from './Lightbox';
-import { Slideshow } from './Slideshow';
 import { SearchFilters, type MediaType, type SortOption } from './SearchFilters';
+
+// Lazy load heavy components that are conditionally rendered
+const Lightbox = lazy(() => import('./Lightbox').then(m => ({ default: m.Lightbox })));
+const Slideshow = lazy(() => import('./Slideshow').then(m => ({ default: m.Slideshow })));
 import BulkActions from './BulkActions';
 import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
 import { DataService, type MediaItem, type Album } from '../../lib/services/dataService';
@@ -80,16 +82,19 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Check authentication (skip in demo mode)
-    if (!demoMode) {
-      requireAuth();
-    }
-
-    // Check admin status (in demo mode, allow admin features)
-    setIsAdmin(demoMode || checkIsAdmin());
-
-    // Load user favorites
-    dataService.getFavorites().then(setUserFavorites);
+    // Run auth check and favorites loading in parallel
+    const init = async () => {
+      const [, favorites] = await Promise.all([
+        // Check authentication (skip in demo mode)
+        !demoMode ? requireAuth() : Promise.resolve(),
+        // Load user favorites
+        dataService.getFavorites()
+      ]);
+      // Check admin status (in demo mode, allow admin features)
+      setIsAdmin(demoMode || checkIsAdmin());
+      setUserFavorites(favorites);
+    };
+    init();
   }, [demoMode, dataService]);
 
   // Filter and sort media
@@ -120,8 +125,8 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       );
     }
 
-    // Sort
-    result.sort((a, b) => {
+    // Sort (using toSorted for immutability)
+    return result.toSorted((a, b) => {
       switch (sortBy) {
         case 'newest':
           return b.createdAt.getTime() - a.createdAt.getTime();
@@ -133,8 +138,6 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
           return 0;
       }
     });
-
-    return result;
   }, [media, selectedAlbumId, mediaType, searchQuery, sortBy, showFavoritesOnly, userFavorites]);
 
   const handleDelete = async (id: string) => {
@@ -301,7 +304,9 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       {/* Loading State */}
       {loading ? (
         <div className="text-center py-24">
-          <Loader2 className="w-8 h-8 mx-auto mb-4 text-burgundy-old animate-spin" />
+          <div className="w-8 h-8 mx-auto mb-4 animate-spin">
+            <Loader2 className="w-full h-full text-burgundy-old" />
+          </div>
           <p className="text-charcoal/60 font-light">Chargement des photos...</p>
         </div>
       ) : media.length === 0 ? (
@@ -406,22 +411,38 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
         dataService={dataService}
       />
 
-      {/* Lightbox */}
+      {/* Lightbox (lazy loaded) */}
       {lightboxIndex !== null && (
-        <Lightbox
-          media={filteredMedia}
-          initialIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-        />
+        <Suspense fallback={
+          <div className="fixed inset-0 bg-deep-charcoal/95 z-50 flex items-center justify-center">
+            <div className="w-8 h-8 animate-spin">
+              <Loader2 className="w-full h-full text-white" />
+            </div>
+          </div>
+        }>
+          <Lightbox
+            media={filteredMedia}
+            initialIndex={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+          />
+        </Suspense>
       )}
 
-      {/* Slideshow */}
+      {/* Slideshow (lazy loaded) */}
       {showSlideshow && (
-        <Slideshow
-          media={filteredMedia.length > 0 ? filteredMedia : media}
-          initialIndex={0}
-          onClose={() => setShowSlideshow(false)}
-        />
+        <Suspense fallback={
+          <div className="fixed inset-0 bg-deep-charcoal/95 z-50 flex items-center justify-center">
+            <div className="w-8 h-8 animate-spin">
+              <Loader2 className="w-full h-full text-white" />
+            </div>
+          </div>
+        }>
+          <Slideshow
+            media={filteredMedia.length > 0 ? filteredMedia : media}
+            initialIndex={0}
+            onClose={() => setShowSlideshow(false)}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import type { MediaItem } from '../../lib/services/dataService';
 import ReactionsPanel from './ReactionsPanel';
@@ -14,6 +14,12 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Ref for stable callback access (prevents effect re-runs when onClose changes)
+  const onCloseRef = useRef(onClose);
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   const currentItem = media[currentIndex];
   const isFirst = currentIndex === 0;
@@ -53,25 +59,31 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
     }
   };
 
-  // Keyboard navigation
+  // Keyboard navigation (uses ref for stable onClose callback)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
-          onClose();
+          onCloseRef.current();
           break;
         case 'ArrowLeft':
-          goToPrevious();
+          if (currentIndex > 0) {
+            setCurrentIndex(prev => prev - 1);
+            setIsZoomed(false);
+          }
           break;
         case 'ArrowRight':
-          goToNext();
+          if (currentIndex < media.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+            setIsZoomed(false);
+          }
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, onClose]);
+  }, [currentIndex, media.length]);
 
   // Touch swipe handlers
   const onTouchStart = (e: React.TouchEvent) => {
