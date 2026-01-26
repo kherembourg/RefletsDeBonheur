@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, ImageIcon, MessageSquare, DownloadCloud, Heart, ToggleLeft, ToggleRight, QrCode, Palette, FolderOpen, BarChart3, Loader2, Edit3, CreditCard } from 'lucide-react';
+import { Settings, ImageIcon, MessageSquare, DownloadCloud, Heart, QrCode, Palette, FolderOpen, BarChart3, Loader2, Edit3, CreditCard, UserCheck, ChevronRight, Users, Calendar } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 import { SettingsToggle } from './SettingsToggle';
 import { QRCodeGenerator } from './QRCodeGenerator';
@@ -7,11 +7,15 @@ import { EnhancedStatistics } from './EnhancedStatistics';
 import { AlbumManager } from './AlbumManager';
 import { ThemeSelector } from './ThemeSelector';
 import { SubscriptionStatus } from './SubscriptionStatus';
+import { RSVPManager } from './rsvp';
+import { AdminSection, AdminDivider, AdminCard, AdminButton, cn } from './ui';
 import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
 import { DataService, type GallerySettings, type WeddingStatistics } from '../../lib/services/dataService';
 import { mockAPI, downloadBlob } from '../../lib/api';
 import { calculateEnhancedStatistics } from '../../lib/statistics';
 import type { ThemeId } from '../../lib/themes';
+
+type AdminView = 'dashboard' | 'rsvp';
 
 interface AdminPanelProps {
   weddingId?: string;
@@ -28,6 +32,7 @@ export function AdminPanel({ weddingId, weddingSlug, profileId, demoMode = false
   }
   const dataService = serviceRef.current;
 
+  const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [stats, setStats] = useState<WeddingStatistics>({
     mediaCount: 0,
     photoCount: 0,
@@ -137,12 +142,47 @@ export function AdminPanel({ weddingId, weddingSlug, profileId, demoMode = false
     );
   }
 
+  // RSVP View
+  if (currentView === 'rsvp') {
+    return (
+      <div className="space-y-6">
+        {/* Back navigation */}
+        <button
+          onClick={() => setCurrentView('dashboard')}
+          className="flex items-center gap-2 text-sm text-charcoal/60 hover:text-burgundy-old transition-colors"
+        >
+          <ChevronRight className="w-4 h-4 rotate-180" />
+          Retour au tableau de bord
+        </button>
+
+        {/* RSVP Header */}
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-burgundy-old/10 flex items-center justify-center">
+            <UserCheck className="w-6 h-6 text-burgundy-old" />
+          </div>
+          <div>
+            <h1 className="font-serif text-2xl text-charcoal font-light">Gestion RSVP</h1>
+            <p className="text-charcoal/50 text-sm font-light">
+              Configurez le formulaire et consultez les réponses
+            </p>
+          </div>
+        </div>
+
+        <AdminDivider />
+
+        {/* RSVP Manager */}
+        <RSVPManager weddingId={weddingId || 'demo'} demoMode={demoMode} />
+      </div>
+    );
+  }
+
+  // Main Dashboard View
   return (
     <div className="space-y-8">
       {/* Statistics Overview */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-burgundy-old/10 flex items-center justify-center">
             <BarChart3 className="text-burgundy-old" size={20} />
           </div>
           <div>
@@ -151,73 +191,156 @@ export function AdminPanel({ weddingId, weddingSlug, profileId, demoMode = false
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white p-6 shadow-xs border border-charcoal/5 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-linear-to-br from-burgundy-old/10 to-burgundy-old/5 flex items-center justify-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <AdminCard padding="md" className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-burgundy-old/10 flex items-center justify-center">
               <ImageIcon className="text-burgundy-old" size={22} />
             </div>
             <p className="font-serif text-3xl text-charcoal font-light">{stats.mediaCount}</p>
             <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Photos</p>
-          </div>
+          </AdminCard>
 
-          <div className="bg-white p-6 shadow-xs border border-charcoal/5 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-linear-to-br from-burgundy-old/10 to-burgundy-old/5 flex items-center justify-center">
+          <AdminCard padding="md" className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-burgundy-old/10 flex items-center justify-center">
               <MessageSquare className="text-burgundy-old" size={22} />
             </div>
             <p className="font-serif text-3xl text-charcoal font-light">{stats.messageCount}</p>
             <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Messages</p>
-          </div>
+          </AdminCard>
 
-          <div className="bg-white p-6 shadow-xs border border-charcoal/5 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-linear-to-br from-burgundy-old/10 to-burgundy-old/5 flex items-center justify-center">
+          <AdminCard padding="md" className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-burgundy-old/10 flex items-center justify-center">
               <Heart className="text-burgundy-old" size={22} />
             </div>
             <p className="font-serif text-3xl text-charcoal font-light">{stats.favoriteCount}</p>
             <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Favoris</p>
+          </AdminCard>
+
+          <AdminCard padding="md" className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-burgundy-old/10 flex items-center justify-center">
+              <FolderOpen className="text-burgundy-old" size={22} />
+            </div>
+            <p className="font-serif text-3xl text-charcoal font-light">{stats.albumCount}</p>
+            <p className="text-xs text-charcoal/50 uppercase tracking-wide mt-1">Albums</p>
+          </AdminCard>
+        </div>
+      </section>
+
+      {/* Quick Actions Grid */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-burgundy-old/10 flex items-center justify-center">
+            <Settings className="text-burgundy-old" size={20} />
           </div>
+          <div>
+            <h2 className="font-serif text-xl text-charcoal font-light">Actions rapides</h2>
+            <p className="text-charcoal/50 text-sm font-light">Gérez les fonctionnalités principales</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* RSVP Management Card */}
+          <AdminCard
+            padding="none"
+            hover
+            onClick={() => setCurrentView('rsvp')}
+            className="group overflow-hidden"
+          >
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-burgundy-old/20 to-burgundy-old/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <UserCheck className="w-6 h-6 text-burgundy-old" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-charcoal/30 group-hover:text-burgundy-old group-hover:translate-x-1 transition-all" />
+              </div>
+              <h3 className="font-semibold text-charcoal mb-1">Gestion RSVP</h3>
+              <p className="text-sm text-charcoal/50">
+                Configurez les questions et consultez les réponses
+              </p>
+            </div>
+            <div className="px-6 py-3 bg-charcoal/[0.02] border-t border-charcoal/5 flex items-center gap-4 text-xs text-charcoal/50">
+              <span className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                Réponses
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                Deadline
+              </span>
+            </div>
+          </AdminCard>
+
+          {/* Website Editor Card */}
+          <AdminCard
+            padding="none"
+            hover
+            className="group overflow-hidden"
+          >
+            <a href={weddingSlug ? `/${weddingSlug}/admin/website-editor` : '/admin/website-editor'} className="block">
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-burgundy-old/20 to-burgundy-old/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Edit3 className="w-6 h-6 text-burgundy-old" />
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-charcoal/30 group-hover:text-burgundy-old group-hover:translate-x-1 transition-all" />
+                </div>
+                <h3 className="font-semibold text-charcoal mb-1">Éditeur de site</h3>
+                <p className="text-sm text-charcoal/50">
+                  Personnalisez couleurs, textes et images
+                </p>
+              </div>
+              <div className="px-6 py-3 bg-charcoal/[0.02] border-t border-charcoal/5 flex items-center gap-4 text-xs text-charcoal/50">
+                <span className="flex items-center gap-1">
+                  <Palette className="w-3 h-3" />
+                  6 thèmes
+                </span>
+              </div>
+            </a>
+          </AdminCard>
+
+          {/* QR Code Card */}
+          <AdminCard padding="none" className="overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-burgundy-old/20 to-burgundy-old/10 flex items-center justify-center">
+                  <QrCode className="w-6 h-6 text-burgundy-old" />
+                </div>
+              </div>
+              <h3 className="font-semibold text-charcoal mb-1">QR Code</h3>
+              <p className="text-sm text-charcoal/50">
+                Partagez facilement votre espace
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-charcoal/[0.02] border-t border-charcoal/5">
+              <QRCodeGenerator />
+            </div>
+          </AdminCard>
         </div>
       </section>
 
       {/* Subscription Section */}
-      <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
-            <CreditCard className="text-burgundy-old" size={20} />
-          </div>
-          <div>
-            <h2 className="font-serif text-xl text-charcoal font-light">Abonnement</h2>
-            <p className="text-charcoal/50 text-sm font-light">Gérez votre forfait</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
+      <AdminSection
+        title="Abonnement"
+        description="Gérez votre forfait"
+        icon={CreditCard}
+      >
+        <AdminCard>
           <SubscriptionStatus
             profileId={profileId || ''}
             demoMode={demoMode}
           />
-        </div>
-      </section>
+        </AdminCard>
+      </AdminSection>
 
-      {/* Decorative Divider */}
-      <div className="flex items-center justify-center gap-4">
-        <div className="flex-1 h-px bg-linear-to-r from-transparent via-burgundy-old/20 to-transparent"></div>
-        <div className="text-burgundy-old/30 text-lg">❧</div>
-        <div className="flex-1 h-px bg-linear-to-r from-transparent via-burgundy-old/20 to-transparent"></div>
-      </div>
+      <AdminDivider />
 
       {/* Settings Section */}
-      <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
-            <Settings className="text-burgundy-old" size={20} />
-          </div>
-          <div>
-            <h2 className="font-serif text-xl text-charcoal font-light">Paramètres</h2>
-            <p className="text-charcoal/50 text-sm font-light">Configuration de votre espace</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-xs border border-charcoal/5">
+      <AdminSection
+        title="Paramètres"
+        description="Configuration de votre espace"
+        icon={Settings}
+      >
+        <AdminCard padding="none">
           {/* Upload Toggle */}
           <div className="flex items-center justify-between p-6 border-b border-charcoal/5">
             <div>
@@ -239,124 +362,55 @@ export function AdminPanel({ weddingId, weddingSlug, profileId, demoMode = false
 
           {/* Backup Button */}
           <div className="p-6">
-            <button
+            <AdminButton
+              variant="secondary"
+              fullWidth
+              leftIcon={<DownloadCloud size={18} />}
+              loading={exporting}
               onClick={handleBackup}
-              disabled={exporting}
-              className="w-full flex items-center justify-center gap-3 bg-charcoal hover:bg-charcoal/90 text-white font-medium py-3.5 transition-all duration-300 disabled:opacity-50 tracking-wide text-sm uppercase"
             >
-              {exporting ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                  <span>Création en cours...</span>
-                </>
-              ) : (
-                <>
-                  <DownloadCloud size={18} />
-                  <span>Télécharger la sauvegarde</span>
-                </>
-              )}
-            </button>
+              {exporting ? 'Création en cours...' : 'Télécharger la sauvegarde'}
+            </AdminButton>
             <p className="text-xs text-charcoal/40 text-center mt-3 font-light">
               Archive ZIP contenant toutes les photos et messages
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* QR Code Section */}
-      <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
-            <QrCode className="text-burgundy-old" size={20} />
-          </div>
-          <div>
-            <h2 className="font-serif text-xl text-charcoal font-light">QR Code</h2>
-            <p className="text-charcoal/50 text-sm font-light">Partagez facilement votre espace</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
-          <QRCodeGenerator />
-        </div>
-      </section>
+        </AdminCard>
+      </AdminSection>
 
       {/* Theme Section */}
-      <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
-            <Palette className="text-burgundy-old" size={20} />
-          </div>
-          <div>
-            <h2 className="font-serif text-xl text-charcoal font-light">Thème</h2>
-            <p className="text-charcoal/50 text-sm font-light">Personnalisez l'apparence</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-xs border border-charcoal/5 p-6 space-y-6">
+      <AdminSection
+        title="Thème"
+        description="Personnalisez l'apparence"
+        icon={Palette}
+      >
+        <AdminCard>
           <ThemeSelector
             currentTheme={currentTheme}
             onThemeChange={setCurrentTheme}
             weddingSlug="julie-thomas"
           />
-
-          {/* Advanced Website Editor */}
-          <div className="pt-6 border-t border-charcoal/10">
-            <div className="bg-linear-to-br from-burgundy/5 to-purple-50 rounded-xl p-6 border border-burgundy/20">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-burgundy flex items-center justify-center shrink-0">
-                  <Edit3 className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-deep-charcoal mb-2">
-                    Éditeur de site web avancé
-                  </h3>
-                  <p className="text-sm text-warm-taupe mb-4">
-                    Personnalisez en profondeur l'apparence de votre site : couleurs, textes, images et bien plus encore avec l'éditeur visuel.
-                  </p>
-                  <a
-                    href={weddingSlug ? `/${weddingSlug}/admin/website-editor` : '/admin/website-editor'}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-burgundy text-white rounded-lg hover:bg-burgundy-dark transition-all shadow-md hover:shadow-lg"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    Ouvrir l'éditeur
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+        </AdminCard>
+      </AdminSection>
 
       {/* Albums Section */}
-      <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
-            <FolderOpen className="text-burgundy-old" size={20} />
-          </div>
-          <div>
-            <h2 className="font-serif text-xl text-charcoal font-light">Albums</h2>
-            <p className="text-charcoal/50 text-sm font-light">Organisez vos photos</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
+      <AdminSection
+        title="Albums"
+        description="Organisez vos photos"
+        icon={FolderOpen}
+      >
+        <AdminCard>
           <AlbumManager dataService={dataService} />
-        </div>
-      </section>
+        </AdminCard>
+      </AdminSection>
 
       {/* Enhanced Statistics */}
-      <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 border border-burgundy-old/20 flex items-center justify-center">
-            <BarChart3 className="text-burgundy-old" size={20} />
-          </div>
-          <div>
-            <h2 className="font-serif text-xl text-charcoal font-light">Statistiques détaillées</h2>
-            <p className="text-charcoal/50 text-sm font-light">Analyse approfondie de l'activité</p>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-xs border border-charcoal/5 p-6">
+      <AdminSection
+        title="Statistiques détaillées"
+        description="Analyse approfondie de l'activité"
+        icon={BarChart3}
+      >
+        <AdminCard>
           {enhancedStats ? (
             <EnhancedStatistics stats={enhancedStats} />
           ) : (
@@ -364,19 +418,21 @@ export function AdminPanel({ weddingId, weddingSlug, profileId, demoMode = false
               Statistiques détaillées non disponibles
             </div>
           )}
-        </div>
-      </section>
+        </AdminCard>
+      </AdminSection>
 
       {/* Storage Info */}
-      <section className="bg-linear-to-br from-cream to-cream-dark p-6 text-center">
+      <AdminCard className="bg-gradient-to-br from-cream to-cream-dark text-center">
         <p className="text-sm font-medium text-charcoal/70">Stockage</p>
         <p className="text-xs text-charcoal/50 mt-1 font-light">
           Géré par Cloudflare R2 en production
         </p>
-        <p className="text-xs text-charcoal/40 mt-1 font-light italic">
-          Mode démo : stockage local
-        </p>
-      </section>
+        {demoMode && (
+          <p className="text-xs text-charcoal/40 mt-1 font-light italic">
+            Mode démo : stockage local
+          </p>
+        )}
+      </AdminCard>
     </div>
   );
 }

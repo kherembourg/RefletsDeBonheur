@@ -269,8 +269,13 @@ describe('AdminPanel Component', () => {
 
     it('should show loading state during backup', async () => {
       const { mockAPI } = await import('../../lib/api');
+      // Create a promise we can control
+      let resolveBackup: (value: Blob) => void;
+      const backupPromise = new Promise<Blob>((resolve) => {
+        resolveBackup = resolve;
+      });
       (mockAPI.exportBackup as ReturnType<typeof vi.fn>).mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 1000))
+        () => backupPromise
       );
 
       render(<AdminPanel demoMode={true} />);
@@ -279,9 +284,17 @@ describe('AdminPanel Component', () => {
         expect(screen.getByText('Télécharger la sauvegarde')).toBeInTheDocument();
       });
 
+      // Click the button to start the backup
       fireEvent.click(screen.getByText('Télécharger la sauvegarde'));
 
-      expect(screen.getByText('Création en cours...')).toBeInTheDocument();
+      // Loading state should appear immediately after click
+      // AdminButton shows "Chargement..." when loading={true}
+      await waitFor(() => {
+        expect(screen.getByText('Chargement...')).toBeInTheDocument();
+      });
+
+      // Resolve the backup promise to clean up
+      resolveBackup!(new Blob(['test']));
     });
   });
 
@@ -326,7 +339,9 @@ describe('AdminPanel Component', () => {
       render(<AdminPanel demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Albums')).toBeInTheDocument();
+        // Albums appears in stats and as section header - check both exist
+        const albumsElements = screen.getAllByText('Albums');
+        expect(albumsElements.length).toBeGreaterThanOrEqual(1);
       });
     });
 

@@ -170,6 +170,7 @@ CREATE TABLE public.reactions (
   CONSTRAINT reactions_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id),
   CONSTRAINT reactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
+-- Legacy RSVP table (kept for backwards compatibility)
 CREATE TABLE public.rsvp (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   wedding_id uuid NOT NULL,
@@ -184,6 +185,43 @@ CREATE TABLE public.rsvp (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT rsvp_pkey PRIMARY KEY (id),
   CONSTRAINT rsvp_wedding_id_fkey FOREIGN KEY (wedding_id) REFERENCES public.weddings(id)
+);
+
+-- RSVP Configuration (per-wedding settings and custom questions)
+CREATE TABLE public.rsvp_config (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  wedding_id uuid NOT NULL UNIQUE,
+  enabled boolean DEFAULT true,
+  questions jsonb DEFAULT '[]'::jsonb,
+  deadline timestamp with time zone,
+  welcome_message text,
+  thank_you_message text,
+  allow_plus_one boolean DEFAULT true,
+  ask_dietary_restrictions boolean DEFAULT true,
+  max_guests_per_response integer DEFAULT 5 CHECK (max_guests_per_response >= 1 AND max_guests_per_response <= 20),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT rsvp_config_pkey PRIMARY KEY (id),
+  CONSTRAINT rsvp_config_wedding_id_fkey FOREIGN KEY (wedding_id) REFERENCES public.weddings(id) ON DELETE CASCADE
+);
+
+-- RSVP Responses (enhanced with custom question answers)
+CREATE TABLE public.rsvp_responses (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  wedding_id uuid NOT NULL,
+  respondent_name text NOT NULL CHECK (char_length(respondent_name) <= 100),
+  respondent_email text CHECK (char_length(respondent_email) <= 254),
+  respondent_phone text CHECK (char_length(respondent_phone) <= 20),
+  attendance text NOT NULL CHECK (attendance IN ('yes', 'no', 'maybe')),
+  guests jsonb DEFAULT '[]'::jsonb,
+  answers jsonb DEFAULT '[]'::jsonb,
+  message text CHECK (char_length(message) <= 2000),
+  ip_address inet,
+  user_agent text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT rsvp_responses_pkey PRIMARY KEY (id),
+  CONSTRAINT rsvp_responses_wedding_id_fkey FOREIGN KEY (wedding_id) REFERENCES public.weddings(id) ON DELETE CASCADE
 );
 CREATE TABLE public.weddings (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

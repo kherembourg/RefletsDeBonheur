@@ -9,6 +9,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    exclude: [
+      'node_modules',
+      'dist',
+      'src/test/ui/**/*.spec.ts', // Playwright tests - run separately
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

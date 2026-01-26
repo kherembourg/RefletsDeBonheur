@@ -17,7 +17,7 @@ The application is fully functional with:
 - Supabase Auth + profiles power client accounts
 - Client wedding pages (`/[slug]/*`) connect to Supabase when configured
 
-**Last Updated:** January 21, 2026
+**Last Updated:** January 24, 2026
 
 ---
 
@@ -35,6 +35,7 @@ The application is fully functional with:
 | [Data Flow](docs/architecture/data-flow.md) | DataService, state, and persistence |
 | [Authentication](docs/architecture/authentication.md) | Auth flows for all user types |
 | [Website Editor](docs/architecture/website-editor.md) | Visual customization system |
+| [RSVP Management](docs/architecture/rsvp-management.md) | Custom questions and response management |
 
 ### When to Update Architecture Docs
 
@@ -394,6 +395,11 @@ reflets-de-bonheur/
 - Real-time message display
 
 ### 5. Admin Dashboard
+- **Redesigned UI**: Modern card-based layout with improved ergonomics
+  - Quick actions grid for common tasks
+  - Statistics overview with 4 cards (Photos, Messages, Favorites, Albums)
+  - Dedicated admin theme system (`src/styles/admin-theme.ts`)
+- **RSVP Management**: Full-featured RSVP system (see section below)
 - **Statistics**: Enhanced stats with graphs
   - Upload timeline
   - Storage usage
@@ -404,6 +410,38 @@ reflets-de-bonheur/
 - **Theme Selector**: Customize wedding appearance
 - **Upload Toggle**: Enable/disable guest uploads
 - **Content Moderation**: Delete inappropriate content
+- **Reusable UI Components**: `src/components/admin/ui/`
+  - AdminButton, AdminCard, AdminInput, AdminToggle
+  - AdminModal, AdminPagination, AdminBadge, AdminSelect
+  - AdminSection, AdminDivider, AdminEmptyState
+
+### 5.1 RSVP Management
+Access via admin dashboard "Gestion RSVP" card or directly at RSVP view.
+
+**Features:**
+- **Toggle Enable/Disable**: Turn RSVP on/off for the wedding
+- **Custom Questions**: Build flexible forms with 3 question types:
+  - Text fields (with character limits)
+  - Single choice (radio/dropdown)
+  - Multiple choice (checkboxes)
+- **Response Viewer**: Paginated list with search and filters
+  - Filter by attendance status (yes/no/maybe)
+  - Search by name or email
+  - Export to CSV
+- **Settings**:
+  - Response deadline
+  - Plus-one allowance
+  - Dietary restrictions
+  - Custom welcome/thank you messages
+- **Statistics Dashboard**: Real-time counts of responses and guests
+
+**Data Limits** (to protect database):
+- Max 20 questions per wedding
+- Max 15 options per question
+- Text answers max 1000 characters
+- Message max 2000 characters
+
+**Documentation**: See `docs/architecture/rsvp-management.md`
 
 ### 6. Website Editor
 - **Modern Dark Theme UI**: Professional editor interface inspired by Squarespace/Webflow
@@ -477,7 +515,9 @@ There is **no `clients` table**. User accounts are managed via Supabase Auth:
 | `guestbook_messages` | Guestbook entries |
 | `reactions` | Media reactions (emoji) |
 | `favorites` | User favorites |
-| `rsvp` | RSVP responses |
+| `rsvp` | Legacy RSVP responses (basic) |
+| `rsvp_config` | **NEW** Per-wedding RSVP configuration + custom questions (JSONB) |
+| `rsvp_responses` | **NEW** Guest responses with custom question answers |
 | `guest_sessions` | Guest authentication sessions (PIN/magic token) |
 | `auth_sessions` | Client/God admin authentication sessions |
 | `god_admins` | Super admin accounts |
@@ -640,15 +680,21 @@ Always add tests for every new feature or bug fix.
 Always run tests before committing.
 
 ### Test Framework
-- **Vitest**: Test runner with fast execution
+- **Vitest**: Unit tests with fast execution
 - **React Testing Library**: Component testing
 - **jsdom**: Browser environment simulation
+- **Playwright**: E2E and screenshot testing
 
 ### Running Tests
 ```bash
-npm test                 # Run all tests
+npm test                 # Run all unit tests
 npm run test:coverage    # Run with coverage report
 npm test -- path/to/file # Run specific test file
+npm run test:e2e         # Run Playwright E2E tests
+npm run test:e2e:ui      # Playwright with UI
+npm run test:e2e:headed  # Run in visible browser
+npm run test:e2e:update-snapshots  # Update screenshot baselines
+npm run test:all         # Run all tests (unit + E2E)
 ```
 
 ### Test Coverage (as of January 2026)
@@ -668,19 +714,33 @@ src/
 │   │   └── clientAuth.test.ts  # Client/guest auth tests (37 tests)
 │   ├── auth.test.ts            # Core auth utilities (30 tests)
 │   ├── mockData.test.ts        # Mock data tests (41 tests)
+│   ├── rsvp/
+│   │   ├── types.test.ts       # RSVP type helpers and factories
+│   │   └── rsvpService.test.ts # RSVP service layer tests
 │   └── services/
 │       └── dataService.test.ts # Data service tests (27 tests)
 ├── components/
 │   └── admin/
 │       ├── AdminPanel.test.tsx
 │       ├── AlbumManager.test.tsx
+│       ├── ui/
+│       │   ├── AdminButton.test.tsx   # Button component tests
+│       │   ├── AdminToggle.test.tsx   # Toggle component tests
+│       │   └── AdminPagination.test.tsx
+│       ├── rsvp/
+│       │   └── RSVPManager.test.tsx   # RSVP manager component tests
 │       └── ... (more component tests)
 ├── i18n/
 │   └── utils.test.ts           # i18n utility tests (36 tests)
 └── test/
     ├── setup.ts                # Test setup & mocks
-    └── integration/
-        └── demoPages.test.ts   # Integration tests (28 tests)
+    ├── integration/
+    │   └── demoPages.test.ts   # Integration tests (28 tests)
+    ├── functional/
+    │   └── rsvp-scenarios.test.ts  # RSVP user flow scenarios
+    └── ui/
+        ├── admin-dashboard.spec.ts  # Dashboard screenshot tests (Playwright)
+        └── rsvp-manager.spec.ts     # RSVP screenshot tests (Playwright)
 ```
 
 ### God Access Token TTL
@@ -700,11 +760,13 @@ God access tokens (for impersonation) have a **24-hour TTL** and are automatical
 2. ~~**R2 Media Storage**: Cloudflare R2 for file uploads~~ ✅ DONE
 3. ~~**Testing & God Token Fix**: Auth tests and 24h TTL~~ ✅ DONE
 4. ~~**Website Editor**: Visual customization for themes, colors, content, images~~ ✅ DONE
-5. **Website Editor Live Preview**: Fix real-time preview updates (colors/content not reflecting)
-6. **Increase Test Coverage**: Target 100% for critical paths
-7. **Payment Integration**: Stripe checkout for $199 package
-8. **Email Notifications**: Welcome emails, upload notifications
-9. **Image Processing**: Generate thumbnails and optimize images
+5. ~~**Admin Dashboard Redesign**: Modern card-based UI with admin theme system~~ ✅ DONE
+6. ~~**RSVP Management**: Custom questions, responses viewer, pagination~~ ✅ DONE
+7. **Website Editor Live Preview**: Fix real-time preview updates (colors/content not reflecting)
+8. **Increase Test Coverage**: Target 100% for critical paths
+9. **Payment Integration**: Stripe checkout for $199 package
+10. **Email Notifications**: Welcome emails, upload notifications
+11. **Image Processing**: Generate thumbnails and optimize images
 
 ### Future Enhancements
 1. **Real-time sync**: WebSocket updates for gallery

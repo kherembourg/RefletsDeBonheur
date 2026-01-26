@@ -49,7 +49,10 @@ global.alert = vi.fn();
 
 // Reset mocks before each test
 beforeEach(() => {
-  localStorageMock.clear();
+  // Clear all keys from the store
+  for (const key of Object.keys(localStorageMock.store)) {
+    delete localStorageMock.store[key];
+  }
   vi.clearAllMocks();
 });
 
