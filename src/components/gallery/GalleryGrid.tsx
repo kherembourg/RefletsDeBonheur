@@ -373,9 +373,8 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
             <div
               key={item.id}
               className={`gallery-item ${gridStyle === 'masonry' ? 'mb-6 break-inside-avoid' : ''}`}
-              style={{
-                animationDelay: `${Math.min(index * 0.05, 0.5)}s`
-              }}
+              // Only animate first 12 items (visible on initial load) to reduce object creation
+              style={index < 12 ? { animationDelay: `${index * 0.05}s` } : undefined}
             >
               <MediaCard
                 item={item}

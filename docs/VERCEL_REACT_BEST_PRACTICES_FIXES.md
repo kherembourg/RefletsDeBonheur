@@ -18,6 +18,8 @@ All 8 fixes have been implemented:
 | 6 | Parallelize auth/data loading | ✅ Complete |
 | 7 | Wrap animated SVGs in divs | ✅ Complete |
 | 8 | Use toSorted() for immutability | ✅ Complete |
+| 9 | Limit gallery animation to first 12 items | ✅ Complete |
+| 10 | Passive touch event listeners in Lightbox | ✅ Complete |
 
 **Tests:** 800/800 passing
 **Build:** Successful
