@@ -6,7 +6,9 @@
 
 ## Completed Fixes Summary
 
-All 8 fixes have been implemented:
+All fixes have been implemented across two commits:
+
+### Phase 1-4 (Initial Review)
 
 | # | Fix | Status |
 |---|-----|--------|
@@ -20,6 +22,18 @@ All 8 fixes have been implemented:
 | 8 | Use toSorted() for immutability | ✅ Complete |
 | 9 | Limit gallery animation to first 12 items | ✅ Complete |
 | 10 | Passive touch event listeners in Lightbox | ✅ Complete |
+
+### Additional Optimizations (Deep Dive)
+
+| # | Fix | Status |
+|---|-----|--------|
+| 11 | Fix GalleryGrid inline handlers breaking MediaCard memo | ✅ Complete |
+| 12 | Memoize MessageList with extracted WaveBorder/MessageCard subcomponents | ✅ Complete |
+| 13 | Fix ReactionsPanel array recreation (module-level constant) | ✅ Complete |
+| 14 | Fix Skeleton random heights causing layout shifts | ✅ Complete |
+| 15 | Memoize inline styles in LuxeHero, LuxeUploadCard, LuxeGalleryPreview | ✅ Complete |
+| 16 | Memoize EnhancedStatistics with useCallback for toggle handler | ✅ Complete |
+| 17 | Fix ContentEditor inline onChange with memoized SectionTab/FieldEditor | ✅ Complete |
 
 **Tests:** 800/800 passing
 **Build:** Successful
