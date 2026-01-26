@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense, useCallback } from 'react';
 import { Upload, Lock, ImageIcon, Play, CheckSquare, Grid3X3, LayoutGrid, Loader2 } from 'lucide-react';
 import { MediaCard } from './MediaCard';
 import { UploadModal } from './UploadModal';
@@ -140,12 +140,13 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
     });
   }, [media, selectedAlbumId, mediaType, searchQuery, sortBy, showFavoritesOnly, userFavorites]);
 
-  const handleDelete = async (id: string) => {
+  // Memoized handlers to prevent breaking MediaCard memo optimization
+  const handleDelete = useCallback(async (id: string) => {
     await dataService.deleteMedia(id);
     refresh();
-  };
+  }, [dataService]);
 
-  const handleToggleFavorite = async (id: string) => {
+  const handleToggleFavorite = useCallback(async (id: string) => {
     const newState = await dataService.toggleFavorite(id);
     // Update local state
     setUserFavorites(prev => {
@@ -157,23 +158,25 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       }
       return newSet;
     });
-  };
+  }, [dataService]);
 
-  const handleUploadComplete = async (items: MediaItem[]) => {
+  const handleUploadComplete = useCallback(async (items: MediaItem[]) => {
     // Items are already saved to the database by the upload process
     // Just refresh the gallery to show them
     refresh();
     setShowUploadModal(false);
-  };
+  }, []);
 
-  const toggleSelectionMode = () => {
-    setSelectionMode(!selectionMode);
-    if (selectionMode) {
-      setSelectedItems(new Set());
-    }
-  };
+  const toggleSelectionMode = useCallback(() => {
+    setSelectionMode(prev => {
+      if (prev) {
+        setSelectedItems(new Set());
+      }
+      return !prev;
+    });
+  }, []);
 
-  const toggleItemSelection = (id: string) => {
+  const toggleItemSelection = useCallback((id: string) => {
     setSelectedItems(prev => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
@@ -183,12 +186,20 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setSelectedItems(new Set());
     setSelectionMode(false);
-  };
+  }, []);
+
+  // Memoized click handler for lightbox - looks up index from id
+  const handleMediaClick = useCallback((id: string) => {
+    const index = filteredMedia.findIndex(item => item.id === id);
+    if (index !== -1) {
+      setLightboxIndex(index);
+    }
+  }, [filteredMedia]);
 
   return (
     <div className="space-y-8">
@@ -380,7 +391,7 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
                 item={item}
                 isAdmin={isAdmin}
                 onDelete={handleDelete}
-                onClick={() => setLightboxIndex(index)}
+                onClick={handleMediaClick}
                 selectionMode={selectionMode}
                 isSelected={selectedItems.has(item.id)}
                 onToggleSelection={toggleItemSelection}

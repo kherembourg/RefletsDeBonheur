@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 interface SkeletonProps {
   className?: string;
   style?: React.CSSProperties;
@@ -14,13 +16,16 @@ export function Skeleton({ className = '', style }: SkeletonProps) {
   );
 }
 
+// Pre-generated heights for gallery skeleton (stable across renders)
+const GALLERY_SKELETON_HEIGHTS = [280, 350, 240, 320, 290, 360, 250, 310];
+
 // Gallery Skeleton
 export function GallerySkeleton() {
   return (
     <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-      {Array.from({ length: 8 }).map((_, i) => (
+      {GALLERY_SKELETON_HEIGHTS.map((height, i) => (
         <div key={i} className="break-inside-avoid">
-          <Skeleton className="w-full rounded-xl" style={{ height: `${200 + Math.random() * 200}px` }} />
+          <Skeleton className="w-full rounded-xl" style={{ height: `${height}px` }} />
         </div>
       ))}
     </div>

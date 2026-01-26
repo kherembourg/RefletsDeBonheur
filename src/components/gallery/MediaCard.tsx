@@ -7,7 +7,7 @@ interface MediaCardProps {
   item: MediaItem;
   isAdmin: boolean;
   onDelete: (id: string) => void;
-  onClick?: () => void;
+  onClick?: (id: string) => void;  // Pass item id for memoization
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (id: string) => void;
@@ -71,7 +71,7 @@ export const MediaCard = memo(function MediaCard({
     if (selectionMode && onToggleSelection) {
       onToggleSelection(item.id);
     } else if (onClick) {
-      onClick();
+      onClick(item.id);
     }
   };
 
