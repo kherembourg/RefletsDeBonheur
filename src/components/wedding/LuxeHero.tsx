@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { WeddingConfig } from '../../lib/types';
 import { luxeTheme } from '../../lib/themes';
 
@@ -17,12 +18,21 @@ export function LuxeHero({ config }: LuxeHeroProps) {
   // Get location from venue
   const location = config.venue?.address?.split(',').pop()?.trim() || 'France';
 
+  // Memoize style objects to prevent recreation on each render
+  const styles = useMemo(() => ({
+    header: { backgroundColor: colors.background },
+    subtitle: { color: colors.textLight },
+    title: { color: colors.text, fontFamily: "'Playfair Display', serif" },
+    ampersand: { color: colors.accent },
+    dateLocation: { color: colors.accent, fontFamily: "'Playfair Display', serif" },
+  }), [colors.background, colors.textLight, colors.text, colors.accent]);
+
   return (
-    <header className="text-center px-5 pt-16 pb-10" style={{ backgroundColor: colors.background }}>
+    <header className="text-center px-5 pt-16 pb-10" style={styles.header}>
       {/* Subtitle */}
       <div
         className="text-xs font-medium tracking-[2px] uppercase mb-4"
-        style={{ color: colors.textLight }}
+        style={styles.subtitle}
       >
         Bienvenue au mariage de
       </div>
@@ -30,12 +40,12 @@ export function LuxeHero({ config }: LuxeHeroProps) {
       {/* Names */}
       <h1
         className="font-display text-[2.8rem] leading-[1.1] mb-2"
-        style={{ color: colors.text, fontFamily: "'Playfair Display', serif" }}
+        style={styles.title}
       >
         {config.brideName}{' '}
         <span
           className="italic"
-          style={{ color: colors.accent }}
+          style={styles.ampersand}
         >
           &
         </span>{' '}
@@ -45,7 +55,7 @@ export function LuxeHero({ config }: LuxeHeroProps) {
       {/* Date & Location */}
       <div
         className="font-display italic text-xl mt-3"
-        style={{ color: colors.accent, fontFamily: "'Playfair Display', serif" }}
+        style={styles.dateLocation}
       >
         {day} {month} {year} • {location}
       </div>

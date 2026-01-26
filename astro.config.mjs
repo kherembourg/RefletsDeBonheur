@@ -22,7 +22,12 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      exclude: ['lucide-react'],
+      // Include lucide-react for tree-shaking optimization
+      include: ['lucide-react'],
+    },
+    ssr: {
+      // Ensure lucide-react is bundled for SSR (enables tree-shaking)
+      noExternal: ['lucide-react'],
     },
     server: {
       allowedHosts: ['b41896afb08b.ngrok-free.app'],

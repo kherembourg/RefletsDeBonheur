@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -20,12 +20,13 @@ interface EnhancedStatisticsProps {
 
 type SectionId = 'timeline' | 'storage' | 'uploaders' | 'reactions';
 
-export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
+export const EnhancedStatistics = memo(function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
   const [expandedSections, setExpandedSections] = useState<Set<SectionId>>(
     new Set(['timeline'])
   );
 
-  const toggleSection = (sectionId: SectionId) => {
+  // Memoized toggle handler
+  const toggleSection = useCallback((sectionId: SectionId) => {
     setExpandedSections(prev => {
       const newSet = new Set(prev);
       if (newSet.has(sectionId)) {
@@ -35,7 +36,7 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
       }
       return newSet;
     });
-  };
+  }, []);
 
   const isExpanded = (sectionId: SectionId) => expandedSections.has(sectionId);
 
@@ -210,4 +211,4 @@ export function EnhancedStatistics({ stats }: EnhancedStatisticsProps) {
       </div>
     </div>
   );
-}
+});

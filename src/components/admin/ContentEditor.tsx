@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { Type, RotateCcw, Check, Info } from 'lucide-react';
 import type { CustomContent } from '../../lib/customization';
 
@@ -165,6 +165,124 @@ const SECTIONS = [
   { id: 'footer' as const, label: 'Footer', icon: '📄' },
 ];
 
+// Memoized Section Tab component
+interface SectionTabProps {
+  section: typeof SECTIONS[number];
+  isActive: boolean;
+  customizedCount: number;
+  onClick: (id: string) => void;
+}
+
+const SectionTab = memo(function SectionTab({
+  section,
+  isActive,
+  customizedCount,
+  onClick,
+}: SectionTabProps) {
+  const handleClick = useCallback(() => {
+    onClick(section.id);
+  }, [onClick, section.id]);
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+        isActive
+          ? 'bg-burgundy text-white'
+          : 'bg-[#1a1a1a] text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
+      }`}
+    >
+      <span>{section.icon}</span>
+      {section.label}
+      {customizedCount > 0 && (
+        <span className={`px-1 py-0.5 rounded text-[10px] ${
+          isActive
+            ? 'bg-white/20'
+            : 'bg-burgundy/30 text-burgundy'
+        }`}>
+          {customizedCount}
+        </span>
+      )}
+    </button>
+  );
+});
+
+// Memoized Field Editor component
+interface FieldEditorProps {
+  field: ContentField;
+  value: string;
+  onChange: (key: keyof CustomContent, value: string) => void;
+}
+
+const FieldEditor = memo(function FieldEditor({
+  field,
+  value,
+  onChange,
+}: FieldEditorProps) {
+  const customized = !!value;
+  const charCount = value?.length || 0;
+  const maxLength = field.maxLength || 500;
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    onChange(field.key, e.target.value);
+  }, [onChange, field.key]);
+
+  const handleReset = useCallback(() => {
+    onChange(field.key, '');
+  }, [onChange, field.key]);
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+          {field.label}
+          {customized && <Check className="w-3 h-3 text-burgundy" />}
+        </label>
+        <span className={`text-[10px] ${charCount > maxLength * 0.9 ? 'text-amber-400' : 'text-gray-600'}`}>
+          {charCount}/{maxLength}
+        </span>
+      </div>
+
+      {field.type === 'text' ? (
+        <input
+          type="text"
+          value={value}
+          onChange={handleChange}
+          placeholder={field.placeholder}
+          maxLength={maxLength}
+          className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors bg-[#0f0f0f] placeholder-gray-600 ${
+            customized
+              ? 'border-burgundy/50 text-white'
+              : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
+          }`}
+        />
+      ) : (
+        <textarea
+          value={value}
+          onChange={handleChange}
+          placeholder={field.placeholder}
+          maxLength={maxLength}
+          rows={3}
+          className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors resize-none bg-[#0f0f0f] placeholder-gray-600 ${
+            customized
+              ? 'border-burgundy/50 text-white'
+              : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
+          }`}
+        />
+      )}
+
+      {customized && (
+        <button
+          onClick={handleReset}
+          className="text-[10px] text-gray-500 hover:text-burgundy transition-colors"
+        >
+          Réinitialiser ce champ
+        </button>
+      )}
+    </div>
+  );
+});
+
 export function ContentEditor({
   customContent,
   onChange,
@@ -175,40 +293,46 @@ export function ContentEditor({
   );
   const [activeSection, setActiveSection] = useState<string>('hero');
 
-  // Handle content change
-  const handleContentChange = (key: keyof CustomContent, value: string) => {
-    const newContent = {
-      ...editingContent,
-      [key]: value || undefined,
-    };
+  // Handle content change - memoized for FieldEditor
+  const handleContentChange = useCallback((key: keyof CustomContent, value: string) => {
+    setEditingContent(prev => {
+      const newContent = {
+        ...prev,
+        [key]: value || undefined,
+      };
 
-    // Remove undefined values
-    Object.keys(newContent).forEach((k) => {
-      if (newContent[k as keyof CustomContent] === undefined) {
-        delete newContent[k as keyof CustomContent];
-      }
+      // Remove undefined values
+      Object.keys(newContent).forEach((k) => {
+        if (newContent[k as keyof CustomContent] === undefined) {
+          delete newContent[k as keyof CustomContent];
+        }
+      });
+
+      // Call onChange with new content (use setTimeout to avoid setState during render)
+      setTimeout(() => {
+        onChange(Object.keys(newContent).length > 0 ? newContent : undefined);
+      }, 0);
+
+      return newContent;
     });
-
-    setEditingContent(newContent);
-    onChange(Object.keys(newContent).length > 0 ? newContent : undefined);
-  };
+  }, [onChange]);
 
   // Reset to defaults
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (confirm('Réinitialiser tout le contenu personnalisé ?')) {
       setEditingContent({});
       onChange(undefined);
     }
-  };
+  }, [onChange]);
+
+  // Handle section click - memoized for SectionTab
+  const handleSectionClick = useCallback((id: string) => {
+    setActiveSection(id);
+  }, []);
 
   // Check if field is customized
   const isCustomized = (key: keyof CustomContent): boolean => {
     return !!editingContent[key];
-  };
-
-  // Get character count
-  const getCharCount = (key: keyof CustomContent): number => {
-    return editingContent[key]?.length || 0;
   };
 
   // Group fields by section
@@ -258,27 +382,13 @@ export function ContentEditor({
             const customizedCount = fields.filter((f) => isCustomized(f.key)).length;
 
             return (
-              <button
+              <SectionTab
                 key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-                  activeSection === section.id
-                    ? 'bg-burgundy text-white'
-                    : 'bg-[#1a1a1a] text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
-                }`}
-              >
-                <span>{section.icon}</span>
-                {section.label}
-                {customizedCount > 0 && (
-                  <span className={`px-1 py-0.5 rounded text-[10px] ${
-                    activeSection === section.id
-                      ? 'bg-white/20'
-                      : 'bg-burgundy/30 text-burgundy'
-                  }`}>
-                    {customizedCount}
-                  </span>
-                )}
-              </button>
+                section={section}
+                isActive={activeSection === section.id}
+                customizedCount={customizedCount}
+                onClick={handleSectionClick}
+              />
             );
           })}
         </div>
@@ -286,62 +396,14 @@ export function ContentEditor({
 
       {/* Fields for Active Section */}
       <div className="space-y-3">
-        {getFieldsBySection(activeSection).map((field) => {
-          const customized = isCustomized(field.key);
-          const charCount = getCharCount(field.key);
-          const maxLength = field.maxLength || 500;
-
-          return (
-            <div key={field.key} className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-                  {field.label}
-                  {customized && <Check className="w-3 h-3 text-burgundy" />}
-                </label>
-                <span className={`text-[10px] ${charCount > maxLength * 0.9 ? 'text-amber-400' : 'text-gray-600'}`}>
-                  {charCount}/{maxLength}
-                </span>
-              </div>
-
-              {field.type === 'text' ? (
-                <input
-                  type="text"
-                  value={editingContent[field.key] || ''}
-                  onChange={(e) => handleContentChange(field.key, e.target.value)}
-                  placeholder={field.placeholder}
-                  maxLength={maxLength}
-                  className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors bg-[#0f0f0f] placeholder-gray-600 ${
-                    customized
-                      ? 'border-burgundy/50 text-white'
-                      : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
-                  }`}
-                />
-              ) : (
-                <textarea
-                  value={editingContent[field.key] || ''}
-                  onChange={(e) => handleContentChange(field.key, e.target.value)}
-                  placeholder={field.placeholder}
-                  maxLength={maxLength}
-                  rows={3}
-                  className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors resize-none bg-[#0f0f0f] placeholder-gray-600 ${
-                    customized
-                      ? 'border-burgundy/50 text-white'
-                      : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
-                  }`}
-                />
-              )}
-
-              {customized && (
-                <button
-                  onClick={() => handleContentChange(field.key, '')}
-                  className="text-[10px] text-gray-500 hover:text-burgundy transition-colors"
-                >
-                  Réinitialiser ce champ
-                </button>
-              )}
-            </div>
-          );
-        })}
+        {getFieldsBySection(activeSection).map((field) => (
+          <FieldEditor
+            key={field.key}
+            field={field}
+            value={editingContent[field.key] || ''}
+            onChange={handleContentChange}
+          />
+        ))}
       </div>
     </div>
   );

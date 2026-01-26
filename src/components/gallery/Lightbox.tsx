@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import type { MediaItem } from '../../lib/services/dataService';
 import ReactionsPanel from './ReactionsPanel';
@@ -12,8 +12,17 @@ interface LightboxProps {
 export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Refs for touch handling (using refs to avoid re-renders during touch)
+  const touchStartRef = useRef<number | null>(null);
+  const touchEndRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Ref for stable callback access (prevents effect re-runs when onClose changes)
+  const onCloseRef = useRef(onClose);
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   const currentItem = media[currentIndex];
   const isFirst = currentIndex === 0;
@@ -53,49 +62,75 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
     }
   };
 
-  // Keyboard navigation
+  // Keyboard navigation (uses ref for stable onClose callback)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
-          onClose();
+          onCloseRef.current();
           break;
         case 'ArrowLeft':
-          goToPrevious();
+          if (currentIndex > 0) {
+            setCurrentIndex(prev => prev - 1);
+            setIsZoomed(false);
+          }
           break;
         case 'ArrowRight':
-          goToNext();
+          if (currentIndex < media.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+            setIsZoomed(false);
+          }
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, onClose]);
+  }, [currentIndex, media.length]);
 
-  // Touch swipe handlers
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
+  // Touch swipe with passive event listeners for better scroll performance
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
+    const handleTouchStart = (e: TouchEvent) => {
+      touchEndRef.current = null;
+      touchStartRef.current = e.targetTouches[0].clientX;
+    };
 
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    const handleTouchMove = (e: TouchEvent) => {
+      touchEndRef.current = e.targetTouches[0].clientX;
+    };
 
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    const handleTouchEnd = () => {
+      const touchStart = touchStartRef.current;
+      const touchEnd = touchEndRef.current;
+      if (touchStart === null || touchEnd === null) return;
 
-    if (isLeftSwipe) {
-      goToNext();
-    } else if (isRightSwipe) {
-      goToPrevious();
-    }
-  };
+      const distance = touchStart - touchEnd;
+      const isLeftSwipe = distance > minSwipeDistance;
+      const isRightSwipe = distance < -minSwipeDistance;
+
+      if (isLeftSwipe && currentIndex < media.length - 1) {
+        setCurrentIndex(prev => prev + 1);
+        setIsZoomed(false);
+      } else if (isRightSwipe && currentIndex > 0) {
+        setCurrentIndex(prev => prev - 1);
+        setIsZoomed(false);
+      }
+    };
+
+    // Add listeners with passive: true for better scroll performance
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: true });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [currentIndex, media.length]);
 
   // Prevent body scroll when lightbox is open
   useEffect(() => {
@@ -148,11 +183,9 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
 
       {/* Image container */}
       <div
+        ref={containerRef}
         className="relative max-w-7xl max-h-[90vh] mx-4 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
       >
         {currentItem.type === 'video' ? (
           <video

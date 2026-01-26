@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { Smile } from 'lucide-react';
 import {
   DataService,
@@ -7,6 +7,9 @@ import {
   type Reaction
 } from '../../lib/services/dataService';
 
+// All available reaction types (module level to avoid recreation)
+const ALL_REACTION_TYPES: ReactionType[] = ['heart', 'love', 'laugh', 'wow', 'celebrate', 'clap'];
+
 interface ReactionsPanelProps {
   mediaId: string;
   dataService?: DataService;
@@ -14,13 +17,17 @@ interface ReactionsPanelProps {
   compact?: boolean;
 }
 
-export default function ReactionsPanel({ mediaId, dataService, onReactionChange, compact = false }: ReactionsPanelProps) {
+const ReactionsPanel = memo(function ReactionsPanel({ mediaId, dataService, onReactionChange, compact = false }: ReactionsPanelProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [userReaction, setUserReaction] = useState<ReactionType | null>(null);
   const [reactions, setReactions] = useState<Reaction[]>([]);
 
-  // Create a default service for demo mode if not provided
-  const service = dataService || new DataService({ demoMode: true });
+  // Create a stable default service for demo mode if not provided (using ref to avoid recreation)
+  const defaultServiceRef = useRef<DataService | null>(null);
+  if (!defaultServiceRef.current && !dataService) {
+    defaultServiceRef.current = new DataService({ demoMode: true });
+  }
+  const service = dataService || defaultServiceRef.current!;
 
   // Load initial state
   useEffect(() => {
@@ -44,8 +51,6 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
 
   const totalReactions = reactions.reduce((sum, r) => sum + r.count, 0);
 
-  // All available reaction types
-  const allReactionTypes: ReactionType[] = ['heart', 'love', 'laugh', 'wow', 'celebrate', 'clap'];
 
   if (compact) {
     // Compact view - just show current reactions and add button
@@ -85,7 +90,7 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
               onClick={() => setShowPicker(false)}
             />
             <div className="absolute top-full mt-2 right-0 bg-ivory dark:bg-[#1A1A1A] rounded-xl shadow-2xl border border-silver-mist/20 p-3 z-50 flex gap-2">
-              {allReactionTypes.map((type) => (
+              {ALL_REACTION_TYPES.map((type) => (
                 <button
                   key={type}
                   onClick={() => handleReaction(type)}
@@ -109,7 +114,7 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
     <div className="relative">
       <div className="flex flex-wrap items-center gap-2">
         {/* All reaction types */}
-        {allReactionTypes.map((type) => {
+        {ALL_REACTION_TYPES.map((type) => {
           const reactionData = reactions.find(r => r.type === type);
           const count = reactionData?.count || 0;
           const isActive = userReaction === type;
@@ -144,4 +149,6 @@ export default function ReactionsPanel({ mediaId, dataService, onReactionChange,
       )}
     </div>
   );
-}
+});
+
+export default ReactionsPanel;

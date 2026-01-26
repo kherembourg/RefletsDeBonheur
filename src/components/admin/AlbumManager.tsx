@@ -131,7 +131,9 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 text-burgundy-old animate-spin" />
+        <div className="w-6 h-6 animate-spin">
+          <Loader2 className="w-full h-full text-burgundy-old" />
+        </div>
         <span className="ml-2 text-charcoal/60 font-light">Chargement des albums...</span>
       </div>
     );

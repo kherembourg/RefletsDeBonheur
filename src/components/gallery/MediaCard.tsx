@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Trash2, Video, Heart, CheckCircle, Circle, Maximize2 } from 'lucide-react';
 import type { MediaItem, DataService } from '../../lib/services/dataService';
 import ReactionsPanel from './ReactionsPanel';
@@ -7,7 +7,7 @@ interface MediaCardProps {
   item: MediaItem;
   isAdmin: boolean;
   onDelete: (id: string) => void;
-  onClick?: () => void;
+  onClick?: (id: string) => void;  // Pass item id for memoization
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (id: string) => void;
@@ -16,7 +16,7 @@ interface MediaCardProps {
   dataService?: DataService;
 }
 
-export function MediaCard({
+export const MediaCard = memo(function MediaCard({
   item,
   isAdmin,
   onDelete,
@@ -71,7 +71,7 @@ export function MediaCard({
     if (selectionMode && onToggleSelection) {
       onToggleSelection(item.id);
     } else if (onClick) {
-      onClick();
+      onClick(item.id);
     }
   };
 
@@ -217,4 +217,4 @@ export function MediaCard({
       </div>
     </div>
   );
-}
+});
