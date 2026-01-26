@@ -193,6 +193,8 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
             controls
             autoPlay
             className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
+            width={1280}
+            height={720}
           />
         ) : (
           <img
@@ -202,6 +204,8 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
               isZoomed ? 'cursor-zoom-out scale-150' : 'cursor-zoom-in'
             }`}
             onClick={() => setIsZoomed(!isZoomed)}
+            width={1280}
+            height={720}
           />
         )}
 

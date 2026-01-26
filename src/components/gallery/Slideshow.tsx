@@ -209,6 +209,8 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
             muted
             className="max-w-full max-h-full rounded-lg shadow-2xl"
             onEnded={goToNext}
+            width={1280}
+            height={720}
           />
         ) : (
           <img
@@ -216,6 +218,8 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
             src={currentItem.url}
             alt={currentItem.caption || `Photo par ${currentItem.author}`}
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-fade-in"
+            width={1280}
+            height={720}
           />
         )}
       </div>

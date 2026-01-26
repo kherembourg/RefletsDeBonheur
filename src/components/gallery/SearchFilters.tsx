@@ -59,15 +59,17 @@ export function SearchFilters({
               : 'border-silver-mist hover:border-burgundy-old/50'
           }`}
         >
-          <Search className="text-warm-taupe" size={20} />
+          <Search className="text-warm-taupe" size={20} aria-hidden="true" />
           <input
-            type="text"
+            type="search"
+            name="gallery-search"
             placeholder="Rechercher par texte ou auteur..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
             className="flex-1 bg-transparent border-none outline-hidden text-deep-charcoal placeholder-warm-taupe"
+            aria-label="Rechercher dans la galerie"
           />
           {searchQuery && (
             <button
@@ -142,8 +144,10 @@ export function SearchFilters({
         {albums.length > 0 && (
           <>
             <div className="flex items-center gap-2">
-              <FolderOpen className="text-warm-taupe" size={18} />
+              <FolderOpen className="text-warm-taupe" size={18} aria-hidden="true" />
+              <label htmlFor="album-filter" className="sr-only">Filtrer par album</label>
               <select
+                id="album-filter"
                 value={selectedAlbumId || ''}
                 onChange={(e) => onAlbumChange(e.target.value || null)}
                 className="px-3 py-2 bg-ivory border border-silver-mist rounded-lg text-sm text-deep-charcoal font-medium focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors cursor-pointer"
@@ -164,8 +168,10 @@ export function SearchFilters({
 
         {/* Sort Dropdown */}
         <div className="flex items-center gap-2">
-          <SortAsc className="text-warm-taupe" size={18} />
+          <SortAsc className="text-warm-taupe" size={18} aria-hidden="true" />
+          <label htmlFor="sort-by" className="sr-only">Trier par</label>
           <select
+            id="sort-by"
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
             className="px-3 py-2 bg-ivory border border-silver-mist rounded-lg text-sm text-deep-charcoal font-medium focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors cursor-pointer"

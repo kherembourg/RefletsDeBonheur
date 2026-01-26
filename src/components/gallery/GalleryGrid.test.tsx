@@ -208,12 +208,12 @@ describe('GalleryGrid Component', () => {
 
       await waitFor(() => {
         // Should have grid toggle buttons
-        expect(screen.getByTitle('Vue mosaïque')).toBeInTheDocument();
-        expect(screen.getByTitle('Vue grille')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Vue mosaïque' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Vue grille' })).toBeInTheDocument();
       });
 
       // Click grid view
-      const gridButton = screen.getByTitle('Vue grille');
+      const gridButton = screen.getByRole('button', { name: 'Vue grille' });
       fireEvent.click(gridButton);
 
       // The component should switch to grid view (class changes)

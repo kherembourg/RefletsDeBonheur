@@ -77,12 +77,21 @@ export const MediaCard = memo(function MediaCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       className={`media-card break-inside-avoid relative group cursor-pointer ${
         isSelected ? 'ring-2 ring-burgundy-old ring-offset-2 ring-offset-cream' : ''
       }`}
       onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      aria-label={item.caption || `Photo par ${item.author || 'Anonyme'}`}
     >
       {/* Elegant frame container */}
       <div className="relative overflow-hidden bg-white shadow-xs transition-all duration-500 ease-out group-hover:shadow-xl">
@@ -102,6 +111,8 @@ export const MediaCard = memo(function MediaCard({
                 controls
                 className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                 poster={item.thumbnailUrl}
+                width={400}
+                height={300}
               />
               <div className="absolute top-3 right-3 bg-charcoal/80 backdrop-blur-xs p-2 text-white z-20">
                 <Video size={14} />
@@ -114,6 +125,8 @@ export const MediaCard = memo(function MediaCard({
                 alt={item.caption || `Photo par ${item.author}`}
                 className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                 loading="lazy"
+                width={400}
+                height={300}
               />
 
               {/* Elegant hover overlay */}

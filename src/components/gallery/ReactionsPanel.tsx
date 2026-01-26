@@ -89,7 +89,7 @@ const ReactionsPanel = memo(function ReactionsPanel({ mediaId, dataService, onRe
               className="fixed inset-0 z-40"
               onClick={() => setShowPicker(false)}
             />
-            <div className="absolute top-full mt-2 right-0 bg-ivory dark:bg-[#1A1A1A] rounded-xl shadow-2xl border border-silver-mist/20 p-3 z-50 flex gap-2">
+            <div className="absolute top-full mt-2 right-0 bg-ivory dark:bg-[#1A1A1A] rounded-xl shadow-2xl border border-silver-mist/20 p-3 z-50 flex gap-2" role="group" aria-label="Choisir une réaction">
               {ALL_REACTION_TYPES.map((type) => (
                 <button
                   key={type}
@@ -97,7 +97,8 @@ const ReactionsPanel = memo(function ReactionsPanel({ mediaId, dataService, onRe
                   className={`text-2xl p-2 rounded-lg hover:bg-burgundy-old/10 transition-all hover:scale-125 ${
                     userReaction === type ? 'bg-burgundy-old/20 ring-2 ring-burgundy-old' : ''
                   }`}
-                  title={type}
+                  aria-label={`Réagir avec ${type}`}
+                  aria-pressed={userReaction === type}
                 >
                   {REACTION_EMOJIS[type]}
                 </button>

@@ -229,7 +229,8 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
                     ? 'bg-charcoal text-white'
                     : 'bg-white text-charcoal/60 hover:text-charcoal'
                 }`}
-                title="Vue mosaïque"
+                aria-label="Vue mosaïque"
+                aria-pressed={gridStyle === 'masonry'}
               >
                 <LayoutGrid size={16} />
               </button>
@@ -240,7 +241,8 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
                     ? 'bg-charcoal text-white'
                     : 'bg-white text-charcoal/60 hover:text-charcoal'
                 }`}
-                title="Vue grille"
+                aria-label="Vue grille"
+                aria-pressed={gridStyle === 'grid'}
               >
                 <Grid3X3 size={16} />
               </button>
