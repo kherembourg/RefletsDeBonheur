@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { AdminInput } from '../../admin/ui/AdminInput';
 import { AdminButton } from '../../admin/ui/AdminButton';
+import { getPasswordError, getPasswordRequirementsMessage } from '../../../lib/passwordValidation';
 
 export interface AccountData {
   email: string;
@@ -35,8 +36,11 @@ export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStep
     // Password validation
     if (!data.password) {
       newErrors.password = 'Password is required';
-    } else if (data.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } else {
+      const passwordError = getPasswordError(data.password);
+      if (passwordError) {
+        newErrors.password = passwordError;
+      }
     }
 
     // Confirm password
@@ -81,7 +85,7 @@ export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStep
       <AdminInput
         label="Password"
         type={showPassword ? 'text' : 'password'}
-        placeholder="At least 8 characters"
+        placeholder="8+ chars, upper, lower, number"
         value={data.password}
         onChange={(e) => onChange({ ...data, password: e.target.value })}
         error={mergedErrors.password}
