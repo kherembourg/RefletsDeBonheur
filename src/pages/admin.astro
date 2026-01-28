@@ -1,75 +1,12 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
-import Header from '../components/layout/Header.astro';
-import Footer from '../components/layout/Footer.astro';
-import FloralDecoration from '../components/decorative/FloralDecoration.astro';
 import { AdminPanel } from '../components/admin/AdminPanel';
-import { mockSettings } from '../lib/mockData';
-
-const coupleName = mockSettings.coupleName || 'Julie & Thomas';
 ---
 
 <MainLayout
   title="Administration - Reflets de Bonheur"
   description="Panneau d'administration du mariage"
+  showHeader={false}
 >
-  <Header slot="header" />
-
-  <!-- Elegant Hero Section -->
-  <section class="relative py-12 sm:py-16 overflow-hidden bg-linear-to-b from-cream to-cream-dark">
-    <!-- Floral Decorations -->
-    <div class="absolute top-0 left-0 w-40 h-40 sm:w-56 sm:h-56 -translate-x-1/4 -translate-y-1/4">
-      <FloralDecoration variant="corner-left" class="w-full h-full" />
-    </div>
-    <div class="absolute top-0 right-0 w-40 h-40 sm:w-56 sm:h-56 translate-x-1/4 -translate-y-1/4">
-      <FloralDecoration variant="corner-right" class="w-full h-full" />
-    </div>
-
-    <!-- Subtle pattern overlay -->
-    <div class="absolute inset-0 opacity-[0.02]" style="background-image: url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ae1725\" fill-opacity=\"1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
-
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <div class="text-center max-w-3xl mx-auto">
-        <!-- Decorative top element -->
-        <div class="mb-4">
-          <span class="text-burgundy-old/70 tracking-[0.3em] uppercase text-xs font-sans font-medium">
-            Espace privé
-          </span>
-        </div>
-
-        <!-- Title -->
-        <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl text-charcoal mb-4 font-light">
-          Administration
-        </h1>
-
-        <!-- Decorative Divider -->
-        <div class="flex items-center justify-center gap-4 mb-4">
-          <div class="w-12 h-px bg-burgundy-old/30"></div>
-          <FloralDecoration variant="small" class="w-8 h-8" />
-          <div class="w-12 h-px bg-burgundy-old/30"></div>
-        </div>
-
-        <!-- Subtitle -->
-        <p class="text-charcoal-light/80 font-light max-w-xl mx-auto leading-relaxed">
-          Gérez les paramètres et le contenu de votre espace mariage
-        </p>
-      </div>
-    </div>
-
-    <!-- Bottom decorative border -->
-    <div class="absolute bottom-0 left-0 right-0">
-      <svg viewBox="0 0 1200 20" preserveAspectRatio="none" class="w-full h-4 text-pearl-white fill-current">
-        <path d="M0,20 L0,10 Q300,0 600,10 T1200,10 L1200,20 Z" />
-      </svg>
-    </div>
-  </section>
-
-  <!-- Admin Content -->
-  <div class="bg-pearl-white">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 page-enter">
-      <AdminPanel client:load />
-    </div>
-  </div>
-
-  <Footer slot="footer" />
+  <AdminPanel client:load initialView="dashboard" />
 </MainLayout>

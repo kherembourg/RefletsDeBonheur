@@ -5,11 +5,42 @@ import Footer from '../components/layout/Footer.astro';
 import { Check, X, HelpCircle, Camera, BookHeart, Globe, ArrowRight } from 'lucide-react';
 
 const lang = 'en';
+const acceptLanguage = Astro.request?.headers?.get('accept-language') ?? '';
+const locale = acceptLanguage.split(',')[0] || 'en-US';
+const currency = new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const currencyPrecise = new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const priceOriginal = 249;
+const pricePromo = 199;
+const renewalAnnual = 19.99;
+const monthlyTransfer = 12;
+const durationYears = 2;
+const discountAmount = priceOriginal - pricePromo;
+const priceOriginalLabel = currency.format(priceOriginal);
+const pricePromoLabel = currency.format(pricePromo);
+const renewalAnnualLabel = currencyPrecise.format(renewalAnnual);
+const monthlyTransferLabel = currency.format(monthlyTransfer);
+const discountLabel = currency.format(discountAmount);
+const durationLabel = new Intl.NumberFormat(locale).format(durationYears);
+const guaranteeDaysLabel = new Intl.NumberFormat(locale).format(30);
+const features = [
+  "Unlimited photos & videos gallery",
+  "Private domain name",
+  "Digital guestbook",
+  "Wedding website & RSVP",
+  "Mobile app (PWA)",
+  "Offline mode",
+  "Bulk download (ZIP)",
+  "Print-ready guestbook PDF",
+  "Category albums",
+  "Reactions & favorites",
+  "Slideshow mode",
+  "Email support"
+];
 ---
 
 <MainLayout
   title="Pricing - Reflets de Bonheur"
-  description="Premium wedding experience: $199 for 2 years with your private domain included."
+  description={`Premium wedding experience: ${pricePromoLabel} for ${durationLabel} years with your private domain included.`}
   showHeader={true}
 >
   <Header slot="header" />
@@ -22,7 +53,7 @@ const lang = 'en';
           Pricing
         </span>
         <h1 class="font-serif text-4xl sm:text-5xl font-light text-charcoal dark:text-cream mt-4 mb-6">
-          Premium pricing, no surprises
+          Premium Pricing, No Surprises
         </h1>
         <div class="w-16 h-px mx-auto mb-6" style="background-color: #ae1725;"></div>
         <p class="text-charcoal-light dark:text-cream/70 font-light">
@@ -47,17 +78,17 @@ const lang = 'en';
 
           <!-- Price -->
           <div class="text-center mb-10">
-            <div class="flex items-center justify-center gap-4 mb-3">
-              <span class="text-2xl text-charcoal-light/50 line-through font-light">$249</span>
-              <span class="font-serif text-6xl sm:text-7xl font-light text-burgundy-old">$199</span>
+            <div class="flex items-center justify-center gap-4 mb-3 tabular-nums">
+              <span class="text-2xl text-charcoal-light/50 line-through font-light">{priceOriginalLabel}</span>
+              <span class="font-serif text-6xl sm:text-7xl font-light text-burgundy-old">{pricePromoLabel}</span>
             </div>
             <p class="text-charcoal-light dark:text-cream/70 mb-2">
-              for <strong class="text-charcoal dark:text-cream">2 years</strong>
-              <span class="ml-2 font-medium text-burgundy-old">(Save $50)</span>
+              for <strong class="text-charcoal dark:text-cream">{durationLabel}&nbsp;years</strong>
+              <span class="ml-2 font-medium text-burgundy-old">(Save {discountLabel})</span>
             </p>
             <div class="inline-flex items-center gap-2 px-4 py-2 mt-2" style="background-color: rgba(174, 23, 37, 0.05);">
               <span class="text-sm text-charcoal-light dark:text-cream/70">
-                Then <strong class="text-burgundy-old">$19.99/year</strong> to keep your gallery online
+                Then <strong class="text-burgundy-old">{renewalAnnualLabel}/year</strong> to keep your gallery online
               </span>
             </div>
           </div>
@@ -72,8 +103,8 @@ const lang = 'en';
           <!-- Three Services -->
           <div class="grid md:grid-cols-3 gap-6 mb-10">
             <div class="text-center p-4">
-              <Camera class="w-6 h-6 mx-auto mb-3 text-burgundy-old" />
-              <h4 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Photo Gallery</h4>
+              <Camera class="w-6 h-6 mx-auto mb-3 text-burgundy-old" aria-hidden="true" />
+              <h3 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Photo Gallery</h3>
               <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
                 <li>Unlimited uploads</li>
                 <li>Curated albums</li>
@@ -82,8 +113,8 @@ const lang = 'en';
             </div>
 
             <div class="text-center p-4 border-x" style="border-color: rgba(174, 23, 37, 0.1);">
-              <BookHeart class="w-6 h-6 mx-auto mb-3 text-burgundy-old" />
-              <h4 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Guestbook</h4>
+              <BookHeart class="w-6 h-6 mx-auto mb-3 text-burgundy-old" aria-hidden="true" />
+              <h3 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Guestbook</h3>
               <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
                 <li>Unlimited messages</li>
                 <li>Admin moderation</li>
@@ -92,8 +123,8 @@ const lang = 'en';
             </div>
 
             <div class="text-center p-4">
-              <Globe class="w-6 h-6 mx-auto mb-3 text-burgundy-old" />
-              <h4 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Wedding Website</h4>
+              <Globe class="w-6 h-6 mx-auto mb-3 text-burgundy-old" aria-hidden="true" />
+              <h3 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Wedding Website</h3>
               <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
                 <li>Private domain</li>
                 <li>Timeline & venue</li>
@@ -106,14 +137,14 @@ const lang = 'en';
           <div class="text-center">
             <a
               href="/connexion"
-              class="inline-flex items-center px-10 py-4 text-white font-sans font-medium text-sm tracking-wider uppercase transition-all hover:opacity-90"
+              class="inline-flex items-center px-10 py-4 text-white font-sans font-medium text-sm tracking-wider uppercase transition-opacity hover:opacity-90"
               style="background-color: #ae1725;"
             >
-              Get started now
-              <ArrowRight class="ml-2 w-4 h-4" />
+              Get Started Now
+              <ArrowRight class="ml-2 w-4 h-4" aria-hidden="true" />
             </a>
             <p class="mt-4 text-charcoal-light dark:text-cream/70 text-sm font-light">
-              30-day money-back guarantee
+              {guaranteeDaysLabel}-day money-back guarantee
             </p>
           </div>
         </div>
@@ -126,36 +157,27 @@ const lang = 'en';
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
         <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
-          Included in the offer
+          Included in the Offer
         </span>
         <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-4">
-          Everything you need
+          Everything You Need
         </h2>
       </div>
 
-      <div class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-4">
-        {[
-          "Unlimited photos & videos gallery",
-          "Private domain name",
-          "Digital guestbook",
-          "Wedding website & RSVP",
-          "Mobile app (PWA)",
-          "Offline mode",
-          "Bulk download (ZIP)",
-          "Print-ready guestbook PDF",
-          "Category albums",
-          "Reactions & favorites",
-          "Slideshow mode",
-          "Email support"
-        ].map(feature => (
-          <div class="flex items-center gap-3 p-3 bg-white dark:bg-[#1b1b1b] border border-white/10">
-            <div class="w-5 h-5 flex items-center justify-center shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
-              <Check class="w-3 h-3" />
+      {features.length > 0 ? (
+        <div class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-4">
+          {features.map(feature => (
+            <div class="flex items-center gap-3 p-3 bg-white dark:bg-[#1b1b1b] border border-white/10">
+              <div class="w-5 h-5 flex items-center justify-center shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
+                <Check class="w-3 h-3" aria-hidden="true" />
+              </div>
+              <span class="text-charcoal dark:text-cream font-light text-sm break-words min-w-0">{feature}</span>
             </div>
-            <span class="text-charcoal dark:text-cream font-light text-sm">{feature}</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p class="text-center text-charcoal-light dark:text-cream/70">Features will be listed here soon.</p>
+      )}
     </div>
   </section>
 
@@ -166,7 +188,7 @@ const lang = 'en';
         <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
           FAQ
         </span>
-        <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-4">
+        <h2 id="faq" class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-4 scroll-mt-24">
           Frequently Asked Questions
         </h2>
       </div>
@@ -175,12 +197,12 @@ const lang = 'en';
         <!-- FAQ Item 1 -->
         <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
-            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
-            <div>
-              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
+            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
+            <div class="min-w-0">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2 break-words">
                 How does the custom domain work?
               </h3>
-              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed break-words">
                 You choose your name during signup (e.g., john-jane.reflets-bonheur.fr).
                 This will be the unique address for your wedding space, accessible to all your guests.
               </p>
@@ -191,14 +213,14 @@ const lang = 'en';
         <!-- FAQ Item 2 -->
         <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
-            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
-            <div>
-              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
+            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
+            <div class="min-w-0">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2 break-words">
                 How does renewal work?
               </h3>
-              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
-                After 2 years, if you want to keep your gallery online (read-only mode, no new uploads),
-                it's only $19.99/year. Renewal is optional - you can download your data at any time.
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed break-words">
+                After {durationLabel}&nbsp;years, if you want to keep your gallery online (read-only mode, no new uploads),
+                it's only {renewalAnnualLabel}/year. Renewal is optional - you can download your data at any time.
               </p>
             </div>
           </div>
@@ -207,12 +229,12 @@ const lang = 'en';
         <!-- FAQ Item 3 -->
         <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
-            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
-            <div>
-              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
+            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
+            <div class="min-w-0">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2 break-words">
                 Are my photos secure?
               </h3>
-              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed break-words">
                 Yes, your data is encrypted and automatically backed up.
                 Only people with the private access link can view your gallery.
               </p>
@@ -223,12 +245,12 @@ const lang = 'en';
         <!-- FAQ Item 4 -->
         <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
           <div class="flex items-start gap-3">
-            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
-            <div>
-              <h3 class="font-medium text-charcoal dark:text-cream mb-2">
+            <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
+            <div class="min-w-0">
+              <h3 class="font-medium text-charcoal dark:text-cream mb-2 break-words">
                 Can I download my photos?
               </h3>
-              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed">
+              <p class="text-charcoal-light dark:text-cream/70 font-light text-sm leading-relaxed break-words">
                 At any time, you can download all your photos and videos in one click (ZIP format).
                 The guestbook can be exported as PDF.
               </p>
@@ -247,55 +269,95 @@ const lang = 'en';
           Comparison
         </span>
         <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-4">
-          Why choose us?
+          Why Choose Us?
         </h2>
       </div>
 
       <div class="max-w-5xl mx-auto overflow-x-auto">
-        <table class="w-full bg-white dark:bg-[#1b1b1b]">
+        <table class="w-full bg-white dark:bg-[#1b1b1b] tabular-nums">
+          <caption class="sr-only">Feature comparison of Reflets de Bonheur, Google Photos, and WeTransfer.</caption>
           <thead>
             <tr style="background-color: #ae1725;">
-              <th class="px-4 py-4 text-left text-sm font-medium tracking-wide text-white">Feature</th>
-              <th class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">Reflets de Bonheur</th>
-              <th class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">Google Photos</th>
-              <th class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">WeTransfer</th>
+              <th scope="col" class="px-4 py-4 text-left text-sm font-medium tracking-wide text-white">Feature</th>
+              <th scope="col" class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">Reflets de Bonheur</th>
+              <th scope="col" class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">Google Photos</th>
+              <th scope="col" class="px-4 py-4 text-center text-sm font-medium tracking-wide text-white">WeTransfer</th>
             </tr>
           </thead>
           <tbody class="divide-y" style="--tw-divide-opacity: 0.1; border-color: rgba(174, 23, 37, 0.1);">
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Price</td>
-              <td class="px-4 py-4 text-center font-medium text-sm text-burgundy-old">$199/2 years</td>
+              <th scope="row" class="px-4 py-4 text-sm text-charcoal dark:text-cream text-left font-normal">Price</th>
+              <td class="px-4 py-4 text-center font-medium text-sm text-burgundy-old">{pricePromoLabel}/{durationLabel}&nbsp;years</td>
               <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">Free (limited)</td>
-              <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">$12/month</td>
+              <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">{monthlyTransferLabel}/month</td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Custom domain</td>
-              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <th scope="row" class="px-4 py-4 text-sm text-charcoal dark:text-cream text-left font-normal">Custom domain</th>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">Yes</span>
+                <Check class="w-5 h-5 mx-auto text-burgundy-old" aria-hidden="true" />
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">No</span>
+                <X class="w-5 h-5 text-charcoal-light/40 mx-auto" aria-hidden="true" />
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">No</span>
+                <X class="w-5 h-5 text-charcoal-light/40 mx-auto" aria-hidden="true" />
+              </td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Guestbook</td>
-              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <th scope="row" class="px-4 py-4 text-sm text-charcoal dark:text-cream text-left font-normal">Guestbook</th>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">Yes</span>
+                <Check class="w-5 h-5 mx-auto text-burgundy-old" aria-hidden="true" />
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">No</span>
+                <X class="w-5 h-5 text-charcoal-light/40 mx-auto" aria-hidden="true" />
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">No</span>
+                <X class="w-5 h-5 text-charcoal-light/40 mx-auto" aria-hidden="true" />
+              </td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Wedding website</td>
-              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <th scope="row" class="px-4 py-4 text-sm text-charcoal dark:text-cream text-left font-normal">Wedding website</th>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">Yes</span>
+                <Check class="w-5 h-5 mx-auto text-burgundy-old" aria-hidden="true" />
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">No</span>
+                <X class="w-5 h-5 text-charcoal-light/40 mx-auto" aria-hidden="true" />
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">No</span>
+                <X class="w-5 h-5 text-charcoal-light/40 mx-auto" aria-hidden="true" />
+              </td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">Original quality</td>
-              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
+              <th scope="row" class="px-4 py-4 text-sm text-charcoal dark:text-cream text-left font-normal">Original quality</th>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">Yes</span>
+                <Check class="w-5 h-5 mx-auto text-burgundy-old" aria-hidden="true" />
+              </td>
               <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">Compressed</td>
-              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">Yes</span>
+                <Check class="w-5 h-5 mx-auto text-burgundy-old" aria-hidden="true" />
+              </td>
             </tr>
             <tr>
-              <td class="px-4 py-4 text-sm text-charcoal dark:text-cream">No ads</td>
-              <td class="px-4 py-4 text-center"><Check class="w-5 h-5 mx-auto text-burgundy-old" /></td>
-              <td class="px-4 py-4 text-center"><X class="w-5 h-5 text-charcoal-light/40 mx-auto" /></td>
+              <th scope="row" class="px-4 py-4 text-sm text-charcoal dark:text-cream text-left font-normal">No ads</th>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">Yes</span>
+                <Check class="w-5 h-5 mx-auto text-burgundy-old" aria-hidden="true" />
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span class="sr-only">No</span>
+                <X class="w-5 h-5 text-charcoal-light/40 mx-auto" aria-hidden="true" />
+              </td>
               <td class="px-4 py-4 text-center text-charcoal-light dark:text-cream/70 text-sm">Pro version</td>
             </tr>
           </tbody>
@@ -309,24 +371,24 @@ const lang = 'en';
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-2xl mx-auto">
         <h2 class="font-serif text-3xl sm:text-4xl font-light mb-6 text-white">
-          Ready to curate your memories?
+          Ready to Curate Your Memories?
         </h2>
-        <p class="text-white/80 font-light mb-4">
-          <span class="line-through text-white/50">$249</span>
-          <strong class="text-white ml-2">$199</strong> for 2 full years.
+        <p class="text-white/80 font-light mb-4 tabular-nums">
+          <span class="line-through text-white/50">{priceOriginalLabel}</span>
+          <strong class="text-white ml-2">{pricePromoLabel}</strong> for {durationLabel}&nbsp;full&nbsp;years.
         </p>
         <p class="text-white/70 font-light text-sm mb-8">
-          Private domain included • Then $19.99/year for renewal
+          Private domain included • Then {renewalAnnualLabel}/year for renewal
         </p>
         <a
           href="/connexion"
-          class="inline-flex items-center px-10 py-4 bg-white font-sans font-medium text-sm tracking-wider uppercase hover:bg-gray-100 transition-all text-burgundy-old"
+          class="inline-flex items-center px-10 py-4 bg-white font-sans font-medium text-sm tracking-wider uppercase hover:bg-gray-100 transition-colors text-burgundy-old"
         >
-          Get started now
-          <ArrowRight class="ml-2 w-4 h-4" />
+          Get Started Now
+          <ArrowRight class="ml-2 w-4 h-4" aria-hidden="true" />
         </a>
         <p class="mt-6 text-white/60 text-sm font-light">
-          30-day money-back guarantee
+          {guaranteeDaysLabel}-day money-back guarantee
         </p>
       </div>
     </div>

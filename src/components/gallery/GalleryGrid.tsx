@@ -1,28 +1,29 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense, useCallback } from 'react';
-import { Upload, Lock, ImageIcon, Play, CheckSquare, Grid3X3, LayoutGrid, Loader2 } from 'lucide-react';
+import { Upload, Lock, ImageIcon, Loader2, CheckSquare, Trash2, FolderPlus } from 'lucide-react';
 import { MediaCard } from './MediaCard';
 import { UploadModal } from './UploadModal';
-import { SearchFilters, type MediaType, type SortOption } from './SearchFilters';
 
 // Lazy load heavy components that are conditionally rendered
 const Lightbox = lazy(() => import('./Lightbox').then(m => ({ default: m.Lightbox })));
-const Slideshow = lazy(() => import('./Slideshow').then(m => ({ default: m.Slideshow })));
-import BulkActions from './BulkActions';
 import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
 import { DataService, type MediaItem, type Album } from '../../lib/services/dataService';
 
 interface GalleryGridProps {
   weddingId?: string;
   demoMode?: boolean; // Skip auth check for demo page
+  variant?: 'public' | 'admin';
 }
 
-export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
+export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }: GalleryGridProps) {
   // Create service once using ref
   const serviceRef = useRef<DataService | null>(null);
   if (!serviceRef.current) {
     serviceRef.current = new DataService({ demoMode, weddingId });
   }
   const dataService = serviceRef.current;
+
+  const isAdminView = variant === 'admin';
+  const isPublicView = variant === 'public';
 
   // Start with empty state and loading to avoid hydration mismatch
   // Both server and client render the same thing initially
@@ -58,26 +59,20 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
     loadData();
   }, [demoMode, dataService]);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     const data = await dataService.getMedia();
     setMedia(data);
-  };
+  }, [dataService]);
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [showSlideshow, setShowSlideshow] = useState(false);
-  const [gridStyle, setGridStyle] = useState<'masonry' | 'grid'>('masonry');
 
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [mediaType, setMediaType] = useState<MediaType>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  // Filter state
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [userFavorites, setUserFavorites] = useState<Set<string>>(new Set());
 
-  // Bulk selection state
+  // Bulk selection state (admin view)
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
@@ -106,45 +101,15 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       result = result.filter(item => item.albumIds?.includes(selectedAlbumId));
     }
 
-    // Filter by favorites
-    if (showFavoritesOnly) {
-      result = result.filter(item => userFavorites.has(item.id));
-    }
-
-    // Filter by type
-    if (mediaType !== 'all') {
-      result = result.filter(item => item.type === mediaType);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(item =>
-        (item.caption && item.caption.toLowerCase().includes(query)) ||
-        (item.author && item.author.toLowerCase().includes(query))
-      );
-    }
-
-    // Sort (using toSorted for immutability)
-    return result.toSorted((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return b.createdAt.getTime() - a.createdAt.getTime();
-        case 'oldest':
-          return a.createdAt.getTime() - b.createdAt.getTime();
-        case 'author':
-          return (a.author || '').localeCompare(b.author || '');
-        default:
-          return 0;
-      }
-    });
-  }, [media, selectedAlbumId, mediaType, searchQuery, sortBy, showFavoritesOnly, userFavorites]);
+    // Sort newest first
+    return result.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }, [media, selectedAlbumId]);
 
   // Memoized handlers to prevent breaking MediaCard memo optimization
   const handleDelete = useCallback(async (id: string) => {
     await dataService.deleteMedia(id);
     refresh();
-  }, [dataService]);
+  }, [dataService, refresh]);
 
   const handleToggleFavorite = useCallback(async (id: string) => {
     const newState = await dataService.toggleFavorite(id);
@@ -160,12 +125,10 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
     });
   }, [dataService]);
 
-  const handleUploadComplete = useCallback(async (items: MediaItem[]) => {
-    // Items are already saved to the database by the upload process
-    // Just refresh the gallery to show them
-    refresh();
+  const handleUploadComplete = useCallback(async (_items: MediaItem[]) => {
+    await refresh();
     setShowUploadModal(false);
-  }, []);
+  }, [refresh]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -193,6 +156,17 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
     setSelectionMode(false);
   }, []);
 
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedItems.size === 0) return;
+    const count = selectedItems.size;
+    if (!confirm(`Supprimer ${count} souvenir${count > 1 ? 's' : ''} ?`)) {
+      return;
+    }
+    await Promise.all([...selectedItems].map(id => dataService.deleteMedia(id)));
+    await refresh();
+    clearSelection();
+  }, [selectedItems, dataService, refresh, clearSelection]);
+
   // Memoized click handler for lightbox - looks up index from id
   const handleMediaClick = useCallback((id: string) => {
     const index = filteredMedia.findIndex(item => item.id === id);
@@ -201,115 +175,95 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
     }
   }, [filteredMedia]);
 
-  return (
-    <div className="space-y-8">
-      {/* Elegant Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 pb-6 border-b border-charcoal/10">
-        <div>
-          <p className="text-burgundy-old/70 tracking-[0.2em] uppercase text-xs font-sans font-medium mb-2">
-            Collection
-          </p>
-          <h2 className="font-serif text-2xl sm:text-3xl font-light text-charcoal">
-            Moments Précieux
-          </h2>
-          <p className="text-charcoal/50 text-sm font-light mt-1">
-            {media.length} souvenir{media.length > 1 ? 's' : ''} partagé{media.length > 1 ? 's' : ''}
-          </p>
-        </div>
+  const gridClassName = isAdminView
+    ? 'grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6'
+    : 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6';
 
-        {/* Action Buttons - Elegant Style */}
-        <div className="flex items-center gap-3">
-          {/* Grid Style Toggle */}
-          {media.length > 0 && !selectionMode && (
-            <div className="flex border border-charcoal/10 divide-x divide-charcoal/10">
-              <button
-                onClick={() => setGridStyle('masonry')}
-                className={`p-2.5 transition-all duration-200 ${
-                  gridStyle === 'masonry'
-                    ? 'bg-charcoal text-white'
-                    : 'bg-white text-charcoal/60 hover:text-charcoal'
-                }`}
-                title="Vue mosaïque"
+  return (
+    <div className="space-y-6">
+      {/* Accessibility-only header */}
+      <h2 className="sr-only">Galerie Photos</h2>
+
+      {/* Public gallery toolbar */}
+      {isPublicView && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-xs uppercase tracking-[0.35em] text-charcoal/40">Galerie</p>
+          {albums.length > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-charcoal/50 hidden sm:inline">Filtrer par album</span>
+              <select
+                value={selectedAlbumId || ''}
+                onChange={(e) => setSelectedAlbumId(e.target.value || null)}
+                className="px-4 py-2 rounded-full border border-charcoal/10 bg-white text-sm text-charcoal/70 shadow-sm focus:outline-none focus:ring-2 focus:ring-burgundy-old/20"
               >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                onClick={() => setGridStyle('grid')}
-                className={`p-2.5 transition-all duration-200 ${
-                  gridStyle === 'grid'
-                    ? 'bg-charcoal text-white'
-                    : 'bg-white text-charcoal/60 hover:text-charcoal'
-                }`}
-                title="Vue grille"
-              >
-                <Grid3X3 size={16} />
-              </button>
+                <option value="">Tous les albums</option>
+                {albums.map(album => (
+                  <option key={album.id} value={album.id}>
+                    {album.name}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
+        </div>
+      )}
 
-          {/* Select Mode Button */}
-          {media.length > 0 && (
+      {/* Admin gallery toolbar */}
+      {isAdminView && media.length > 0 && (
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
             <button
               onClick={toggleSelectionMode}
-              className={`px-4 py-2.5 flex items-center gap-2 transition-all duration-300 font-medium text-sm tracking-wide ${
+              className={`px-4 py-2 rounded-full border text-sm font-medium flex items-center gap-2 transition-colors ${
                 selectionMode
-                  ? 'bg-burgundy-old text-white'
-                  : 'bg-white border border-charcoal/10 text-charcoal/70 hover:border-charcoal/30 hover:text-charcoal'
+                  ? 'bg-burgundy-old text-white border-burgundy-old'
+                  : 'bg-white text-charcoal/70 border-charcoal/10 hover:border-charcoal/30'
               }`}
-              title={selectionMode ? 'Annuler la sélection' : 'Sélectionner des photos'}
             >
               <CheckSquare size={16} />
-              <span className="hidden sm:inline">{selectionMode ? 'Annuler' : 'Sélectionner'}</span>
+              Actions groupées
             </button>
-          )}
+            {selectionMode && (
+              <span className="text-sm text-charcoal/50">
+                {selectedItems.size} sélectionnée{selectedItems.size > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
 
-          {/* Slideshow Button */}
-          {media.length > 0 && !selectionMode && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => setShowSlideshow(true)}
-              className="px-4 py-2.5 bg-charcoal text-white flex items-center gap-2 transition-all duration-300 hover:bg-charcoal/90 font-medium text-sm tracking-wide"
-              title="Lancer le diaporama"
+              onClick={handleBulkDelete}
+              disabled={!selectionMode || selectedItems.size === 0}
+              className="px-4 py-2 rounded-full border border-charcoal/10 text-sm text-charcoal/70 hover:text-charcoal disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Play size={16} />
-              <span className="hidden sm:inline">Diaporama</span>
+              <Trash2 size={16} className="inline-block mr-2" />
+              Supprimer
             </button>
-          )}
+            <button
+              disabled
+              className="px-4 py-2 rounded-full border border-charcoal/10 text-sm text-charcoal/50 cursor-not-allowed"
+              title="Bientôt disponible"
+            >
+              <FolderPlus size={16} className="inline-block mr-2" />
+              Ajouter à un album
+            </button>
 
-          {/* Upload Button or Lock Message */}
-          {!selectionMode && (settings.allowUploads ? (
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="px-4 py-2.5 bg-burgundy-old text-white flex items-center gap-2 transition-all duration-300 hover:bg-[#c92a38] font-medium text-sm tracking-wide"
-            >
-              <Upload size={16} />
-              <span className="hidden sm:inline">Partager</span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 text-charcoal/50 bg-cream px-4 py-2.5 text-sm font-light">
-              <Lock size={14} />
-              <span>Uploads fermés</span>
-            </div>
-          ))}
+            {settings.allowUploads ? (
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="px-4 py-2 rounded-full bg-burgundy-old text-white text-sm font-medium hover:bg-[#c92a38] transition-colors"
+              >
+                <Upload size={16} className="inline-block mr-2" />
+                Ajouter des photos
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 text-charcoal/50 bg-cream px-4 py-2 rounded-full text-sm">
+                <Lock size={14} />
+                <span>Uploads fermés</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Search and Filters */}
-      {media.length > 0 && (
-        <SearchFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          mediaType={mediaType}
-          onMediaTypeChange={setMediaType}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          showFavoritesOnly={showFavoritesOnly}
-          onShowFavoritesChange={setShowFavoritesOnly}
-          selectedAlbumId={selectedAlbumId}
-          onAlbumChange={setSelectedAlbumId}
-          albums={albums}
-          resultCount={filteredMedia.length}
-          totalCount={media.length}
-        />
       )}
 
       {/* Loading State */}
@@ -323,15 +277,11 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
       ) : media.length === 0 ? (
         /* Empty State - No media at all */
         <div className="text-center py-16 sm:py-24 px-4">
-          {/* Decorative illustration */}
           <div className="relative w-32 h-32 mx-auto mb-8">
             <div className="absolute inset-0 bg-linear-to-br from-burgundy-old/5 to-burgundy-old/10 rounded-full"></div>
             <div className="absolute inset-4 bg-white rounded-full shadow-inner flex items-center justify-center">
               <ImageIcon className="text-burgundy-old/40" size={36} />
             </div>
-            {/* Decorative sparkles */}
-            <div className="absolute -top-2 -right-2 w-6 h-6 text-burgundy-old/30">✨</div>
-            <div className="absolute -bottom-1 -left-3 w-4 h-4 text-burgundy-old/20">✨</div>
           </div>
 
           <h3 className="font-serif text-2xl sm:text-3xl text-charcoal mb-3">
@@ -345,24 +295,17 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
           {settings.allowUploads ? (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-burgundy-old text-white rounded-none hover:bg-[#c92a38] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-burgundy-old text-white rounded-full hover:bg-[#c92a38] transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <Upload size={20} />
-              <span className="font-medium tracking-wide">Partager vos premiers souvenirs</span>
+              <span className="font-medium tracking-wide">Contribuer à la galerie</span>
             </button>
           ) : (
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-cream text-charcoal/60 rounded-none">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-cream text-charcoal/60 rounded-full">
               <Lock size={16} />
               <span className="font-light">Les uploads seront bientôt disponibles</span>
             </div>
           )}
-
-          {/* Decorative bottom element */}
-          <div className="flex items-center justify-center gap-4 mt-12">
-            <div className="w-16 h-px bg-linear-to-r from-transparent to-burgundy-old/20"></div>
-            <div className="text-burgundy-old/30 text-lg">❧</div>
-            <div className="w-16 h-px bg-linear-to-r from-burgundy-old/20 to-transparent"></div>
-          </div>
         </div>
       ) : filteredMedia.length === 0 ? (
         /* Empty State - No results from filtering */
@@ -375,15 +318,11 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
         </div>
       ) : (
         /* Gallery Grid */
-        <div className={
-          gridStyle === 'masonry'
-            ? "columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6"
-            : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6"
-        }>
+        <div className={gridClassName}>
           {filteredMedia.map((item, index) => (
             <div
               key={item.id}
-              className={`gallery-item ${gridStyle === 'masonry' ? 'mb-6 break-inside-avoid' : ''}`}
+              className={`gallery-item ${isPublicView ? 'mb-6 break-inside-avoid' : ''}`}
               // Only animate first 12 items (visible on initial load) to reduce object creation
               style={index < 12 ? { animationDelay: `${index * 0.05}s` } : undefined}
             >
@@ -398,19 +337,23 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
                 isFavorited={userFavorites.has(item.id)}
                 onToggleFavorite={handleToggleFavorite}
                 dataService={dataService}
+                variant={variant}
               />
             </div>
           ))}
         </div>
       )}
 
-      {/* Bulk Actions Bar */}
-      {selectionMode && (
-        <BulkActions
-          selectedItems={selectedItems}
-          allItems={filteredMedia}
-          onClearSelection={clearSelection}
-        />
+      {/* Public CTA */}
+      {isPublicView && media.length > 0 && settings.allowUploads && (
+        <div className="pt-6 flex justify-center">
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="px-8 py-3 rounded-full bg-burgundy-old text-white text-sm font-medium tracking-wide hover:bg-[#c92a38] transition-colors shadow-md"
+          >
+            Contribuer à la galerie
+          </button>
+        </div>
       )}
 
       {/* Upload Modal */}
@@ -434,23 +377,6 @@ export function GalleryGrid({ weddingId, demoMode = false }: GalleryGridProps) {
             media={filteredMedia}
             initialIndex={lightboxIndex}
             onClose={() => setLightboxIndex(null)}
-          />
-        </Suspense>
-      )}
-
-      {/* Slideshow (lazy loaded) */}
-      {showSlideshow && (
-        <Suspense fallback={
-          <div className="fixed inset-0 bg-deep-charcoal/95 z-50 flex items-center justify-center">
-            <div className="w-8 h-8 animate-spin">
-              <Loader2 className="w-full h-full text-white" />
-            </div>
-          </div>
-        }>
-          <Slideshow
-            media={filteredMedia.length > 0 ? filteredMedia : media}
-            initialIndex={0}
-            onClose={() => setShowSlideshow(false)}
           />
         </Suspense>
       )}

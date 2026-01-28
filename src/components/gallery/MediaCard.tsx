@@ -1,7 +1,21 @@
-import { useState, memo } from 'react';
-import { Trash2, Video, Heart, CheckCircle, Circle, Maximize2 } from 'lucide-react';
+import { useState, memo, useCallback } from 'react';
+import { Trash2, Video, Heart, CheckCircle, Circle, Download } from 'lucide-react';
 import type { MediaItem, DataService } from '../../lib/services/dataService';
-import ReactionsPanel from './ReactionsPanel';
+
+// Default placeholder gradient for items without a pre-generated placeholder
+const DEFAULT_PLACEHOLDER = 'linear-gradient(135deg, #f5f0e8 0%, #e8d5d3 50%, #f0e6e4 100%)';
+
+// Generate responsive srcset for Unsplash images
+function generateSrcSet(url: string): string | undefined {
+  if (!url.includes('unsplash.com')) return undefined;
+
+  const baseUrl = url.split('?')[0];
+  const sizes = [320, 480, 640, 800];
+
+  return sizes
+    .map(w => `${baseUrl}?w=${w}&q=75&auto=format&fit=crop ${w}w`)
+    .join(', ');
+}
 
 interface MediaCardProps {
   item: MediaItem;
@@ -14,6 +28,7 @@ interface MediaCardProps {
   isFavorited?: boolean;
   onToggleFavorite?: (id: string) => void;
   dataService?: DataService;
+  variant?: 'public' | 'admin';
 }
 
 export const MediaCard = memo(function MediaCard({
@@ -26,12 +41,20 @@ export const MediaCard = memo(function MediaCard({
   onToggleSelection,
   isFavorited: isFavoritedProp = false,
   onToggleFavorite,
-  dataService
+  dataService,
+  variant = 'public'
 }: MediaCardProps) {
+  const isPublicView = variant === 'public';
+  const isAdminView = variant === 'admin';
+
   // Use prop for favorited state, with local state for optimistic updates
   const [localFavorited, setLocalFavorited] = useState(isFavoritedProp);
-  const [favoriteCount, setFavoriteCount] = useState(item.favoriteCount || 0);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoaded(true);
+  }, []);
 
   // Sync with prop changes
   if (isFavoritedProp !== localFavorited && !onToggleFavorite) {
@@ -56,8 +79,19 @@ export const MediaCard = memo(function MediaCard({
       // Use dataService directly
       const newState = dataService.syncToggleFavorite(item.id);
       setLocalFavorited(newState);
-      setFavoriteCount((prev: number) => prev + (newState ? 1 : -1));
     }
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const link = document.createElement('a');
+    link.href = item.url;
+    link.download = item.url.split('/').pop() || 'souvenir';
+    link.target = '_blank';
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleSelection = (e: React.MouseEvent) => {
@@ -77,121 +111,116 @@ export const MediaCard = memo(function MediaCard({
 
   return (
     <div
-      className={`media-card break-inside-avoid relative group cursor-pointer ${
+      role="button"
+      tabIndex={0}
+      className={`media-card relative group cursor-pointer ${
         isSelected ? 'ring-2 ring-burgundy-old ring-offset-2 ring-offset-cream' : ''
       }`}
       onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      aria-label={item.caption || `Photo par ${item.author || 'Anonyme'}`}
     >
-      {/* Elegant frame container */}
-      <div className="relative overflow-hidden bg-white shadow-xs transition-all duration-500 ease-out group-hover:shadow-xl">
-        {/* Subtle border frame */}
-        <div className="absolute inset-0 border border-charcoal/5 z-10 pointer-events-none transition-all duration-500 group-hover:border-burgundy-old/20" />
-
-        {/* Image container with padding for frame effect */}
-        <div className="relative p-2 sm:p-3">
-          {/* Inner frame border */}
-          <div className="absolute inset-2 sm:inset-3 border border-charcoal/3 pointer-events-none z-10" />
-
-          {/* Media Display */}
-          {item.type === 'video' ? (
-            <div className="relative overflow-hidden">
-              <video
-                src={item.url}
-                controls
-                className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-                poster={item.thumbnailUrl}
-              />
-              <div className="absolute top-3 right-3 bg-charcoal/80 backdrop-blur-xs p-2 text-white z-20">
-                <Video size={14} />
-              </div>
+      <div
+        className={`relative overflow-hidden ${
+          isPublicView
+            ? 'rounded-2xl bg-white shadow-sm ring-1 ring-black/5'
+            : 'rounded-xl bg-white shadow-sm ring-1 ring-black/5'
+        }`}
+      >
+        {item.type === 'video' ? (
+          <div className="relative">
+            <video
+              src={item.url}
+              controls
+              className={`w-full object-cover ${isAdminView ? 'aspect-[4/3]' : ''}`}
+              poster={item.thumbnailUrl}
+              width={400}
+              height={300}
+            />
+            <div className="absolute top-3 right-3 bg-charcoal/80 backdrop-blur-xs p-2 text-white">
+              <Video size={14} />
             </div>
-          ) : (
-            <div className="relative overflow-hidden">
-              <img
-                src={item.url}
-                alt={item.caption || `Photo par ${item.author}`}
-                className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-                loading="lazy"
-              />
+          </div>
+        ) : (
+          <div className="relative">
+            {/* Blur placeholder shown while image loads - uses pre-generated SVG or gradient */}
+            {!imageLoaded && (
+              item.placeholder ? (
+                <img
+                  src={item.placeholder}
+                  alt=""
+                  aria-hidden="true"
+                  className={`absolute inset-0 w-full h-full object-cover ${isAdminView ? 'aspect-[4/3]' : 'min-h-[200px]'}`}
+                />
+              ) : (
+                <div
+                  className={`absolute inset-0 ${isAdminView ? 'aspect-[4/3]' : 'min-h-[200px]'}`}
+                  style={{ background: DEFAULT_PLACEHOLDER }}
+                />
+              )
+            )}
+            <img
+              src={item.url}
+              srcSet={generateSrcSet(item.url)}
+              sizes="(max-width: 640px) 320px, (max-width: 1024px) 480px, 400px"
+              alt={item.caption || `Photo par ${item.author}`}
+              className={`w-full object-cover transition-opacity duration-300 ${isAdminView ? 'aspect-[4/3]' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              loading="lazy"
+              decoding="async"
+              width={400}
+              height={300}
+              onLoad={handleImageLoad}
+            />
 
-              {/* Elegant hover overlay */}
-              <div
-                className={`absolute inset-0 bg-linear-to-t from-charcoal/80 via-charcoal/20 to-transparent transition-opacity duration-500 ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
+            {isPublicView && (
+              <div className={`absolute inset-0 bg-black/5 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
+            )}
+          </div>
+        )}
 
-              {/* Expand icon on hover */}
-              <div
-                className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
-                  isHovered && !selectionMode ? 'opacity-100' : 'opacity-0'
-                }`}
+        {/* Author label (public) */}
+        {isPublicView && item.author && (
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/85 text-charcoal/70 shadow-sm">
+            {item.author}
+          </div>
+        )}
+
+        {/* Action buttons (public) */}
+        {isPublicView && !selectionMode && (
+          <div className="absolute right-3 bottom-3 md:top-3 md:right-3 md:bottom-auto flex items-center gap-2">
+            <button
+              onClick={handleFavorite}
+              className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors ${
+                favorited ? 'bg-burgundy-old text-white' : 'bg-white text-charcoal/60 hover:text-charcoal'
+              }`}
+              aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            >
+              <Heart size={16} fill={favorited ? 'currentColor' : 'none'} strokeWidth={1.5} />
+            </button>
+            {item.type !== 'video' && (
+              <button
+                onClick={handleDownload}
+                className="w-9 h-9 rounded-full flex items-center justify-center bg-white text-charcoal/60 hover:text-charcoal shadow-sm"
+                aria-label="Télécharger"
               >
-                <div className="w-12 h-12 border border-white/50 flex items-center justify-center backdrop-blur-xs bg-white/10 transition-transform duration-300 group-hover:scale-110">
-                  <Maximize2 className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Caption area - elegant typography */}
-        <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-1">
-          {item.caption && (
-            <p className="font-serif text-sm text-charcoal/80 italic line-clamp-2 mb-1 leading-relaxed">
-              "{item.caption}"
-            </p>
-          )}
-          <p className="text-xs text-charcoal/50 font-light tracking-wide uppercase">
-            {item.author || 'Anonyme'}
-          </p>
-        </div>
-
-        {/* Reactions Panel (visible on hover) */}
-        {!selectionMode && isHovered && (
-          <div
-            className="absolute bottom-16 left-3 right-3 z-20 animate-fade-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-white/95 backdrop-blur-xs p-2 shadow-lg">
-              <ReactionsPanel mediaId={item.id} dataService={dataService} compact={true} />
-            </div>
+                <Download size={16} />
+              </button>
+            )}
           </div>
         )}
 
-        {/* Favorite Button - elegant minimal style */}
-        <button
-          onClick={handleFavorite}
-          className={`absolute top-4 right-4 sm:top-5 sm:right-5 p-2 transition-all duration-300 z-20 ${
-            favorited
-              ? 'bg-burgundy-old text-white shadow-md'
-              : `bg-white/90 backdrop-blur-xs text-charcoal/60 shadow-xs ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                } hover:bg-white hover:text-burgundy-old`
-          }`}
-          aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-        >
-          <Heart
-            size={16}
-            fill={favorited ? 'currentColor' : 'none'}
-            strokeWidth={1.5}
-          />
-        </button>
-
-        {/* Favorite Count Badge */}
-        {favoriteCount > 0 && !selectionMode && (
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 translate-x-1/2 -translate-y-1/2 bg-burgundy-old text-white text-[10px] font-medium w-5 h-5 flex items-center justify-center pointer-events-none z-30">
-            {favoriteCount}
-          </div>
-        )}
-
-        {/* Selection Checkbox - elegant style */}
-        {selectionMode && (
+        {/* Selection Checkbox - admin */}
+        {isAdminView && selectionMode && (
           <button
             onClick={handleSelection}
-            className="absolute top-4 left-4 sm:top-5 sm:left-5 p-1 bg-white/90 backdrop-blur-xs shadow-xs transition-all duration-200 hover:bg-white z-20"
+            className="absolute top-3 left-3 p-1.5 bg-white/90 backdrop-blur-xs shadow-xs rounded-full transition-all duration-200 hover:bg-white"
             aria-label={isSelected ? 'Désélectionner' : 'Sélectionner'}
           >
             {isSelected ? (
@@ -203,10 +232,10 @@ export const MediaCard = memo(function MediaCard({
         )}
 
         {/* Delete Button (Admin Only) */}
-        {isAdmin && !selectionMode && (
+        {isAdminView && isAdmin && !selectionMode && (
           <button
             onClick={handleDelete}
-            className={`absolute top-4 left-4 sm:top-5 sm:left-5 bg-white/90 backdrop-blur-xs text-charcoal/60 p-2 transition-all duration-300 hover:bg-burgundy-old hover:text-white shadow-xs z-20 ${
+            className={`absolute top-3 right-3 bg-white/90 backdrop-blur-xs text-charcoal/60 p-2 rounded-full transition-all duration-300 hover:bg-burgundy-old hover:text-white shadow-xs ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
             aria-label="Supprimer"

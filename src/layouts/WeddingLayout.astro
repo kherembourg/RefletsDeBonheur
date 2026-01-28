@@ -6,9 +6,10 @@ interface Props {
   wedding: Wedding;
   title?: string;
   showNav?: boolean;
+  showFooter?: boolean;
 }
 
-const { wedding, title, showNav = true } = Astro.props;
+const { wedding, title, showNav = true, showFooter = true } = Astro.props;
 const { config } = wedding;
 const pageTitle = title ? `${title} - ${wedding.name}` : wedding.name;
 
@@ -173,50 +174,52 @@ const secondaryColor = config.theme.secondaryColor || '#c92a38';
     </main>
 
     <!-- Elegant Footer -->
-    <footer class="bg-linear-to-b from-cream to-cream-dark py-12 border-t border-charcoal/5">
-      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Decorative top element -->
-        <div class="flex items-center justify-center gap-4 mb-8">
-          <div class="w-16 h-px bg-linear-to-r from-transparent" style={`--tw-gradient-to: ${primaryColor}30`}></div>
-          <span class="text-2xl" style={`color: ${primaryColor}40`}>❦</span>
-          <div class="w-16 h-px bg-linear-to-l from-transparent" style={`--tw-gradient-to: ${primaryColor}30`}></div>
-        </div>
+    {showFooter && (
+      <footer class="bg-linear-to-b from-cream to-cream-dark py-12 border-t border-charcoal/5">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <!-- Decorative top element -->
+          <div class="flex items-center justify-center gap-4 mb-8">
+            <div class="w-16 h-px bg-linear-to-r from-transparent" style={`--tw-gradient-to: ${primaryColor}30`}></div>
+            <span class="text-2xl" style={`color: ${primaryColor}40`}>❦</span>
+            <div class="w-16 h-px bg-linear-to-l from-transparent" style={`--tw-gradient-to: ${primaryColor}30`}></div>
+          </div>
 
-        <!-- Names -->
-        <p class="text-center font-script text-3xl mb-3" style={`color: ${primaryColor}`}>
-          {config.brideName} & {config.groomName}
-        </p>
-
-        <!-- Date -->
-        <p class="text-center text-charcoal/60 font-light mb-6">
-          {new Date(config.weddingDate).toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        </p>
-
-        <!-- Quote -->
-        <p class="text-center text-charcoal/40 font-serif italic text-sm max-w-md mx-auto mb-8">
-          "L'amour ne se voit pas avec les yeux, mais avec le cœur"
-        </p>
-
-        <!-- Powered by -->
-        <div class="text-center pt-6 border-t border-charcoal/5">
-          <p class="text-xs text-charcoal/40 font-light">
-            Propulsé par{' '}
-            <a
-              href="/"
-              class="hover:underline transition-colors"
-              style={`color: ${primaryColor}`}
-            >
-              Reflets de Bonheur
-            </a>
+          <!-- Names -->
+          <p class="text-center font-script text-3xl mb-3" style={`color: ${primaryColor}`}>
+            {config.brideName} & {config.groomName}
           </p>
+
+          <!-- Date -->
+          <p class="text-center text-charcoal/60 font-light mb-6">
+            {new Date(config.weddingDate).toLocaleDateString('fr-FR', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </p>
+
+          <!-- Quote -->
+          <p class="text-center text-charcoal/40 font-serif italic text-sm max-w-md mx-auto mb-8">
+            "L'amour ne se voit pas avec les yeux, mais avec le cœur"
+          </p>
+
+          <!-- Powered by -->
+          <div class="text-center pt-6 border-t border-charcoal/5">
+            <p class="text-xs text-charcoal/40 font-light">
+              Propulsé par{' '}
+              <a
+                href="/"
+                class="hover:underline transition-colors"
+                style={`color: ${primaryColor}`}
+              >
+                Reflets de Bonheur
+              </a>
+            </p>
+          </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    )}
 
     <!-- Mobile menu script -->
     <script>

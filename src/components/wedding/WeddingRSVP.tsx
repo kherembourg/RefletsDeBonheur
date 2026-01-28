@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, X, HelpCircle, User, Mail, Users, AlertCircle, Send } from 'lucide-react';
+import { Check, X, AlertCircle, Send, Heart } from 'lucide-react';
 import type { AttendanceStatus, WeddingConfig } from '../../lib/types';
 
 interface WeddingRSVPProps {
@@ -9,12 +9,9 @@ interface WeddingRSVPProps {
 
 export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [attendance, setAttendance] = useState<AttendanceStatus | null>(null);
-  const [plusOne, setPlusOne] = useState(false);
-  const [plusOneName, setPlusOneName] = useState('');
+  const [mealPreference, setMealPreference] = useState('');
   const [dietaryRestrictions, setDietaryRestrictions] = useState('');
-  const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -44,12 +41,9 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
     // await supabase.from('guests_rsvp').insert({
     //   wedding_id: weddingId,
     //   name,
-    //   email,
     //   attendance,
-    //   plus_one: plusOne,
-    //   plus_one_name: plusOneName,
+    //   meal_preference: mealPreference,
     //   dietary_restrictions: dietaryRestrictions,
-    //   message,
     // });
 
     setIsSubmitting(false);
@@ -65,212 +59,125 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
         >
           <Check className="w-10 h-10" style={{ color: primaryColor }} />
         </div>
-        <h3 className="text-2xl font-display font-bold text-deep-charcoal dark:text-ivory mb-4">
+        <h3 className="text-2xl font-serif text-charcoal mb-4">
           Merci pour votre réponse !
         </h3>
-        <p className="text-warm-taupe dark:text-silver-mist">
+        <p className="text-charcoal/60">
           {attendance === 'yes'
             ? 'Nous avons hâte de vous voir !'
-            : attendance === 'no'
-            ? 'Nous sommes désolés que vous ne puissiez pas être présent. Vous serez dans nos pensées.'
-            : 'Nous attendons votre confirmation définitive.'}
+            : 'Nous sommes désolés que vous ne puissiez pas être présent. Vous serez dans nos pensées.'}
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-6">
-      {/* Welcome message */}
-      {config.rsvpMessage && (
-        <div
-          className="p-4 rounded-lg text-sm"
-          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
-        >
-          {config.rsvpMessage}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="text-center">
+        <div className="flex items-center justify-center mb-2 text-[#b08b8b]">
+          <Heart className="w-5 h-5" />
         </div>
-      )}
-
-      {/* Attendance selection */}
-      <div>
-        <label className="block text-sm font-medium text-deep-charcoal dark:text-ivory mb-3">
-          Serez-vous présent(e) ? *
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            type="button"
-            onClick={() => setAttendance('yes')}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              attendance === 'yes'
-                ? 'border-green-500 bg-green-50 dark:bg-green-500/10'
-                : 'border-silver-mist/30 hover:border-silver-mist'
-            }`}
-          >
-            <Check
-              className={`w-6 h-6 mx-auto mb-2 ${
-                attendance === 'yes' ? 'text-green-500' : 'text-silver-mist'
-              }`}
-            />
-            <span className={`text-sm font-medium ${attendance === 'yes' ? 'text-green-600' : ''}`}>
-              Oui
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAttendance('no')}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              attendance === 'no'
-                ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
-                : 'border-silver-mist/30 hover:border-silver-mist'
-            }`}
-          >
-            <X
-              className={`w-6 h-6 mx-auto mb-2 ${
-                attendance === 'no' ? 'text-red-500' : 'text-silver-mist'
-              }`}
-            />
-            <span className={`text-sm font-medium ${attendance === 'no' ? 'text-red-600' : ''}`}>
-              Non
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAttendance('maybe')}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              attendance === 'maybe'
-                ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-500/10'
-                : 'border-silver-mist/30 hover:border-silver-mist'
-            }`}
-          >
-            <HelpCircle
-              className={`w-6 h-6 mx-auto mb-2 ${
-                attendance === 'maybe' ? 'text-yellow-500' : 'text-silver-mist'
-              }`}
-            />
-            <span className={`text-sm font-medium ${attendance === 'maybe' ? 'text-yellow-600' : ''}`}>
-              Peut-être
-            </span>
-          </button>
-        </div>
+        <p className="text-[10px] uppercase tracking-[0.35em] text-charcoal/40">Wedding Invitation</p>
+        <h2 className="font-serif text-3xl text-charcoal mt-3">RSVP</h2>
+        <p className="text-sm text-charcoal/50 italic mt-1">
+          {config.brideName} & {config.groomName}
+        </p>
       </div>
 
-      {/* Name */}
+      {/* Guest Name */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-deep-charcoal dark:text-ivory mb-2">
-          Votre nom *
+        <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
+          Guest name
         </label>
-        <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-taupe" />
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Prénom Nom"
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
-            required
-          />
-        </div>
-      </div>
-
-      {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-deep-charcoal dark:text-ivory mb-2">
-          Votre email
-        </label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-taupe" />
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="votre@email.com"
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
-          />
-        </div>
-      </div>
-
-      {/* Plus One */}
-      {config.allowPlusOne && attendance === 'yes' && (
-        <div>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={plusOne}
-              onChange={(e) => setPlusOne(e.target.checked)}
-              className="w-5 h-5 rounded-sm border-silver-mist/30 text-burgundy-old focus:ring-burgundy-old/20"
-            />
-            <span className="text-sm font-medium text-deep-charcoal dark:text-ivory">
-              Je viendrai accompagné(e)
-            </span>
-          </label>
-
-          {plusOne && (
-            <div className="mt-3">
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-taupe" />
-                <input
-                  type="text"
-                  value={plusOneName}
-                  onChange={(e) => setPlusOneName(e.target.value)}
-                  placeholder="Nom de votre accompagnant(e)"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Dietary restrictions */}
-      {config.askDietaryRestrictions && attendance === 'yes' && (
-        <div>
-          <label htmlFor="dietary" className="block text-sm font-medium text-deep-charcoal dark:text-ivory mb-2">
-            Restrictions alimentaires
-          </label>
-          <input
-            type="text"
-            id="dietary"
-            value={dietaryRestrictions}
-            onChange={(e) => setDietaryRestrictions(e.target.value)}
-            placeholder="Végétarien, sans gluten, allergies..."
-            className="w-full px-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50"
-          />
-        </div>
-      )}
-
-      {/* Message */}
-      <div>
-        <label htmlFor="message" className="block text-sm font-medium text-deep-charcoal dark:text-ivory mb-2">
-          Un petit mot pour les mariés
-        </label>
-        <textarea
-          id="message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Votre message..."
-          rows={3}
-          className="w-full px-4 py-3 rounded-lg border border-silver-mist/30 focus:border-burgundy-old focus:ring-2 focus:ring-burgundy-old/20 outline-hidden transition-all bg-white dark:bg-deep-charcoal/50 resize-none"
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter your full name"
+          className="w-full px-4 py-3 rounded-xl border border-charcoal/10 bg-white text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-[#b08b8b]/30"
+          required
         />
       </div>
 
+      {/* Attendance */}
+      <div>
+        <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
+          Will you attend?
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setAttendance('yes')}
+            className={`px-4 py-3 rounded-xl border transition-all text-sm font-medium flex items-center justify-center gap-2 ${
+              attendance === 'yes'
+                ? 'border-[#b08b8b] bg-[#b08b8b]/10 text-charcoal'
+                : 'border-charcoal/10 text-charcoal/50 hover:border-charcoal/30'
+            }`}
+          >
+            <Check className="w-4 h-4" />
+            Joyfully Accepts
+          </button>
+          <button
+            type="button"
+            onClick={() => setAttendance('no')}
+            className={`px-4 py-3 rounded-xl border transition-all text-sm font-medium flex items-center justify-center gap-2 ${
+              attendance === 'no'
+                ? 'border-[#b08b8b] bg-[#b08b8b]/10 text-charcoal'
+                : 'border-charcoal/10 text-charcoal/50 hover:border-charcoal/30'
+            }`}
+          >
+            <X className="w-4 h-4" />
+            Regretfully Declines
+          </button>
+        </div>
+      </div>
+
+      {/* Meal Preference */}
+      <div>
+        <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
+          Meal preference
+        </label>
+        <select
+          value={mealPreference}
+          onChange={(e) => setMealPreference(e.target.value)}
+          className="w-full px-4 py-3 rounded-xl border border-charcoal/10 bg-white text-sm text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-[#b08b8b]/30"
+        >
+          <option value="">Please select an option...</option>
+          <option value="chicken">Chicken</option>
+          <option value="fish">Fish</option>
+          <option value="vegetarian">Vegetarian</option>
+        </select>
+      </div>
+
+      {/* Dietary restrictions */}
+      {config.askDietaryRestrictions && (
+        <div>
+          <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
+            Any dietary restrictions?
+          </label>
+          <textarea
+            value={dietaryRestrictions}
+            onChange={(e) => setDietaryRestrictions(e.target.value)}
+            placeholder="Allergies, intolerances, etc."
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl border border-charcoal/10 bg-white text-sm text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-[#b08b8b]/30 resize-none"
+          />
+        </div>
+      )}
+
       {/* Error message */}
       {error && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 text-sm">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Submit button */}
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-lg text-white font-semibold transition-all hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ backgroundColor: primaryColor }}
+        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-full text-white font-semibold transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ backgroundColor: '#b08b8b' }}
       >
         {isSubmitting ? (
           <>
@@ -280,15 +187,14 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
         ) : (
           <>
             <Send className="w-5 h-5" />
-            <span>Envoyer ma réponse</span>
+            <span>Confirm RSVP</span>
           </>
         )}
       </button>
 
-      {/* Deadline reminder */}
       {config.rsvpDeadline && (
-        <p className="text-center text-sm text-warm-taupe dark:text-silver-mist">
-          Merci de répondre avant le{' '}
+        <p className="text-center text-xs text-charcoal/40">
+          Please respond by{' '}
           <span className="font-medium">
             {new Date(config.rsvpDeadline).toLocaleDateString('fr-FR', {
               day: 'numeric',

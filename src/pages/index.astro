@@ -5,26 +5,45 @@ import Footer from '../components/layout/Footer.astro';
 import { Camera, BookHeart, Globe, Check, ArrowRight, Sparkles, Shield, Smartphone, Download, Clock, Star, Quote, HelpCircle, Users, Heart } from 'lucide-react';
 
 const lang = 'en';
+const acceptLanguage = Astro.request?.headers?.get('accept-language') ?? '';
+const locale = acceptLanguage.split(',')[0] || 'en-US';
+const currency = new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const currencyPrecise = new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
+const couplesTrusted = new Intl.NumberFormat(locale).format(500);
+const priceOriginal = 249;
+const pricePromo = 199;
+const renewalAnnual = 19.99;
+const durationYears = 2;
+const priceOriginalLabel = currency.format(priceOriginal);
+const pricePromoLabel = currency.format(pricePromo);
+const renewalAnnualLabel = currencyPrecise.format(renewalAnnual);
+const durationLabel = new Intl.NumberFormat(locale).format(durationYears);
+const guaranteeDaysLabel = new Intl.NumberFormat(locale).format(30);
+const averagePhotos = new Intl.NumberFormat(locale).format(847);
+const setupMinutesLabel = new Intl.NumberFormat(locale).format(2);
+const stepLabels = [1, 2, 3].map((step) => new Intl.NumberFormat(locale).format(step));
+const discountPercentLabel = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format((priceOriginal - pricePromo) / priceOriginal);
 
 // Testimonials data
 const testimonials = [
   {
     name: "Emily & James",
-    date: "September 2025",
+    date: new Date(2025, 8, 1),
     quote: "The experience felt like a private concierge for our memories. Every photo appeared instantly and in original quality.",
     location: "London",
     rating: 5
   },
   {
     name: "Sarah & Michael",
-    date: "June 2025",
+    date: new Date(2025, 5, 1),
     quote: "The guestbook became our keepsake. Elegant, easy for guests, and beautiful to revisit whenever we want.",
     location: "New York",
     rating: 5
   },
   {
     name: "Jessica & David",
-    date: "August 2025",
+    date: new Date(2025, 7, 1),
     quote: "Premium, simple, and fast. The QR code on the tables made sharing effortless for everyone.",
     location: "Sydney",
     rating: 5
@@ -35,7 +54,7 @@ const testimonials = [
 const faqs = [
   {
     question: "How long are my photos kept?",
-    answer: "Your memories are hosted for 2 years with your package. After that, renew for $19.99/year or download everything in one elegant click."
+    answer: `Your memories are hosted for ${durationLabel}\u00a0years with your package. After that, renew for ${renewalAnnualLabel}/year or download everything in one elegant click.`
   },
   {
     question: "Do my guests need to create an account?",
@@ -68,6 +87,10 @@ const faqs = [
         alt="Elegant wedding"
         class="w-full h-full object-cover"
         loading="eager"
+        fetchpriority="high"
+        decoding="async"
+        width="1920"
+        height="1280"
       />
       <div class="absolute inset-0 bg-linear-to-b from-black/50 via-black/30 to-black/60"></div>
     </div>
@@ -79,11 +102,11 @@ const faqs = [
           <div class="flex items-center gap-3">
             <span class="text-2xl opacity-80">🌸</span>
             <span class="text-xl opacity-70">💫</span>
-            <Heart class="w-5 h-5 text-rose-gold animate-pulse" />
-            <h2 class="font-script text-4xl sm:text-5xl text-white drop-shadow-lg">
-              Reflets de Bonheur
-            </h2>
-            <Heart class="w-5 h-5 text-rose-gold animate-pulse" />
+            <Heart class="w-5 h-5 text-rose-gold animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+            <p class="font-script text-4xl sm:text-5xl text-white drop-shadow-lg">
+              Reflets&nbsp;de&nbsp;Bonheur
+            </p>
+            <Heart class="w-5 h-5 text-rose-gold animate-pulse motion-reduce:animate-none" aria-hidden="true" />
             <span class="text-xl opacity-70">💫</span>
             <span class="text-2xl opacity-80">🌸</span>
           </div>
@@ -92,16 +115,16 @@ const faqs = [
 
         <!-- Social Proof Badge -->
         <div class="mb-6 inline-flex items-center gap-2 bg-white/10 backdrop-blur-xs px-5 py-2 rounded-full border border-white/20">
-          <Users class="w-4 h-4 text-white" />
+          <Users class="w-4 h-4 text-white" aria-hidden="true" />
           <span class="text-white/90 text-sm font-medium">
-            Trusted by 500+ couples worldwide
+            Trusted by {couplesTrusted}+&nbsp;couples worldwide
           </span>
         </div>
 
         <!-- Main Title - Emotional Hook -->
         <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-light text-white mb-6 leading-tight">
-          A private gallery<br />
-          <span class="italic text-white/90">crafted for your wedding story</span>
+          A Private Gallery<br />
+          <span class="italic text-white/90">Crafted for Your Wedding Story</span>
         </h1>
 
         <!-- Value Proposition - Clear & Impactful -->
@@ -114,30 +137,30 @@ const faqs = [
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10">
           <a
             href="/pricing"
-            class="group inline-flex items-center px-8 py-4 bg-burgundy text-white rounded-lg font-sans font-semibold text-base tracking-wide hover:bg-burgundy-light transition-all duration-300 shadow-lg hover:shadow-xl"
+            class="group inline-flex items-center px-8 py-4 bg-burgundy text-white rounded-lg font-sans font-semibold text-base tracking-wide hover:bg-burgundy-light transition-colors transition-shadow transition-transform duration-300 shadow-lg hover:shadow-xl"
           >
-            Create my private space
-            <ArrowRight class="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            Create Your Private Space
+            <ArrowRight class="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </a>
           <a
             href="/demo_gallery"
-            class="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-xs text-white border border-white/30 rounded-lg font-sans font-medium text-base hover:bg-white/20 transition-all duration-300"
+            class="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-xs text-white border border-white/30 rounded-lg font-sans font-medium text-base hover:bg-white/20 transition-colors duration-300"
           >
             <span class="mr-2">▶</span>
-            Experience the demo
+            Experience the Demo
           </a>
         </div>
 
         <!-- Pricing Highlight - Clear Value -->
         <div class="inline-flex flex-col sm:flex-row items-center gap-4 bg-white/10 backdrop-blur-xs px-6 py-4 rounded-xl border border-white/20">
-          <div class="flex items-baseline gap-2">
-            <span class="line-through text-white/50 text-lg">$249</span>
-            <span class="text-white font-bold text-3xl">$199</span>
-            <span class="text-white/80">for 2 years</span>
+          <div class="flex items-baseline gap-2 tabular-nums">
+            <span class="line-through text-white/50 text-lg">{priceOriginalLabel}</span>
+            <span class="text-white font-bold text-3xl">{pricePromoLabel}</span>
+            <span class="text-white/80">for {durationLabel}&nbsp;years</span>
           </div>
           <div class="hidden sm:block w-px h-8 bg-white/30"></div>
           <div class="flex items-center gap-2 text-white/80 text-sm">
-            <Check class="w-4 h-4 text-green-400" />
+            <Check class="w-4 h-4 text-green-400" aria-hidden="true" />
             <span>Private domain included</span>
           </div>
         </div>
@@ -147,7 +170,7 @@ const faqs = [
     <!-- Scroll Indicator -->
     <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
       <div class="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-        <div class="w-1 h-3 bg-white/60 rounded-full mt-2 animate-bounce"></div>
+        <div class="w-1 h-3 bg-white/60 rounded-full mt-2 animate-bounce motion-reduce:animate-none"></div>
       </div>
     </div>
   </section>
@@ -160,7 +183,7 @@ const faqs = [
           Preview
         </span>
         <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-3 mb-4">
-          See the refined experience
+          See the Refined Experience
         </h2>
         <p class="text-charcoal-light dark:text-cream/70 max-w-xl mx-auto">
           A premium space where guests share photos and messages instantly, without any friction.
@@ -184,6 +207,10 @@ const faqs = [
             src="https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&q=80"
             alt="Gallery preview"
             class="w-full h-[300px] sm:h-[400px] object-cover"
+            loading="lazy"
+            decoding="async"
+            width="1200"
+            height="800"
           />
         </div>
       </div>
@@ -194,8 +221,8 @@ const faqs = [
           href="/demo_gallery"
           class="inline-flex items-center text-burgundy font-medium hover:text-burgundy-light transition-colors"
         >
-          Explore the full demo
-          <ArrowRight class="ml-2 w-4 h-4" />
+          Explore the Full Demo
+          <ArrowRight class="ml-2 w-4 h-4" aria-hidden="true" />
         </a>
       </div>
     </div>
@@ -209,7 +236,7 @@ const faqs = [
           Everything Included
         </span>
         <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-3 mb-4">
-          Three premium services, one elegant space
+          Three Premium Services, One Elegant Space
         </h2>
         <p class="text-charcoal-light dark:text-cream/70 max-w-xl mx-auto">
           A seamless experience that replaces file sharing, social albums, and scattered guestbooks.
@@ -219,9 +246,9 @@ const faqs = [
       <!-- Services Grid - Improved Cards -->
       <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         <!-- Service 1: Gallery -->
-        <div class="group bg-cream dark:bg-[#1b1b1b] rounded-2xl p-9 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 border border-transparent hover:border-burgundy/20 dark:border-white/10">
-          <div class="w-16 h-16 mb-6 flex items-center justify-center bg-burgundy/10 rounded-xl group-hover:bg-burgundy group-hover:text-white transition-all duration-300">
-            <Camera class="w-8 h-8 text-burgundy group-hover:text-white transition-colors" />
+        <div class="group bg-cream dark:bg-[#1b1b1b] rounded-2xl p-9 transition-transform transition-shadow transition-colors duration-300 hover:shadow-xl hover:-translate-y-2 border border-transparent hover:border-burgundy/20 dark:border-white/10">
+          <div class="w-16 h-16 mb-6 flex items-center justify-center bg-burgundy/10 rounded-xl group-hover:bg-burgundy group-hover:text-white transition-colors duration-300">
+            <Camera class="w-8 h-8 text-burgundy group-hover:text-white transition-colors" aria-hidden="true" />
           </div>
           <h3 class="font-serif text-2xl text-charcoal dark:text-cream mb-3">Photo Gallery</h3>
           <p class="text-charcoal-light dark:text-cream/70 leading-relaxed mb-4">
@@ -229,24 +256,24 @@ const faqs = [
           </p>
           <ul class="space-y-2 text-sm text-charcoal-light dark:text-cream/70">
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Unlimited uploads, original quality
             </li>
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Curated albums by moment
             </li>
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               One-click ZIP archive
             </li>
           </ul>
         </div>
 
         <!-- Service 2: Guestbook -->
-        <div class="group bg-cream dark:bg-[#1b1b1b] rounded-2xl p-9 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 border border-transparent hover:border-burgundy/20 dark:border-white/10">
-          <div class="w-16 h-16 mb-6 flex items-center justify-center bg-burgundy/10 rounded-xl group-hover:bg-burgundy group-hover:text-white transition-all duration-300">
-            <BookHeart class="w-8 h-8 text-burgundy group-hover:text-white transition-colors" />
+        <div class="group bg-cream dark:bg-[#1b1b1b] rounded-2xl p-9 transition-transform transition-shadow transition-colors duration-300 hover:shadow-xl hover:-translate-y-2 border border-transparent hover:border-burgundy/20 dark:border-white/10">
+          <div class="w-16 h-16 mb-6 flex items-center justify-center bg-burgundy/10 rounded-xl group-hover:bg-burgundy group-hover:text-white transition-colors duration-300">
+            <BookHeart class="w-8 h-8 text-burgundy group-hover:text-white transition-colors" aria-hidden="true" />
           </div>
           <h3 class="font-serif text-2xl text-charcoal dark:text-cream mb-3">Guestbook</h3>
           <p class="text-charcoal-light dark:text-cream/70 leading-relaxed mb-4">
@@ -254,24 +281,24 @@ const faqs = [
           </p>
           <ul class="space-y-2 text-sm text-charcoal-light dark:text-cream/70">
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Unlimited messages
             </li>
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Elegant moderation tools
             </li>
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Print-ready PDF export
             </li>
           </ul>
         </div>
 
         <!-- Service 3: Website -->
-        <div class="group bg-cream dark:bg-[#1b1b1b] rounded-2xl p-9 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 border border-transparent hover:border-burgundy/20 dark:border-white/10">
-          <div class="w-16 h-16 mb-6 flex items-center justify-center bg-burgundy/10 rounded-xl group-hover:bg-burgundy group-hover:text-white transition-all duration-300">
-            <Globe class="w-8 h-8 text-burgundy group-hover:text-white transition-colors" />
+        <div class="group bg-cream dark:bg-[#1b1b1b] rounded-2xl p-9 transition-transform transition-shadow transition-colors duration-300 hover:shadow-xl hover:-translate-y-2 border border-transparent hover:border-burgundy/20 dark:border-white/10">
+          <div class="w-16 h-16 mb-6 flex items-center justify-center bg-burgundy/10 rounded-xl group-hover:bg-burgundy group-hover:text-white transition-colors duration-300">
+            <Globe class="w-8 h-8 text-burgundy group-hover:text-white transition-colors" aria-hidden="true" />
           </div>
           <h3 class="font-serif text-2xl text-charcoal dark:text-cream mb-3">Wedding Website</h3>
           <p class="text-charcoal-light dark:text-cream/70 leading-relaxed mb-4">
@@ -279,15 +306,15 @@ const faqs = [
           </p>
           <ul class="space-y-2 text-sm text-charcoal-light dark:text-cream/70">
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Custom domain & branding
             </li>
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Timeline, venue & logistics
             </li>
             <li class="flex items-center gap-2">
-              <Check class="w-4 h-4 text-burgundy" />
+              <Check class="w-4 h-4 text-burgundy" aria-hidden="true" />
               Built-in RSVP tracking
             </li>
           </ul>
@@ -303,19 +330,23 @@ const faqs = [
         <div class="grid lg:grid-cols-2 gap-16 items-center">
           <!-- Image -->
           <div class="relative order-2 lg:order-1">
-            <img
-              src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80"
-              alt="Wedding couple"
-              class="w-full h-[450px] object-cover rounded-2xl shadow-xl"
-            />
+          <img
+            src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80"
+            alt="Wedding couple"
+            class="w-full h-[450px] object-cover rounded-2xl shadow-xl"
+            loading="lazy"
+            decoding="async"
+            width="800"
+            height="533"
+          />
             <!-- Floating Card -->
             <div class="absolute -bottom-6 -right-6 bg-white dark:bg-[#141414] rounded-xl p-4 shadow-lg hidden sm:block border border-white/10">
               <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-burgundy/10 rounded-full flex items-center justify-center">
-                  <Camera class="w-6 h-6 text-burgundy" />
+                  <Camera class="w-6 h-6 text-burgundy" aria-hidden="true" />
                 </div>
                 <div>
-                  <p class="font-bold text-charcoal dark:text-cream">847 photos</p>
+                  <p class="font-bold text-charcoal dark:text-cream">{averagePhotos}&nbsp;photos</p>
                   <p class="text-sm text-charcoal-light dark:text-cream/70">collected on average</p>
                 </div>
               </div>
@@ -328,46 +359,46 @@ const faqs = [
               Why Couples Choose Us
             </span>
             <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-3 mb-8">
-              A luxury experience that feels effortless
+              A Luxury Experience That Feels Effortless
             </h2>
 
             <div class="space-y-6">
               <div class="flex items-start gap-4">
                 <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
-                  <Clock class="w-5 h-5 text-burgundy" />
+                  <Clock class="w-5 h-5 text-burgundy" aria-hidden="true" />
                 </div>
                 <div>
-                  <h4 class="font-semibold text-charcoal dark:text-cream mb-1">Ready in 2 minutes</h4>
+                  <h3 class="font-semibold text-charcoal dark:text-cream mb-1">Ready in {setupMinutesLabel}&nbsp;Minutes</h3>
                   <p class="text-charcoal-light dark:text-cream/70 text-sm">Launch your space in minutes with guided setup and polished templates.</p>
                 </div>
               </div>
 
               <div class="flex items-start gap-4">
                 <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
-                  <Shield class="w-5 h-5 text-burgundy" />
+                  <Shield class="w-5 h-5 text-burgundy" aria-hidden="true" />
                 </div>
                 <div>
-                  <h4 class="font-semibold text-charcoal dark:text-cream mb-1">Private & protected</h4>
+                  <h3 class="font-semibold text-charcoal dark:text-cream mb-1">Private & Protected</h3>
                   <p class="text-charcoal-light dark:text-cream/70 text-sm">Encrypted storage, private access, and secure hosting built in.</p>
                 </div>
               </div>
 
               <div class="flex items-start gap-4">
                 <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
-                  <Smartphone class="w-5 h-5 text-burgundy" />
+                  <Smartphone class="w-5 h-5 text-burgundy" aria-hidden="true" />
                 </div>
                 <div>
-                  <h4 class="font-semibold text-charcoal dark:text-cream mb-1">Designed for mobile</h4>
+                  <h3 class="font-semibold text-charcoal dark:text-cream mb-1">Designed for Mobile</h3>
                   <p class="text-charcoal-light dark:text-cream/70 text-sm">Your guests tap once to access the space, even with limited reception.</p>
                 </div>
               </div>
 
               <div class="flex items-start gap-4">
                 <div class="w-10 h-10 flex items-center justify-center shrink-0 bg-burgundy/10 rounded-lg">
-                  <Download class="w-5 h-5 text-burgundy" />
+                  <Download class="w-5 h-5 text-burgundy" aria-hidden="true" />
                 </div>
                 <div>
-                  <h4 class="font-semibold text-charcoal dark:text-cream mb-1">Your memories belong to you</h4>
+                  <h3 class="font-semibold text-charcoal dark:text-cream mb-1">Your Memories Belong to You</h3>
                   <p class="text-charcoal-light dark:text-cream/70 text-sm">Download everything anytime in original quality, ready to archive.</p>
                 </div>
               </div>
@@ -386,46 +417,51 @@ const faqs = [
           Testimonials
         </span>
         <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-3 mb-4">
-          Loved by modern couples
+          Loved by Modern Couples
         </h2>
         <p class="text-charcoal-light dark:text-cream/70">
           A premium experience trusted for intimate ceremonies and grand celebrations alike
         </p>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {testimonials.map((testimonial, index) => (
-          <div class="bg-cream dark:bg-[#1b1b1b] rounded-2xl p-8 relative border border-white/10" style={`animation-delay: ${index * 100}ms`}>
-            <!-- Quote Icon -->
-            <Quote class="w-10 h-10 text-burgundy/20 absolute top-6 right-6" />
+      {testimonials.length > 0 ? (
+        <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {testimonials.map((testimonial, index) => (
+            <div class="bg-cream dark:bg-[#1b1b1b] rounded-2xl p-8 relative border border-white/10" style={`animation-delay: ${index * 100}ms`}>
+              <!-- Quote Icon -->
+              <Quote class="w-10 h-10 text-burgundy/20 absolute top-6 right-6" aria-hidden="true" />
 
-            <!-- Stars -->
-            <div class="flex gap-1 mb-4">
-              {[...Array(testimonial.rating)].map(() => (
-                <Star class="w-4 h-4 fill-burgundy text-burgundy" />
-              ))}
-            </div>
-
-            <!-- Quote -->
-            <p class="text-charcoal dark:text-cream leading-relaxed mb-6 italic">
-              "{testimonial.quote}"
-            </p>
-
-            <!-- Author -->
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-burgundy/20 flex items-center justify-center">
-                <span class="text-burgundy font-semibold text-sm">
-                  {testimonial.name.split(' ')[0][0]}{testimonial.name.split(' ')[2]?.[0] || testimonial.name.split(' ')[1][0]}
-                </span>
+              <!-- Stars -->
+              <div class="flex gap-1 mb-4" role="img" aria-label={`Rated ${testimonial.rating} out of 5`}>
+                <span class="sr-only">Rated {testimonial.rating} out of 5</span>
+                {[...Array(testimonial.rating)].map(() => (
+                  <Star class="w-4 h-4 fill-burgundy text-burgundy" aria-hidden="true" />
+                ))}
               </div>
-              <div>
-                <p class="font-semibold text-charcoal dark:text-cream text-sm">{testimonial.name}</p>
-                <p class="text-charcoal-light dark:text-cream/70 text-xs">{testimonial.location} • {testimonial.date}</p>
+
+              <!-- Quote -->
+              <p class="text-charcoal dark:text-cream leading-relaxed mb-6 italic break-words">
+                &ldquo;{testimonial.quote}&rdquo;
+              </p>
+
+              <!-- Author -->
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-burgundy/20 flex items-center justify-center">
+                  <span class="text-burgundy font-semibold text-sm">
+                    {testimonial.name.split(' ')[0][0]}{testimonial.name.split(' ')[2]?.[0] || testimonial.name.split(' ')[1][0]}
+                  </span>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-charcoal dark:text-cream text-sm break-words">{testimonial.name}</p>
+                  <p class="text-charcoal-light dark:text-cream/70 text-xs break-words">{testimonial.location} • {dateFormatter.format(testimonial.date)}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p class="text-center text-charcoal-light dark:text-cream/70">Testimonials are on the way.</p>
+      )}
     </div>
   </section>
 
@@ -434,10 +470,10 @@ const faqs = [
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
         <span class="tracking-[0.3em] uppercase text-xs font-sans font-semibold text-burgundy">
-          Easy as 1–2–3
+          Easy as {stepLabels[0]}–{stepLabels[1]}–{stepLabels[2]}
         </span>
         <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-3">
-          A seamless experience
+          A Seamless Experience
         </h2>
       </div>
 
@@ -446,9 +482,9 @@ const faqs = [
           <!-- Step 1 -->
           <div class="text-center">
             <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center bg-burgundy text-white rounded-full font-serif text-xl font-bold shadow-lg">
-              1
+              {stepLabels[0]}
             </div>
-            <h3 class="font-serif text-xl text-charcoal dark:text-cream mb-3">Create your space</h3>
+            <h3 class="font-serif text-xl text-charcoal dark:text-cream mb-3">Create Your Space</h3>
             <p class="text-charcoal-light dark:text-cream/70 text-sm">
               Choose your address (e.g., emily-james.reflets-bonheur.com) and personalize it to match your wedding.
             </p>
@@ -467,9 +503,9 @@ const faqs = [
           <!-- Step 2 -->
           <div class="text-center md:col-start-1">
             <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center bg-burgundy text-white rounded-full font-serif text-xl font-bold shadow-lg">
-              2
+              {stepLabels[1]}
             </div>
-            <h3 class="font-serif text-xl text-charcoal dark:text-cream mb-3">Share the link</h3>
+            <h3 class="font-serif text-xl text-charcoal dark:text-cream mb-3">Share the Link</h3>
             <p class="text-charcoal-light dark:text-cream/70 text-sm">
               Send the link to guests or display a QR code. Guests contribute in seconds, no account required.
             </p>
@@ -488,9 +524,9 @@ const faqs = [
           <!-- Step 3 -->
           <div class="text-center">
             <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center bg-burgundy text-white rounded-full font-serif text-xl font-bold shadow-lg">
-              3
+              {stepLabels[2]}
             </div>
-            <h3 class="font-serif text-xl text-charcoal dark:text-cream mb-3">Enjoy your memories</h3>
+            <h3 class="font-serif text-xl text-charcoal dark:text-cream mb-3">Enjoy Your Memories</h3>
             <p class="text-charcoal-light dark:text-cream/70 text-sm">
               Memories arrive in real-time. Download everything in one elegant archive whenever you wish.
             </p>
@@ -508,27 +544,31 @@ const faqs = [
           FAQ
         </span>
         <h2 class="font-serif text-3xl sm:text-4xl font-light text-charcoal dark:text-cream mt-3">
-          Frequently asked questions
+          Frequently Asked Questions
         </h2>
       </div>
 
-      <div class="max-w-3xl mx-auto space-y-4">
-        {faqs.map((faq) => (
-          <div class="bg-cream dark:bg-[#1b1b1b] rounded-xl p-6 hover:shadow-md transition-shadow border border-white/10">
-            <div class="flex items-start gap-4">
-              <HelpCircle class="w-6 h-6 shrink-0 text-burgundy mt-0.5" />
-              <div>
-                <h3 class="font-semibold text-charcoal dark:text-cream mb-2">
-                  {faq.question}
-                </h3>
-                <p class="text-charcoal-light dark:text-cream/70 text-sm leading-relaxed">
-                  {faq.answer}
-                </p>
+      {faqs.length > 0 ? (
+        <div class="max-w-3xl mx-auto space-y-4">
+          {faqs.map((faq) => (
+            <div class="bg-cream dark:bg-[#1b1b1b] rounded-xl p-6 hover:shadow-md transition-shadow border border-white/10">
+              <div class="flex items-start gap-4">
+                <HelpCircle class="w-6 h-6 shrink-0 text-burgundy mt-0.5" aria-hidden="true" />
+                <div class="min-w-0">
+                  <h3 class="font-semibold text-charcoal dark:text-cream mb-2 break-words">
+                    {faq.question}
+                  </h3>
+                  <p class="text-charcoal-light dark:text-cream/70 text-sm leading-relaxed break-words">
+                    {faq.answer}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p class="text-center text-charcoal-light dark:text-cream/70">No FAQs yet. Check back soon.</p>
+      )}
 
       <!-- Link to full FAQ -->
       <div class="text-center mt-8">
@@ -536,8 +576,8 @@ const faqs = [
           href="/pricing#faq"
           class="inline-flex items-center text-burgundy font-medium hover:text-burgundy-light transition-colors"
         >
-          Explore all answers
-          <ArrowRight class="ml-2 w-4 h-4" />
+          Explore All Answers
+          <ArrowRight class="ml-2 w-4 h-4" aria-hidden="true" />
         </a>
       </div>
     </div>
@@ -556,12 +596,12 @@ const faqs = [
         <!-- Decorative -->
         <div class="flex items-center justify-center gap-4 mb-8">
           <div class="w-12 h-px bg-white/30"></div>
-          <Sparkles class="w-6 h-6 text-white/60" />
+          <Sparkles class="w-6 h-6 text-white/60" aria-hidden="true" />
           <div class="w-12 h-px bg-white/30"></div>
         </div>
 
         <h2 class="font-serif text-4xl sm:text-5xl font-light mb-6 text-white">
-          Ready to curate your wedding memories?
+          Ready to Curate Your Wedding Memories?
         </h2>
         <p class="text-white/80 text-lg font-light mb-8 max-w-xl mx-auto">
           Join couples who chose a premium space to collect every guest photo and message.
@@ -570,17 +610,17 @@ const faqs = [
         <!-- Pricing -->
         <div class="mb-10 bg-white/10 backdrop-blur-xs rounded-2xl p-6 inline-block">
           <p class="text-white/60 mb-2 text-sm">
-            <span class="line-through">$249</span>
-            <span class="ml-2 bg-white/20 px-2 py-0.5 rounded-sm text-white text-xs font-medium">-20%</span>
+            <span class="line-through">{priceOriginalLabel}</span>
+            <span class="ml-2 bg-white/20 px-2 py-0.5 rounded-sm text-white text-xs font-medium">-{discountPercentLabel}</span>
           </p>
-          <p class="text-5xl font-serif font-light text-white mb-2">
-            $199
+          <p class="text-5xl font-serif font-light text-white mb-2 tabular-nums">
+            {pricePromoLabel}
           </p>
           <p class="text-white/80 text-sm">
-            for <strong>2 full years</strong>
+            for <strong>{durationLabel}&nbsp;full&nbsp;years</strong>
           </p>
           <p class="text-white/60 text-xs mt-2">
-            Then $19.99/year to keep it online
+            Then {renewalAnnualLabel}/year to keep it online
           </p>
         </div>
 
@@ -588,14 +628,14 @@ const faqs = [
         <div class="space-y-4">
           <a
             href="/pricing"
-            class="inline-flex items-center px-10 py-4 bg-white text-burgundy font-sans font-semibold text-base tracking-wide rounded-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl"
+            class="inline-flex items-center px-10 py-4 bg-white text-burgundy font-sans font-semibold text-base tracking-wide rounded-lg hover:bg-gray-100 transition-colors transition-shadow transition-transform duration-300 shadow-lg hover:shadow-xl"
           >
-            Get started now
-            <ArrowRight class="ml-2 w-5 h-5" />
+            Get Started Now
+            <ArrowRight class="ml-2 w-5 h-5" aria-hidden="true" />
           </a>
 
           <p class="text-white/60 text-sm">
-            ✓ 30-day money-back guarantee &nbsp;•&nbsp; ✓ Cancel anytime
+            ✓ {guaranteeDaysLabel}-day money-back guarantee &nbsp;•&nbsp; ✓ Cancel anytime
           </p>
         </div>
       </div>

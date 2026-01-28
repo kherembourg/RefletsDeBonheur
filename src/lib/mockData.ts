@@ -6,6 +6,7 @@ import {
   saveDemoMessage,
   deleteDemoMessage
 } from './demoStorage';
+import { DEMO_PLACEHOLDERS } from './imagePlaceholders';
 
 // Type definitions
 export type ReactionType = 'heart' | 'laugh' | 'wow' | 'celebrate' | 'love' | 'clap';
@@ -23,6 +24,7 @@ export interface MediaItem {
   caption?: string;
   createdAt: Date;
   thumbnail?: string;
+  placeholder?: string; // Base64 blur placeholder for instant display
   favoriteCount?: number;
   reactions?: Reaction[];
   albumIds?: string[]; // Array of album IDs this media belongs to
@@ -53,15 +55,18 @@ export interface Settings {
   coupleName: string;
 }
 
-// Mock Media Items (using Unsplash wedding photos)
+// Mock Media Items (using optimized Unsplash wedding photos)
+// Using smaller sizes (w=400) and auto-format for faster loading
+// Each item includes a pre-generated blur placeholder for instant display
 export const mockMedia: MediaItem[] = [
   {
     id: '1',
-    url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800',
+    url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Sophie Martin',
     caption: 'Un moment de joie partagée sous les étoiles',
     createdAt: new Date('2026-01-16T14:30:00'),
+    placeholder: DEMO_PLACEHOLDERS['1'],
     favoriteCount: 5,
     reactions: [
       { type: 'love', count: 8 },
@@ -71,20 +76,22 @@ export const mockMedia: MediaItem[] = [
   },
   {
     id: '2',
-    url: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800',
+    url: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Thomas Dubois',
     caption: 'Les rires résonnent encore dans nos cœurs',
     createdAt: new Date('2026-01-16T15:45:00'),
+    placeholder: DEMO_PLACEHOLDERS['2'],
     favoriteCount: 3,
   },
   {
     id: '3',
-    url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800',
+    url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Marie Laurent',
     caption: 'L\'amour illumine cette scène magique',
     createdAt: new Date('2026-01-16T16:20:00'),
+    placeholder: DEMO_PLACEHOLDERS['3'],
     favoriteCount: 8,
     reactions: [
       { type: 'wow', count: 12 },
@@ -95,50 +102,56 @@ export const mockMedia: MediaItem[] = [
   },
   {
     id: '4',
-    url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800',
+    url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Lucas Bernard',
     caption: 'Des souvenirs gravés à jamais',
     createdAt: new Date('2026-01-16T17:10:00'),
+    placeholder: DEMO_PLACEHOLDERS['4'],
   },
   {
     id: '5',
-    url: 'https://images.unsplash.com/photo-1522413452208-996ff3f3e740?w=800',
+    url: 'https://images.unsplash.com/photo-1522413452208-996ff3f3e740?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Camille Rousseau',
     caption: 'La magie d\'un instant précieux',
     createdAt: new Date('2026-01-16T18:00:00'),
+    placeholder: DEMO_PLACEHOLDERS['5'],
   },
   {
     id: '6',
-    url: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=800',
+    url: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Alexandre Petit',
     caption: 'Une célébration inoubliable',
     createdAt: new Date('2026-01-16T19:30:00'),
+    placeholder: DEMO_PLACEHOLDERS['6'],
   },
   {
     id: '7',
-    url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800',
+    url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Isabelle Moreau',
     caption: 'L\'élégance de ce moment',
     createdAt: new Date('2026-01-16T20:15:00'),
+    placeholder: DEMO_PLACEHOLDERS['7'],
   },
   {
     id: '8',
-    url: 'https://images.unsplash.com/photo-1516651029879-bcd191e3e0d3?w=800',
+    url: 'https://images.unsplash.com/photo-1516651029879-bcd191e3e0d3?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Antoine Leroy',
     createdAt: new Date('2026-01-17T10:00:00'),
+    placeholder: DEMO_PLACEHOLDERS['8'],
   },
   {
     id: '9',
-    url: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=800',
+    url: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=400&q=75&auto=format&fit=crop',
     type: 'image',
     author: 'Émilie Garcia',
     caption: 'Les détails qui rendent tout parfait',
     createdAt: new Date('2026-01-17T11:30:00'),
+    placeholder: DEMO_PLACEHOLDERS['9'],
   },
   {
     id: '10',
@@ -147,7 +160,8 @@ export const mockMedia: MediaItem[] = [
     author: 'Pierre Durand',
     caption: 'La danse des mariés',
     createdAt: new Date('2026-01-17T12:00:00'),
-    thumbnail: 'https://images.unsplash.com/photo-1522413452208-996ff3f3e740?w=400',
+    placeholder: DEMO_PLACEHOLDERS['10'],
+    thumbnail: 'https://images.unsplash.com/photo-1522413452208-996ff3f3e740?w=300&q=60&auto=format&fit=crop',
   },
 ];
 

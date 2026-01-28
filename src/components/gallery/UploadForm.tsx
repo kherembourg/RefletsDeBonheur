@@ -147,6 +147,8 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
         </label>
         <input
           type="text"
+          name="author-name"
+          autoComplete="given-name"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
           placeholder="Ex: Sophie"
@@ -165,8 +167,9 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
           multiple
           onChange={handleFileSelect}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          aria-label="Ajouter des photos ou vidéos"
         />
-        <div className="flex items-center justify-center gap-2 text-warm-taupe">
+        <div className="flex items-center justify-center gap-2 text-warm-taupe" aria-hidden="true">
           <Plus size={20} />
           <span className="font-medium text-sm">Ajouter des photos/vidéos</span>
         </div>
@@ -183,9 +186,9 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
               {/* Preview Thumbnail */}
               <div className="w-20 h-20 bg-silver-mist/20 rounded-lg overflow-hidden shrink-0">
                 {item.type === 'video' ? (
-                  <video src={item.preview} className="w-full h-full object-cover" />
+                  <video src={item.preview} className="w-full h-full object-cover" width={80} height={80} />
                 ) : (
-                  <img src={item.preview} alt="preview" className="w-full h-full object-cover" />
+                  <img src={item.preview} alt={`Aperçu de ${item.originalName}`} className="w-full h-full object-cover" width={80} height={80} />
                 )}
               </div>
 
@@ -239,16 +242,18 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
                   <div className="flex gap-2">
                     <input
                       type="text"
+                      name={`caption-${item.id}`}
                       value={item.caption}
                       onChange={(e) => updateCaption(item.id, e.target.value)}
                       placeholder="Légende..."
                       className="flex-1 px-2 py-1 text-sm border border-silver-mist rounded-sm focus:outline-hidden focus:ring-1 focus:ring-burgundy-old bg-ivory"
+                      aria-label={`Légende pour ${item.originalName}`}
                     />
                     <button
                       onClick={() => generateAICaption(item.id)}
                       disabled={generatingFor === item.id}
                       className="bg-violet-100 text-violet-600 p-1.5 rounded-sm hover:bg-violet-200 transition-colors disabled:opacity-50"
-                      title="Générer une légende IA"
+                      aria-label="Générer une légende avec l'IA"
                     >
                       {generatingFor === item.id ? (
                         <Loader2 size={16} className="animate-spin" />

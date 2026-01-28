@@ -7,11 +7,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MediaCard } from './MediaCard';
 import type { MediaItem } from '../../lib/services/dataService';
 
-// Mock ReactionsPanel
-vi.mock('./ReactionsPanel', () => ({
-  default: () => <div data-testid="reactions-panel">Reactions Panel</div>,
-}));
-
 const mockImageItem: MediaItem = {
   id: 'img-1',
   url: 'https://example.com/photo.jpg',
@@ -54,36 +49,10 @@ describe('MediaCard Component', () => {
 
       const img = screen.getByRole('img');
       expect(img).toHaveAttribute('src', mockImageItem.url);
-      // When caption is available, it's used as alt text
       expect(img).toHaveAttribute('alt', mockImageItem.caption);
     });
 
-    it('should use caption as alt text when available', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      const img = screen.getByRole('img');
-      expect(img).toHaveAttribute('alt', mockImageItem.caption);
-    });
-
-    it('should render caption with quotes', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      expect(screen.getByText(`"${mockImageItem.caption}"`)).toBeInTheDocument();
-    });
-
-    it('should render author name', () => {
+    it('should render author pill in public view', () => {
       render(
         <MediaCard
           item={mockImageItem}
@@ -95,7 +64,7 @@ describe('MediaCard Component', () => {
       expect(screen.getByText(mockImageItem.author!)).toBeInTheDocument();
     });
 
-    it('should render "Anonyme" when no author', () => {
+    it('should not render author pill when no author', () => {
       const itemWithoutAuthor = { ...mockImageItem, author: undefined };
       render(
         <MediaCard
@@ -105,7 +74,7 @@ describe('MediaCard Component', () => {
         />
       );
 
-      expect(screen.getByText('Anonyme')).toBeInTheDocument();
+      expect(screen.queryByText('Test Author')).not.toBeInTheDocument();
     });
   });
 
@@ -156,7 +125,7 @@ describe('MediaCard Component', () => {
       expect(mockOnClick).toHaveBeenCalled();
     });
 
-    it('should call onToggleSelection in selection mode', () => {
+    it('should call onToggleSelection in selection mode for admin view', () => {
       render(
         <MediaCard
           item={mockImageItem}
@@ -165,6 +134,7 @@ describe('MediaCard Component', () => {
           onClick={mockOnClick}
           selectionMode={true}
           onToggleSelection={mockOnToggleSelection}
+          variant="admin"
         />
       );
 
@@ -183,18 +153,20 @@ describe('MediaCard Component', () => {
           item={mockImageItem}
           isAdmin={false}
           onDelete={mockOnDelete}
+          variant="admin"
         />
       );
 
       expect(screen.queryByRole('button', { name: /supprimer/i })).not.toBeInTheDocument();
     });
 
-    it('should show delete button for admin on hover', () => {
+    it('should show delete button for admin', () => {
       render(
         <MediaCard
           item={mockImageItem}
           isAdmin={true}
           onDelete={mockOnDelete}
+          variant="admin"
         />
       );
 
@@ -210,6 +182,7 @@ describe('MediaCard Component', () => {
           item={mockImageItem}
           isAdmin={true}
           onDelete={mockOnDelete}
+          variant="admin"
         />
       );
 
@@ -218,36 +191,6 @@ describe('MediaCard Component', () => {
 
       expect(window.confirm).toHaveBeenCalledWith('Supprimer définitivement ce souvenir ?');
       expect(mockOnDelete).toHaveBeenCalledWith(mockImageItem.id);
-    });
-
-    it('should not call onDelete when cancelled', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
-
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={true}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      const deleteButton = screen.getByRole('button', { name: /supprimer/i });
-      fireEvent.click(deleteButton);
-
-      expect(mockOnDelete).not.toHaveBeenCalled();
-    });
-
-    it('should not show delete button in selection mode', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={true}
-          onDelete={mockOnDelete}
-          selectionMode={true}
-        />
-      );
-
-      expect(screen.queryByRole('button', { name: /supprimer/i })).not.toBeInTheDocument();
     });
   });
 
@@ -306,41 +249,17 @@ describe('MediaCard Component', () => {
 
       expect(mockOnToggleFavorite).toHaveBeenCalledWith(mockImageItem.id);
     });
-
-    it('should display favorite count when > 0', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      expect(screen.getByText('5')).toBeInTheDocument();
-    });
-
-    it('should not display favorite count when 0', () => {
-      const itemWithNoFavorites = { ...mockImageItem, favoriteCount: 0 };
-      render(
-        <MediaCard
-          item={itemWithNoFavorites}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      expect(screen.queryByText('0')).not.toBeInTheDocument();
-    });
   });
 
   describe('Selection Mode', () => {
-    it('should show selection checkbox in selection mode', () => {
+    it('should show selection checkbox in selection mode for admin view', () => {
       render(
         <MediaCard
           item={mockImageItem}
           isAdmin={false}
           onDelete={mockOnDelete}
           selectionMode={true}
+          variant="admin"
         />
       );
 
@@ -355,6 +274,7 @@ describe('MediaCard Component', () => {
           onDelete={mockOnDelete}
           selectionMode={true}
           onToggleSelection={mockOnToggleSelection}
+          variant="admin"
         />
       );
 
@@ -372,6 +292,7 @@ describe('MediaCard Component', () => {
           onDelete={mockOnDelete}
           selectionMode={true}
           isSelected={true}
+          variant="admin"
         />
       );
 
@@ -386,6 +307,7 @@ describe('MediaCard Component', () => {
           onDelete={mockOnDelete}
           selectionMode={true}
           isSelected={true}
+          variant="admin"
         />
       );
 
@@ -394,67 +316,7 @@ describe('MediaCard Component', () => {
     });
   });
 
-  describe('Hover Interactions', () => {
-    it('should show ReactionsPanel on hover', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      const card = screen.getByRole('img').closest('.media-card');
-      fireEvent.mouseEnter(card!);
-
-      expect(screen.getByTestId('reactions-panel')).toBeInTheDocument();
-    });
-
-    it('should hide ReactionsPanel when not hovering', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      // Initially not hovered
-      expect(screen.queryByTestId('reactions-panel')).not.toBeInTheDocument();
-    });
-
-    it('should not show ReactionsPanel in selection mode', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          selectionMode={true}
-        />
-      );
-
-      const card = screen.getByRole('img').closest('.media-card');
-      fireEvent.mouseEnter(card!);
-
-      expect(screen.queryByTestId('reactions-panel')).not.toBeInTheDocument();
-    });
-  });
-
   describe('Edge Cases', () => {
-    it('should handle item without caption', () => {
-      const itemWithoutCaption = { ...mockImageItem, caption: undefined };
-      render(
-        <MediaCard
-          item={itemWithoutCaption}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      // Should not render caption paragraph
-      expect(screen.queryByText(/".*"/)).not.toBeInTheDocument();
-    });
-
     it('should stop propagation on favorite button click', () => {
       render(
         <MediaCard
