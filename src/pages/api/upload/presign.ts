@@ -105,13 +105,79 @@ export const POST: APIRoute = async ({ request }) => {
         );
       }
 
-      // Only allow cloud uploads for active subscriptions
-      if (profile.subscription_status !== 'active') {
+      // Check subscription status and enforce trial limits
+      if (profile.subscription_status === 'trial') {
+        // Trial limits: 50 photos, 1 video
+        const TRIAL_PHOTO_LIMIT = 50;
+        const TRIAL_VIDEO_LIMIT = 1;
+
+        const isVideo = contentType.startsWith('video/');
+        const isPhoto = contentType.startsWith('image/');
+
+        if (isPhoto) {
+          // Count existing photos
+          const { count: photoCount, error: countError } = await adminClient
+            .from('media')
+            .select('*', { count: 'exact', head: true })
+            .eq('wedding_id', weddingId)
+            .eq('type', 'photo');
+
+          if (countError) {
+            console.error('[API] Error counting photos:', countError);
+          }
+
+          if ((photoCount ?? 0) >= TRIAL_PHOTO_LIMIT) {
+            return new Response(
+              JSON.stringify({
+                error: 'Trial limit reached',
+                code: 'TRIAL_PHOTO_LIMIT',
+                message: `Your free trial allows up to ${TRIAL_PHOTO_LIMIT} photos. Upgrade to upload unlimited photos.`,
+                limit: TRIAL_PHOTO_LIMIT,
+                current: photoCount,
+              }),
+              {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          }
+        }
+
+        if (isVideo) {
+          // Count existing videos
+          const { count: videoCount, error: countError } = await adminClient
+            .from('media')
+            .select('*', { count: 'exact', head: true })
+            .eq('wedding_id', weddingId)
+            .eq('type', 'video');
+
+          if (countError) {
+            console.error('[API] Error counting videos:', countError);
+          }
+
+          if ((videoCount ?? 0) >= TRIAL_VIDEO_LIMIT) {
+            return new Response(
+              JSON.stringify({
+                error: 'Trial limit reached',
+                code: 'TRIAL_VIDEO_LIMIT',
+                message: `Your free trial allows up to ${TRIAL_VIDEO_LIMIT} video. Upgrade to upload unlimited videos.`,
+                limit: TRIAL_VIDEO_LIMIT,
+                current: videoCount,
+              }),
+              {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          }
+        }
+      } else if (profile.subscription_status !== 'active') {
+        // Expired or cancelled subscription - no uploads allowed
         return new Response(
           JSON.stringify({
             error: 'Subscription required',
-            code: 'TRIAL_MODE',
-            message: 'Les uploads cloud sont réservés aux abonnements actifs. Pendant l\'essai gratuit, les photos sont stockées localement.',
+            code: 'SUBSCRIPTION_EXPIRED',
+            message: 'Your subscription has expired. Please renew to continue uploading.',
             subscriptionStatus: profile.subscription_status,
           }),
           {

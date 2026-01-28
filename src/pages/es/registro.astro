@@ -1,0 +1,37 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import { SignupWizard } from '../../components/signup/SignupWizard';
+
+const lang = 'es';
+---
+
+<MainLayout
+  title="Registro - Reflets de Bonheur"
+  description="Crea tu sitio web de boda y galería de fotos. Comienza tu prueba gratuita de 1 mes."
+  showHeader={true}
+>
+  <Header slot="header" />
+
+  <section class="min-h-screen py-12 sm:py-16 lg:py-24 bg-cream dark:bg-[#0f0f0f]">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
+        <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
+          Empezar
+        </span>
+        <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-charcoal dark:text-cream mt-4 mb-4">
+          Crea Tu Espacio de Boda
+        </h1>
+        <div class="w-16 h-px mx-auto mb-4" style="background-color: #ae1725;"></div>
+        <p class="text-charcoal-light dark:text-cream/70 font-light">
+          Tu galería privada, libro de visitas y sitio web de boda—todo en un hermoso lugar.
+        </p>
+      </div>
+
+      <SignupWizard client:load lang={lang} />
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</MainLayout>
