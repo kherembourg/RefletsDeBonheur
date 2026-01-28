@@ -45,21 +45,11 @@ const primaryColor = config.theme.primaryColor || '#ae1725';
   </WeddingLuxeLayout>
 ) : (
   <!-- CLASSIC THEME -->
-  <WeddingLayout wedding={wedding} title="RSVP">
-    <section class="py-20 px-4 min-h-[80vh]">
-      <div class="max-w-2xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-12">
-          <h1 class="text-4xl sm:text-5xl font-display font-bold text-deep-charcoal dark:text-ivory mb-4">
-            Confirmez votre présence
-          </h1>
-          <p class="text-lg text-warm-taupe dark:text-silver-mist">
-            {config.brideName} & {config.groomName} seraient ravis de savoir si vous serez des leurs.
-          </p>
-        </div>
-
-        <!-- RSVP Form -->
-        <div class="bg-white dark:bg-deep-charcoal/50 rounded-2xl shadow-lg p-6 sm:p-10">
+  <WeddingLayout wedding={wedding} title="RSVP" showNav={false} showFooter={false}>
+    <section class="min-h-screen bg-[#e9e6ea] flex items-center justify-center px-4 py-10">
+      <div class="w-full max-w-md bg-white rounded-[28px] shadow-2xl overflow-hidden">
+        <div class="h-1" style={`background-color: ${primaryColor}`}></div>
+        <div class="p-8 sm:p-10">
           <WeddingRSVP weddingId={wedding.id} config={config} client:load />
         </div>
       </div>

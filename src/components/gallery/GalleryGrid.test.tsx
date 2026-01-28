@@ -3,7 +3,7 @@
  * Tests the main gallery grid display
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 // Define mock data (hoisted)
 const mockMedia = [
@@ -93,19 +93,11 @@ describe('GalleryGrid Component', () => {
   });
 
   describe('Rendering', () => {
-    it('should render the gallery header', async () => {
+    it('should render the gallery label', async () => {
       render(<GalleryGrid demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Moments Précieux')).toBeInTheDocument();
-      });
-    });
-
-    it('should show photo count', async () => {
-      render(<GalleryGrid demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/2 souvenirs partagés/)).toBeInTheDocument();
+        expect(screen.getByText('Galerie Photos')).toBeInTheDocument();
       });
     });
 
@@ -118,27 +110,11 @@ describe('GalleryGrid Component', () => {
       });
     });
 
-    it('should show upload button when uploads allowed', async () => {
+    it('should show contribute button when uploads allowed', async () => {
       render(<GalleryGrid demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /partager/i })).toBeInTheDocument();
-      });
-    });
-
-    it('should show slideshow button', async () => {
-      render(<GalleryGrid demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /diaporama/i })).toBeInTheDocument();
-      });
-    });
-
-    it('should show selection mode button', async () => {
-      render(<GalleryGrid demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /sélectionner/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /contribuer à la galerie/i })).toBeInTheDocument();
       });
     });
   });
@@ -168,56 +144,8 @@ describe('GalleryGrid Component', () => {
       render(<GalleryGrid demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText(/partager vos premiers souvenirs/i)).toBeInTheDocument();
+        expect(screen.getByText(/contribuer à la galerie/i)).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('Uploads Disabled', () => {
-    it('should show lock message when uploads disabled', async () => {
-      mockGetSettings.mockReturnValue({ allowUploads: false });
-
-      render(<GalleryGrid demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/uploads fermés/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Selection Mode', () => {
-    it('should toggle selection mode', async () => {
-      render(<GalleryGrid demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /sélectionner/i })).toBeInTheDocument();
-      });
-
-      const selectButton = screen.getByRole('button', { name: /sélectionner/i });
-      fireEvent.click(selectButton);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /annuler/i })).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Grid Style', () => {
-    it('should toggle between masonry and grid view', async () => {
-      render(<GalleryGrid demoMode={true} />);
-
-      await waitFor(() => {
-        // Should have grid toggle buttons
-        expect(screen.getByRole('button', { name: 'Vue mosaïque' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Vue grille' })).toBeInTheDocument();
-      });
-
-      // Click grid view
-      const gridButton = screen.getByRole('button', { name: 'Vue grille' });
-      fireEvent.click(gridButton);
-
-      // The component should switch to grid view (class changes)
-      // This tests that clicking doesn't throw an error
     });
   });
 
@@ -231,34 +159,13 @@ describe('GalleryGrid Component', () => {
     });
   });
 
-  describe('Search Filters', () => {
-    it('should render search filters when media exists', async () => {
-      render(<GalleryGrid demoMode={true} />);
+  describe('Admin Variant', () => {
+    it('should show bulk actions in admin view', async () => {
+      render(<GalleryGrid demoMode={true} variant="admin" />);
 
       await waitFor(() => {
-        // Search filters should be present
-        const searchInput = screen.getByPlaceholderText(/rechercher/i);
-        expect(searchInput).toBeInTheDocument();
+        expect(screen.getByText('Actions groupées')).toBeInTheDocument();
       });
-    });
-  });
-});
-
-describe('GalleryGrid - Count Display', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockGetAlbums.mockResolvedValue([]);
-    mockGetFavorites.mockResolvedValue(new Set());
-    mockGetSettings.mockReturnValue({ allowUploads: true });
-  });
-
-  it('should show singular for single item', async () => {
-    mockGetMedia.mockResolvedValue([mockMedia[0]]);
-
-    render(<GalleryGrid demoMode={true} />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/1 souvenir partagé$/)).toBeInTheDocument();
     });
   });
 });

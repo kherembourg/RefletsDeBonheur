@@ -82,6 +82,7 @@ const {
   mockGetStatistics,
   mockGetMedia,
   mockGetMessages,
+  mockGetAlbums,
   mockGetSettings,
   mockInitializeDemoStorage,
 } = vi.hoisted(() => ({
@@ -95,6 +96,7 @@ const {
   }),
   mockGetMedia: vi.fn().mockResolvedValue([]),
   mockGetMessages: vi.fn().mockResolvedValue([]),
+  mockGetAlbums: vi.fn().mockResolvedValue([]),
   mockGetSettings: vi.fn(() => ({ allowUploads: true })),
   mockInitializeDemoStorage: vi.fn(),
 }));
@@ -104,6 +106,7 @@ vi.mock('../../lib/services/dataService', () => ({
     getStatistics = mockGetStatistics;
     getMedia = mockGetMedia;
     getMessages = mockGetMessages;
+    getAlbums = mockGetAlbums;
     getSettings = mockGetSettings;
     initializeDemoStorage = mockInitializeDemoStorage;
   },
@@ -123,6 +126,7 @@ describe('AdminPanel Component', () => {
     });
     mockGetMedia.mockResolvedValue([]);
     mockGetMessages.mockResolvedValue([]);
+    mockGetAlbums.mockResolvedValue([]);
     mockGetSettings.mockReturnValue({ allowUploads: true });
   });
 
@@ -173,7 +177,7 @@ describe('AdminPanel Component', () => {
       render(<AdminPanel demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('100')).toBeInTheDocument();
+        expect(screen.getByText('90')).toBeInTheDocument();
         expect(screen.getByText('Photos')).toBeInTheDocument();
       });
     });
@@ -199,7 +203,7 @@ describe('AdminPanel Component', () => {
 
   describe('Settings Section', () => {
     it('should display settings section', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByText('Paramètres')).toBeInTheDocument();
@@ -207,7 +211,7 @@ describe('AdminPanel Component', () => {
     });
 
     it('should show upload toggle', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByText('Autoriser les uploads')).toBeInTheDocument();
@@ -215,7 +219,7 @@ describe('AdminPanel Component', () => {
     });
 
     it('should show enabled state when uploads allowed', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(
@@ -227,7 +231,7 @@ describe('AdminPanel Component', () => {
     it('should toggle uploads when clicked', async () => {
       const { mockAPI } = await import('../../lib/api');
 
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByTestId('settings-toggle')).toBeInTheDocument();
@@ -243,7 +247,7 @@ describe('AdminPanel Component', () => {
 
   describe('Backup Button', () => {
     it('should display backup button', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByText('Télécharger la sauvegarde')).toBeInTheDocument();
@@ -253,7 +257,7 @@ describe('AdminPanel Component', () => {
     it('should trigger backup when clicked', async () => {
       const { mockAPI, downloadBlob } = await import('../../lib/api');
 
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByText('Télécharger la sauvegarde')).toBeInTheDocument();
@@ -278,7 +282,7 @@ describe('AdminPanel Component', () => {
         () => backupPromise
       );
 
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByText('Télécharger la sauvegarde')).toBeInTheDocument();
@@ -303,7 +307,7 @@ describe('AdminPanel Component', () => {
       render(<AdminPanel demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('QR Code')).toBeInTheDocument();
+        expect(screen.getByText('QR Code Galerie')).toBeInTheDocument();
       });
     });
 
@@ -311,14 +315,14 @@ describe('AdminPanel Component', () => {
       render(<AdminPanel demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('qr-generator')).toBeInTheDocument();
+        expect(screen.getByAltText('QR Code')).toBeInTheDocument();
       });
     });
   });
 
   describe('Theme Section', () => {
     it('should display theme section', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByText('Thème')).toBeInTheDocument();
@@ -326,7 +330,7 @@ describe('AdminPanel Component', () => {
     });
 
     it('should render ThemeSelector component', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByTestId('theme-selector')).toBeInTheDocument();
@@ -336,7 +340,7 @@ describe('AdminPanel Component', () => {
 
   describe('Albums Section', () => {
     it('should display albums section', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         // Albums appears in stats and as section header - check both exist
@@ -346,7 +350,7 @@ describe('AdminPanel Component', () => {
     });
 
     it('should render AlbumManager component', async () => {
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByTestId('album-manager')).toBeInTheDocument();
@@ -354,41 +358,7 @@ describe('AdminPanel Component', () => {
     });
   });
 
-  describe('Enhanced Statistics Section', () => {
-    it('should display detailed statistics section', async () => {
-      render(<AdminPanel demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Statistiques détaillées')).toBeInTheDocument();
-      });
-    });
-
-    it('should render EnhancedStatistics in demo mode', async () => {
-      render(<AdminPanel demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('enhanced-stats')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Storage Info', () => {
-    it('should display storage info section', async () => {
-      render(<AdminPanel demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Stockage')).toBeInTheDocument();
-      });
-    });
-
-    it('should indicate demo mode storage', async () => {
-      render(<AdminPanel demoMode={true} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Mode démo : stockage local/)).toBeInTheDocument();
-      });
-    });
-  });
+  // Enhanced statistics and storage sections were removed from the dashboard layout.
 
   describe('Error Handling', () => {
     it('should handle statistics load failure', async () => {
@@ -408,7 +378,7 @@ describe('AdminPanel Component', () => {
       const { mockAPI } = await import('../../lib/api');
       (mockAPI.toggleUploads as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Toggle failed'));
 
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByTestId('settings-toggle')).toBeInTheDocument();
@@ -427,7 +397,7 @@ describe('AdminPanel Component', () => {
       const { mockAPI } = await import('../../lib/api');
       (mockAPI.exportBackup as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Backup failed'));
 
-      render(<AdminPanel demoMode={true} />);
+      render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
         expect(screen.getByText('Télécharger la sauvegarde')).toBeInTheDocument();

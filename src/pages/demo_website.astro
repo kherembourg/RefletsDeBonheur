@@ -1,0 +1,115 @@
+---
+import DemoLayout from '../layouts/DemoLayout.astro';
+
+const coupleName = 'Julie & Thomas';
+const weddingDate = '15 Août 2026';
+const primaryColor = '#ae1725';
+---
+
+<DemoLayout
+  title="Demo Website - Reflets de Bonheur"
+  description="Découvrez notre site de mariage en mode démo"
+  currentPage="accueil"
+  bannerColor="from-amber-500 to-orange-500"
+  bannerText="Mode Démo - Découvrez votre futur site de mariage ! Naviguez librement entre les pages."
+>
+  <!-- Hero Section -->
+  <div class="text-center mt-8 mb-12">
+    <p class="text-xs uppercase tracking-[0.35em] text-charcoal/40 mb-4">Nous nous marions</p>
+    <h2 class="font-serif text-5xl md:text-6xl lg:text-7xl text-charcoal mb-4">
+      {coupleName}
+    </h2>
+    <p class="text-lg text-charcoal/60 font-light">{weddingDate}</p>
+    <div class="mt-6 flex items-center justify-center gap-2 text-charcoal/30">
+      <div class="w-12 h-px bg-charcoal/20"></div>
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+      <div class="w-12 h-px bg-charcoal/20"></div>
+    </div>
+  </div>
+
+  <!-- Welcome Message -->
+  <div class="max-w-2xl mx-auto text-center mb-16">
+    <p class="text-xl text-charcoal/70 leading-relaxed italic">
+      "Nous sommes heureux de partager avec vous ce jour si spécial.
+      Votre présence est le plus beau des cadeaux."
+    </p>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="max-w-4xl mx-auto">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- RSVP Card -->
+      <a
+        href="/demo_rsvp"
+        class="group bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 border border-charcoal/5"
+      >
+        <div
+          class="w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+          style={`background-color: ${primaryColor}15`}
+        >
+          <svg class="w-7 h-7" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-charcoal mb-2">
+          Confirmer ma présence
+        </h3>
+        <p class="text-sm text-charcoal/60">
+          Répondez à notre invitation
+        </p>
+      </a>
+
+      <!-- Photos Card -->
+      <a
+        href="/demo_gallery"
+        class="group bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 border border-charcoal/5"
+      >
+        <div
+          class="w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+          style={`background-color: ${primaryColor}15`}
+        >
+          <svg class="w-7 h-7" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-charcoal mb-2">
+          Galerie Photos
+        </h3>
+        <p class="text-sm text-charcoal/60">
+          Partagez vos photos et vidéos
+        </p>
+      </a>
+
+      <!-- Guestbook Card -->
+      <a
+        href="/demo_livre-or"
+        class="group bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 border border-charcoal/5"
+      >
+        <div
+          class="w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+          style={`background-color: ${primaryColor}15`}
+        >
+          <svg class="w-7 h-7" style={`color: ${primaryColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-charcoal mb-2">
+          Livre d'Or
+        </h3>
+        <p class="text-sm text-charcoal/60">
+          Laissez un message aux mariés
+        </p>
+      </a>
+    </div>
+  </div>
+
+  <!-- Venue Info -->
+  <div class="max-w-2xl mx-auto mt-16 text-center">
+    <p class="text-xs uppercase tracking-[0.35em] text-charcoal/40 mb-4">Lieu de célébration</p>
+    <h3 class="font-serif text-2xl text-charcoal mb-2">Château de Versailles</h3>
+    <p class="text-charcoal/60">Place d'Armes, 78000 Versailles</p>
+    <p class="text-charcoal/50 text-sm mt-2">Cérémonie à 15h00 · Réception à 18h00</p>
+  </div>
+</DemoLayout>

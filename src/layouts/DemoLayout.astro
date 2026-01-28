@@ -1,0 +1,152 @@
+---
+import MainLayout from './MainLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  currentPage: 'accueil' | 'galerie' | 'livre-or' | 'rsvp';
+  bannerColor?: string;
+  bannerText?: string;
+  sectionTitle?: string;
+  sectionSubtitle?: string;
+  showContributeButton?: boolean;
+  maxContentWidth?: string;
+}
+
+const {
+  title,
+  description,
+  currentPage,
+  bannerColor = 'from-rose-500 to-rose-600',
+  bannerText = 'Mode Démo - Testez librement les fonctionnalités !',
+  sectionTitle,
+  sectionSubtitle,
+  showContributeButton = false,
+  maxContentWidth,
+} = Astro.props;
+
+const coupleName = 'Julie & Thomas';
+const weddingDate = '15 Août 2026';
+
+const navItems = [
+  { id: 'accueil', label: 'Accueil', href: '/demo_website' },
+  { id: 'galerie', label: 'Galerie', href: '/demo_gallery' },
+  { id: 'livre-or', label: "Livre d'or", href: '/demo_livre-or' },
+  { id: 'rsvp', label: 'RSVP', href: '/demo_rsvp' },
+];
+---
+
+<MainLayout
+  title={title}
+  description={description}
+  showHeader={false}
+>
+  <!-- Demo Banner -->
+  <div class={`bg-linear-to-r ${bannerColor} text-white py-3 px-4 text-center`}>
+    <p class="text-sm font-medium">
+      {bannerText}
+    </p>
+  </div>
+
+  <section class="min-h-screen bg-gradient-to-b from-[#f7f2f5] via-[#f8f4f8] to-[#efe9f0]">
+    <div class="w-full px-4 sm:px-6 lg:px-10 pt-8 pb-16">
+      <!-- Mobile Header -->
+      <div class="flex items-center justify-between md:hidden text-charcoal/60">
+        <button class="w-10 h-10 flex items-center justify-center rounded-full bg-white/70 border border-charcoal/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <span class="font-serif text-base text-charcoal">{coupleName}</span>
+        <a
+          href="/pricing"
+          class="px-4 py-2 rounded-full bg-burgundy-old text-white text-xs font-medium hover:bg-[#c92a38] transition-colors"
+        >
+          Commander
+        </a>
+      </div>
+
+      <!-- Desktop Header -->
+      <div class="hidden md:block">
+        <div class="flex items-center justify-between">
+          <div class="w-32"></div>
+          <h1 class="font-serif text-4xl lg:text-5xl text-charcoal tracking-wide text-center">
+            {coupleName}
+          </h1>
+          <div class="w-32 flex justify-end">
+            <a
+              href="/pricing"
+              class="px-5 py-2.5 rounded-full bg-burgundy-old text-white text-sm font-medium hover:bg-[#c92a38] transition-colors"
+            >
+              Commander
+            </a>
+          </div>
+        </div>
+        <nav class="mt-5 flex items-center justify-center gap-6 text-xs uppercase tracking-[0.3em] text-charcoal/60">
+          {navItems.map((item) => (
+            <a
+              href={item.href}
+              class={currentPage === item.id
+                ? 'text-charcoal border-b border-charcoal pb-1'
+                : 'hover:text-charcoal transition-colors'}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+
+      <div class="mt-8 border-t border-charcoal/10"></div>
+
+      <!-- Section Header (optional) -->
+      {(sectionTitle || showContributeButton) && (
+        <div class={`mt-6 ${showContributeButton ? 'flex items-center justify-between' : 'text-center'}`}>
+          {sectionTitle && (
+            <div class={showContributeButton ? '' : ''}>
+              <p class="text-xs uppercase tracking-[0.35em] text-charcoal/50">{sectionTitle}</p>
+              {sectionSubtitle && (
+                <p class="text-sm text-charcoal/50 mt-1">{sectionSubtitle}</p>
+              )}
+            </div>
+          )}
+          {showContributeButton && (
+            <button
+              id="contribute-btn"
+              class="px-5 py-2.5 rounded-full bg-burgundy-old text-white text-sm font-medium hover:bg-[#c92a38] transition-colors"
+            >
+              Contribuer
+            </button>
+          )}
+        </div>
+      )}
+
+      <!-- Main Content -->
+      <div class={`mt-8 ${maxContentWidth ? `max-w-${maxContentWidth} mx-auto` : ''}`}>
+        <slot />
+      </div>
+
+      <!-- Footer CTA -->
+      <div class="mt-14 text-center">
+        <a
+          href="/pricing"
+          class="px-6 py-3 rounded-full bg-burgundy-old text-white font-medium hover:bg-[#c92a38] transition-colors inline-block"
+        >
+          Commander mon espace
+        </a>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+{showContributeButton && (
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const contributeBtn = document.getElementById('contribute-btn');
+      if (contributeBtn) {
+        contributeBtn.addEventListener('click', () => {
+          window.dispatchEvent(new CustomEvent('open-upload-modal'));
+        });
+      }
+    });
+  </script>
+)}

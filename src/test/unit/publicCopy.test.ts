@@ -13,8 +13,8 @@ describe('Public marketing copy', () => {
     const fr = readPage('pages/fr/index.astro');
     const es = readPage('pages/es/index.astro');
 
-    expect(en).toContain('A private gallery');
-    expect(en).toContain('Create my private space');
+    expect(en).toContain('A Private Gallery');
+    expect(en).toContain('Create Your Private Space');
 
     expect(fr).toContain('Un écrin privé');
     expect(fr).toContain('Créer mon espace privé');
@@ -28,7 +28,7 @@ describe('Public marketing copy', () => {
     const frPricing = readPage('pages/fr/tarification.astro');
     const esPricing = readPage('pages/es/precios.astro');
 
-    expect(enPricing).toContain('Premium pricing, no surprises');
+    expect(enPricing).toContain('Premium Pricing, No Surprises');
     expect(frPricing).toContain('Une offre premium, sans surprises');
     expect(esPricing).toContain('Precios premium, sin sorpresas');
   });

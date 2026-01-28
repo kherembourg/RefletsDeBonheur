@@ -1,0 +1,30 @@
+---
+import DemoLayout from '../layouts/DemoLayout.astro';
+import { WeddingRSVP } from '../components/wedding/WeddingRSVP';
+
+// Demo config for the RSVP form
+const demoConfig = {
+  brideName: 'Julie',
+  groomName: 'Thomas',
+  weddingDate: '2026-08-15',
+  askDietaryRestrictions: true,
+  rsvpDeadline: '2026-07-15',
+  theme: {
+    primaryColor: '#ae1725',
+  },
+};
+---
+
+<DemoLayout
+  title="Demo RSVP - Reflets de Bonheur"
+  description="Testez notre formulaire RSVP en mode démo"
+  currentPage="rsvp"
+  bannerColor="from-emerald-500 to-teal-600"
+  bannerText="Mode Démo - Testez librement les fonctionnalités ! Les réponses sont stockées localement dans votre navigateur."
+  sectionTitle="RSVP"
+  sectionSubtitle="Confirmez votre présence"
+>
+  <div class="max-w-lg mx-auto bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-charcoal/5">
+    <WeddingRSVP weddingId="demo" config={demoConfig} client:load />
+  </div>
+</DemoLayout>

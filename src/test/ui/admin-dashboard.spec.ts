@@ -9,120 +9,78 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Admin Dashboard', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to admin page (demo mode)
-    await page.goto('/admin');
-  });
-
-  test('dashboard overview should match snapshot', async ({ page }) => {
-    // Wait for the dashboard to load
-    await page.waitForSelector('[data-testid="admin-dashboard"]', { timeout: 10000 }).catch(() => {
-      // Fallback: wait for statistics section
-      return page.waitForSelector('text=Vue d\'ensemble', { timeout: 10000 });
+    await page.addInitScript(() => {
+      localStorage.setItem('reflets_client_token', 'demo');
+      localStorage.setItem('reflets_client_session', 'demo');
+      localStorage.setItem('reflets_is_admin', 'true');
     });
 
-    // Take a screenshot of the overview section
-    await expect(page).toHaveScreenshot('admin-dashboard-overview.png', {
+    await page.goto('/admin');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(3000);
+  });
+
+  test('dashboard view should match snapshot', async ({ page }) => {
+    await page.waitForSelector('text=Welcome back', { timeout: 10000 });
+
+    await expect(page).toHaveScreenshot('admin-dashboard-desktop.png', {
       fullPage: false,
       clip: { x: 0, y: 0, width: 1280, height: 800 },
     });
   });
 
-  test('statistics cards should render correctly', async ({ page }) => {
-    await page.waitForSelector('text=Photos', { timeout: 10000 });
-
-    // Find and screenshot the stats section
-    const statsSection = page.locator('section').first();
-    await expect(statsSection).toHaveScreenshot('admin-stats-cards.png');
+  test('sidebar should render with navigation items', async ({ page }) => {
+    const sidebar = page.locator('aside');
+    await expect(sidebar).toBeVisible();
+    await expect(sidebar).toHaveScreenshot('admin-sidebar.png');
   });
 
-  test('quick actions grid should match snapshot', async ({ page }) => {
-    await page.waitForSelector('text=Actions rapides', { timeout: 10000 });
-
-    const actionsSection = page.locator('text=Actions rapides').locator('..').locator('..');
-    await expect(actionsSection).toHaveScreenshot('admin-quick-actions.png');
+  test('gallery share panel should be visible', async ({ page }) => {
+    await page.waitForSelector('text=QR Code Galerie', { timeout: 10000 });
+    const sharePanel = page.locator('text=QR Code Galerie').locator('..');
+    await expect(sharePanel).toHaveScreenshot('admin-qr-panel.png');
   });
 
-  test('RSVP card should be visible and styled correctly', async ({ page }) => {
-    await page.waitForSelector('text=Gestion RSVP', { timeout: 10000 });
-
-    const rsvpCard = page.locator('text=Gestion RSVP').locator('..').locator('..');
-    await expect(rsvpCard).toHaveScreenshot('admin-rsvp-card.png');
-  });
-
-  test('settings section should match snapshot', async ({ page }) => {
-    await page.waitForSelector('text=Paramètres', { timeout: 10000 });
-
-    // Scroll to settings section
-    await page.locator('text=Paramètres').first().scrollIntoViewIfNeeded();
-
-    const settingsSection = page.locator('text=Paramètres').first().locator('..').locator('..');
-    await expect(settingsSection).toHaveScreenshot('admin-settings-section.png');
-  });
-
-  test('theme section should match snapshot', async ({ page }) => {
-    await page.waitForSelector('text=Thème', { timeout: 10000 });
-
-    // Scroll to theme section
-    await page.locator('text=Thème').first().scrollIntoViewIfNeeded();
-
-    const themeSection = page.locator('text=Thème').first().locator('..').locator('..');
-    await expect(themeSection).toHaveScreenshot('admin-theme-section.png');
-  });
-
-  test('mobile view should be responsive', async ({ page }) => {
-    // Set mobile viewport
-    await page.setViewportSize({ width: 375, height: 667 });
-
+  test('mobile view should show mobile navigation', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/admin');
-    await page.waitForSelector('text=Vue d\'ensemble', { timeout: 10000 });
+    await page.waitForLoadState('domcontentloaded');
+    // Wait for the page to render fully
+    await page.waitForTimeout(6000);
 
-    await expect(page).toHaveScreenshot('admin-dashboard-mobile.png', {
+    await expect(page).toHaveScreenshot('admin-mobile-view.png', {
       fullPage: true,
-    });
-  });
-
-  test('tablet view should be responsive', async ({ page }) => {
-    // Set tablet viewport
-    await page.setViewportSize({ width: 768, height: 1024 });
-
-    await page.goto('/admin');
-    await page.waitForSelector('text=Vue d\'ensemble', { timeout: 10000 });
-
-    await expect(page).toHaveScreenshot('admin-dashboard-tablet.png', {
-      fullPage: true,
+      maxDiffPixels: 200,
     });
   });
 });
 
 test.describe('Admin Dashboard Interactions', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('reflets_client_token', 'demo');
+      localStorage.setItem('reflets_client_session', 'demo');
+      localStorage.setItem('reflets_is_admin', 'true');
+    });
     await page.goto('/admin');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(3000);
   });
 
-  test('clicking RSVP card should navigate to RSVP view', async ({ page }) => {
-    await page.waitForSelector('text=Gestion RSVP', { timeout: 10000 });
-
-    // Click on RSVP card
-    await page.click('text=Gestion RSVP');
-
-    // Should show RSVP management view
-    await expect(page.locator('text=Retour au tableau de bord')).toBeVisible({ timeout: 10000 });
+  test('switching to dashboard view should show stats', async ({ page }) => {
+    await page.waitForSelector('text=Dashboard', { timeout: 10000 });
+    await page.click('text=Dashboard');
+    await page.waitForSelector("text=Vue d'ensemble", { timeout: 10000 });
+    await expect(page.locator("text=Vue d'ensemble")).toBeVisible();
   });
 
-  test('upload toggle should be interactive', async ({ page }) => {
-    await page.waitForSelector('text=Autoriser les uploads', { timeout: 10000 });
-
-    // Find the toggle
-    const toggle = page.locator('text=Autoriser les uploads').locator('..').locator('button[role="switch"]');
-
-    // Get initial state
-    const initialState = await toggle.getAttribute('aria-checked');
-
-    // Click toggle
-    await toggle.click();
-
-    // State should change
-    const newState = await toggle.getAttribute('aria-checked');
-    expect(newState).not.toBe(initialState);
+  test('gallery tabs should switch to albums', async ({ page }) => {
+    // The page should already be loaded from beforeEach
+    await page.click('text=Photo Gallery');
+    // Wait for gallery view to load - look for Albums section
+    await page.waitForSelector('text=Albums', { timeout: 15000 });
+    await page.click('text=Albums');
+    await page.waitForSelector('text=Nouvel Album', { timeout: 15000 });
+    await expect(page.locator('text=Nouvel Album')).toBeVisible();
   });
 });

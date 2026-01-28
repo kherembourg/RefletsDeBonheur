@@ -16,7 +16,12 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        // Multiple switches exist (main toggle + settings toggles)
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
+
+      await waitFor(() => {
         const switches = screen.getAllByRole('switch');
         expect(switches.length).toBeGreaterThanOrEqual(1);
       });
@@ -26,9 +31,9 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        // Tab buttons with text - Paramètres, Questions tabs
-        expect(screen.getByRole('button', { name: /Paramètres/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Questions/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Guest Responses/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Form Builder/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
     });
 
@@ -36,10 +41,7 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        // Statistics labels appear on the page
-        expect(screen.getByText('Présents')).toBeInTheDocument();
-        expect(screen.getByText('Absents')).toBeInTheDocument();
-        expect(screen.getByText('Convives')).toBeInTheDocument();
+        expect(screen.getByText('RSVP Stats')).toBeInTheDocument();
       });
     });
   });
@@ -49,12 +51,12 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        const switches = screen.getAllByRole('switch');
-        expect(switches.length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      // First switch is the main RSVP enabled toggle
-      const toggles = screen.getAllByRole('switch');
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
+
+      const toggles = await screen.findAllByRole('switch');
       const mainToggle = toggles[0];
       const initialState = mainToggle.getAttribute('aria-checked');
 
@@ -69,16 +71,16 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        const switches = screen.getAllByRole('switch');
-        expect(switches.length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      // First switch is the main RSVP enabled toggle
-      const toggles = screen.getAllByRole('switch');
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
+
+      const toggles = await screen.findAllByRole('switch');
       fireEvent.click(toggles[0]);
 
       await waitFor(() => {
-        expect(screen.getByText('Enregistrer')).toBeInTheDocument();
+        expect(screen.getByText('Save Changes')).toBeInTheDocument();
       });
     });
   });
@@ -88,10 +90,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Paramètres')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Paramètres'));
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Options générales')).toBeInTheDocument();
@@ -102,10 +104,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Questions')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Form Builder/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Questions'));
+      fireEvent.click(screen.getByRole('button', { name: /Form Builder/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Questions personnalisées')).toBeInTheDocument();
@@ -116,12 +118,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        // Find the tab button with Réponses text (in the nav)
-        expect(screen.getByRole('button', { name: /Réponses/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Guest Responses/i })).toBeInTheDocument();
       });
 
-      // Click the Réponses tab button
-      fireEvent.click(screen.getByRole('button', { name: /Réponses/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Guest Responses/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Aucune réponse')).toBeInTheDocument();
@@ -130,17 +130,17 @@ describe('RSVPManager', () => {
   });
 
   describe('settings tab', () => {
-    it('should show deadline input', async () => {
+    it('should show RSVP enabled toggle', async () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Paramètres')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Paramètres'));
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
 
       await waitFor(() => {
-        expect(screen.getByText('Date limite de réponse')).toBeInTheDocument();
+        expect(screen.getByText('RSVP activé')).toBeInTheDocument();
       });
     });
 
@@ -148,10 +148,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Paramètres')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Paramètres'));
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Autoriser les accompagnants')).toBeInTheDocument();
@@ -162,10 +162,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Paramètres')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Paramètres'));
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Demander les restrictions alimentaires')).toBeInTheDocument();
@@ -176,10 +176,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Paramètres')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Paramètres'));
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
 
       await waitFor(() => {
         expect(screen.getByText("Message d'accueil")).toBeInTheDocument();
@@ -190,10 +190,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Paramètres')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Settings/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Paramètres'));
+      fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Message de remerciement')).toBeInTheDocument();
@@ -206,10 +206,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Questions')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Form Builder/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Questions'));
+      fireEvent.click(screen.getByRole('button', { name: /Form Builder/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Aucune question personnalisée')).toBeInTheDocument();
@@ -220,10 +220,10 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Questions')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Form Builder/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Questions'));
+      fireEvent.click(screen.getByRole('button', { name: /Form Builder/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Champ texte libre')).toBeInTheDocument();
@@ -235,14 +235,14 @@ describe('RSVPManager', () => {
 
   describe('responses tab', () => {
     const clickResponsesTab = () => {
-      fireEvent.click(screen.getByRole('button', { name: /Réponses/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Guest Responses/i }));
     };
 
     it('should show empty state when no responses', async () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Réponses/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Guest Responses/i })).toBeInTheDocument();
       });
 
       clickResponsesTab();
@@ -256,7 +256,7 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Réponses/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Guest Responses/i })).toBeInTheDocument();
       });
 
       clickResponsesTab();
@@ -270,7 +270,7 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Réponses/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Guest Responses/i })).toBeInTheDocument();
       });
 
       clickResponsesTab();
@@ -284,7 +284,7 @@ describe('RSVPManager', () => {
       render(<RSVPManager {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Réponses/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Guest Responses/i })).toBeInTheDocument();
       });
 
       clickResponsesTab();

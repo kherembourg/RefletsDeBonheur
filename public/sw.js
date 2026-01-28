@@ -1,10 +1,11 @@
 // Reflets de Bonheur - Service Worker
 // Version 1.0.0
 
-const CACHE_VERSION = 'reflets-v1.0.3';
+const CACHE_VERSION = 'reflets-v1.0.4';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
+const FONT_CACHE = 'reflets-fonts-v1'; // Fonts cache persists across versions
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -42,8 +43,12 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames
             .filter((cacheName) => {
-              // Delete old versions
-              return cacheName.startsWith('reflets-') && cacheName !== STATIC_CACHE && cacheName !== RUNTIME_CACHE && cacheName !== IMAGE_CACHE;
+              // Delete old versions, but keep font cache (fonts rarely change)
+              return cacheName.startsWith('reflets-') &&
+                     cacheName !== STATIC_CACHE &&
+                     cacheName !== RUNTIME_CACHE &&
+                     cacheName !== IMAGE_CACHE &&
+                     cacheName !== FONT_CACHE;
             })
             .map((cacheName) => {
               console.log('[SW] Deleting old cache:', cacheName);
@@ -70,6 +75,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Handle font requests (Google Fonts) - cache aggressively
+  if (url.hostname === 'fonts.gstatic.com' ||
+      (url.hostname === 'fonts.googleapis.com' && request.destination === 'style')) {
+    event.respondWith(handleFontRequest(request));
+    return;
+  }
+
   // Handle image requests
   if (request.destination === 'image') {
     event.respondWith(handleImageRequest(request));
@@ -82,9 +94,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle other requests (CSS, JS, fonts)
+  // Handle other requests (CSS, JS)
   event.respondWith(handleResourceRequest(request));
 });
+
+// Font caching strategy: Cache first, very long TTL (fonts rarely change)
+async function handleFontRequest(request) {
+  try {
+    const cache = await caches.open(FONT_CACHE);
+    const cached = await cache.match(request);
+
+    if (cached) {
+      console.log('[SW] Serving cached font:', request.url);
+      return cached;
+    }
+
+    console.log('[SW] Fetching font:', request.url);
+    const response = await fetch(request);
+
+    if (response.ok) {
+      // Cache fonts for a long time - they don't change
+      cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    console.error('[SW] Font fetch failed:', error);
+    // Try to find in cache as last resort
+    const cached = await caches.match(request);
+    return cached || new Response('', { status: 404, statusText: 'Font not found' });
+  }
+}
 
 // Image caching strategy: Cache first, network fallback
 async function handleImageRequest(request) {
