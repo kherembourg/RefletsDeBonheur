@@ -52,6 +52,8 @@ export function SlugStep({
       const suggested = generateSlug(partner1Name, partner2Name);
       onChange({ slug: suggested });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Intentionally excluding data.slug and onChange to only run when partner names change
   }, [partner1Name, partner2Name]);
 
   // Debounced slug check

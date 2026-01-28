@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../lib/supabase/server';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase/client';
 import type { ThemeId } from '../../lib/themes';
+import { RESERVED_SLUGS, isValidSlugFormat, normalizeSlug } from '../../lib/slugValidation';
 
 export const prerender = false;
 
@@ -13,21 +14,6 @@ function generateShortCode(length: number = 6): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
-}
-
-// Reserved slugs that cannot be used
-const RESERVED_SLUGS = new Set([
-  'admin', 'api', 'demo', 'demo_gallery', 'demo_livre-or', 'demo_rsvp', 'demo_website',
-  'connexion', 'pricing', 'tarification', 'precios', 'offline', 'fr', 'es', 'account',
-  'god', 'test', 'signup', 'inscription', 'registro', 'guestbook', 'gallery', 'photos',
-  'rsvp', 'infos', 'livre-or', 'mentions-legales', 'cgv', 'politique-confidentialite',
-]);
-
-// Validate slug format
-function isValidSlugFormat(slug: string): boolean {
-  if (slug.length < 3 || slug.length > 50) return false;
-  const slugPattern = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]{1,2}$/;
-  return slugPattern.test(slug);
 }
 
 interface SignupRequest {
@@ -204,11 +190,24 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (profileError) {
       // Cleanup: delete the auth user since profile creation failed
-      await adminClient.auth.admin.deleteUser(userId);
+      // Use retry logic to handle transient failures
+      let cleanupSuccess = false;
+      for (let attempt = 0; attempt < 3 && !cleanupSuccess; attempt++) {
+        try {
+          await adminClient.auth.admin.deleteUser(userId);
+          cleanupSuccess = true;
+        } catch (cleanupError) {
+          console.error(`[CRITICAL] Cleanup attempt ${attempt + 1} failed for user ${userId}:`, cleanupError);
+          if (attempt < 2) await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
+        }
+      }
+      if (!cleanupSuccess) {
+        console.error(`[CRITICAL] Failed to cleanup orphaned auth user: ${userId}. Manual cleanup required.`);
+      }
       return new Response(
         JSON.stringify({
           error: 'Profile creation failed',
-          message: profileError.message,
+          message: 'Account creation failed. Please try again.',
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
@@ -259,13 +258,39 @@ export const POST: APIRoute = async ({ request }) => {
       .single();
 
     if (weddingError || !wedding) {
-      // Cleanup: delete profile and auth user
-      await adminClient.from('profiles').delete().eq('id', userId);
-      await adminClient.auth.admin.deleteUser(userId);
+      // Cleanup: delete profile and auth user with retry logic
+      let cleanupSuccess = false;
+      for (let attempt = 0; attempt < 3 && !cleanupSuccess; attempt++) {
+        try {
+          await adminClient.from('profiles').delete().eq('id', userId);
+          await adminClient.auth.admin.deleteUser(userId);
+          cleanupSuccess = true;
+        } catch (cleanupError) {
+          console.error(`[CRITICAL] Cleanup attempt ${attempt + 1} failed for user ${userId}:`, cleanupError);
+          if (attempt < 2) await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
+        }
+      }
+      if (!cleanupSuccess) {
+        console.error(`[CRITICAL] Failed to cleanup orphaned user/profile: ${userId}. Manual cleanup required.`);
+      }
+
+      // Check if this was a slug conflict (unique constraint violation)
+      const isSlugConflict = weddingError?.code === '23505' && weddingError?.message?.includes('slug');
+      if (isSlugConflict) {
+        return new Response(
+          JSON.stringify({
+            error: 'Slug taken',
+            field: 'slug',
+            message: 'This URL was just taken by someone else. Please choose a different one.',
+          }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           error: 'Wedding creation failed',
-          message: weddingError?.message || 'Unknown error',
+          message: 'Account creation failed. Please try again.',
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );

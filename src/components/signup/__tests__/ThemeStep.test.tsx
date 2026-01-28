@@ -108,8 +108,8 @@ describe('ThemeStep', () => {
       />
     );
 
-    // Submit button should show loading text
-    expect(screen.getByText(/chargement/i)).toBeInTheDocument();
+    // Submit button should show loading text (English)
+    expect(screen.getByText(/creating/i)).toBeInTheDocument();
   });
 
   it('disables back button when loading', () => {
