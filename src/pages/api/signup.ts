@@ -148,13 +148,17 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     if (authResult.error || !authResult.data.user) {
-      // Check for duplicate email
+      // Check for duplicate email - use generic message to prevent email enumeration
+      // but keep error code for frontend to handle appropriately
       if (authResult.error?.message?.includes('already been registered')) {
+        // Log the actual issue for debugging
+        console.info('[API] Signup attempt for existing email (masked for security)');
         return new Response(
           JSON.stringify({
-            error: 'Email exists',
+            error: 'Account error',
             field: 'email',
-            message: 'An account with this email already exists. Please sign in instead.',
+            code: 'ACCOUNT_EXISTS_OR_ERROR',
+            message: 'Unable to create account with this email. Try signing in or use a different email.',
           }),
           { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
