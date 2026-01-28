@@ -54,10 +54,19 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
     }
   }, []);
 
-  // Save state to sessionStorage on change
+  // Save state to sessionStorage on change (excluding sensitive password fields)
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ state }));
+      // Create a safe copy without password fields
+      const safeState: WizardState = {
+        ...state,
+        account: {
+          email: state.account.email,
+          password: '', // Never persist password
+          confirmPassword: '', // Never persist confirmPassword
+        },
+      };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ state: safeState }));
     } catch {
       // Ignore storage errors
     }

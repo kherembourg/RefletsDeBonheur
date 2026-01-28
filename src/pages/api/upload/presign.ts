@@ -122,8 +122,19 @@ export const POST: APIRoute = async ({ request }) => {
             .eq('wedding_id', weddingId)
             .eq('type', 'photo');
 
+          // Fail-safe: if we can't verify limits, don't allow uploads
           if (countError) {
             console.error('[API] Error counting photos:', countError);
+            return new Response(
+              JSON.stringify({
+                error: 'Database error',
+                message: 'Unable to verify upload limits. Please try again.',
+              }),
+              {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
           }
 
           if ((photoCount ?? 0) >= TRIAL_PHOTO_LIMIT) {
@@ -151,8 +162,19 @@ export const POST: APIRoute = async ({ request }) => {
             .eq('wedding_id', weddingId)
             .eq('type', 'video');
 
+          // Fail-safe: if we can't verify limits, don't allow uploads
           if (countError) {
             console.error('[API] Error counting videos:', countError);
+            return new Response(
+              JSON.stringify({
+                error: 'Database error',
+                message: 'Unable to verify upload limits. Please try again.',
+              }),
+              {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
           }
 
           if ((videoCount ?? 0) >= TRIAL_VIDEO_LIMIT) {
