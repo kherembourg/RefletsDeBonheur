@@ -65,14 +65,20 @@ export const POST: APIRoute = async ({ request }) => {
     if (isSupabaseConfigured() && isSupabaseServiceRoleConfigured()) {
       const adminClient = getSupabaseAdminClient();
 
-      // Get wedding owner
-      const { data: wedding, error: weddingError } = await adminClient
+      // OPTIMIZED: Single query to get wedding with owner's profile (JOIN)
+      // This reduces 2 sequential queries to 1
+      const { data: weddingData, error: weddingError } = await adminClient
         .from('weddings')
-        .select('owner_id')
+        .select(`
+          owner_id,
+          profiles!weddings_owner_id_fkey (
+            subscription_status
+          )
+        `)
         .eq('id', weddingId)
         .single();
 
-      if (weddingError || !wedding) {
+      if (weddingError || !weddingData) {
         return new Response(
           JSON.stringify({
             error: 'Wedding not found',
@@ -85,14 +91,10 @@ export const POST: APIRoute = async ({ request }) => {
         );
       }
 
-      // Get owner's subscription status
-      const { data: profile, error: profileError } = await adminClient
-        .from('profiles')
-        .select('subscription_status')
-        .eq('id', wedding.owner_id)
-        .single();
+      // Type assertion for the joined profile data
+      const profile = weddingData.profiles as { subscription_status: string } | null;
 
-      if (profileError || !profile) {
+      if (!profile) {
         return new Response(
           JSON.stringify({
             error: 'Profile not found',
@@ -114,8 +116,8 @@ export const POST: APIRoute = async ({ request }) => {
         const isVideo = contentType.startsWith('video/');
         const isPhoto = contentType.startsWith('image/');
 
+        // Only query the count we actually need (not both)
         if (isPhoto) {
-          // Count existing photos
           const { count: photoCount, error: countError } = await adminClient
             .from('media')
             .select('*', { count: 'exact', head: true })
@@ -152,10 +154,7 @@ export const POST: APIRoute = async ({ request }) => {
               }
             );
           }
-        }
-
-        if (isVideo) {
-          // Count existing videos
+        } else if (isVideo) {
           const { count: videoCount, error: countError } = await adminClient
             .from('media')
             .select('*', { count: 'exact', head: true })
