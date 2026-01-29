@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Figma Export Page</title>
+  <style>
+    /* Global resets */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #f5f5f5;
+      background: linear-gradient(180deg, #2c1200 0%, #090401 100%);
+      line-height: 1.6;
+    }
+
+    /* Container setup */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    /* Header styling */
+    header {
+      padding: 1.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    nav a {
+      color: #f5f5f5;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: #f0b865;
+    }
+
+    /* Hero section */
+    .hero {
+      text-align: center;
+      padding: 4rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      line-height: 1.5;
+      color: #d6d3d1;
+    }
+
+    .hero .cta-button {
+      padding: 0.8rem 1.6rem;
+      background-color: #f0b865;
+      color: #2c1200;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .hero .cta-button:hover {
+      background-color: #d39f56;
+    }
+
+    /* Feature section */
+    .features {
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      padding: 4rem 0;
+    }
+
+    .feature-card {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 2rem;
+      border-radius: 8px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .feature-card h3 {
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+    }
+
+    .feature-card p {
+      font-size: 0.95rem;
+      color: #d6d3d1;
+    }
+
+    /* Footer section */
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      font-size: 0.9rem;
+      color: #a89f96;
+    }
+
+    /* Responsive typography */
+    @media (min-width: 768px) {
+      .hero h1 {
+        font-size: 3rem;
+      }
+      .hero p {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <div class="logo">YourBrand</div>
+    <nav>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Features</a></li>
+        <li><a href="#">Pricing</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Launch Your Digital Presence</h1>
+      <p>Build a stunning, responsive landing page with ease. Our template gives you the foundation to showcase your product or service effectively.</p>
+      <button class="cta-button">Get Started</button>
+    </section>
+
+    <section class="features">
+      <div class="feature-card">
+        <h3>Responsive Design</h3>
+        <p>Our layout adapts beautifully to all screen sizes, ensuring your site looks great on desktop, tablet, and mobile.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Easy Customization</h3>
+        <p>Simple, clean code structure makes it quick to adjust colors, fonts, and content to match your brand.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Performance Optimized</h3>
+        <p>The template is built with performance in mind, delivering fast load times and smooth interactions.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    © 2026 YourBrand. All rights reserved.
+  </footer>
+</body>
+</html>
