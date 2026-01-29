@@ -26,7 +26,7 @@
     "@aws-sdk/s3-request-presigner": "^3.975.0",
     "@supabase/supabase-js": "^2.93.1",
     "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.16.15",
+    "astro": "^5.17.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.563.0",
     "react": "^19.2.3",

@@ -464,14 +464,10 @@ Access via admin dashboard "Gestion RSVP" card or directly at RSVP view.
 - **Color Customization**: Collapsible color groups (Primary, Backgrounds, Text, Other)
 - **Content Editor**: Section tabs (Hero, Bienvenue, À propos, Galerie, etc.) with character counts
 - **Image Management**: 6 customizable images (Hero, Background, Couple Photo, Gallery Placeholder, Logo, Favicon)
-- **Live Preview**: Preview panel shows current wedding page (⚠️ see known issues)
+- **Live Preview**: Preview panel shows current wedding page with auto-refresh (500ms debounce)
 - **Responsive Preview**: Test designs at desktop (100%), tablet (768px), mobile (375px) widths
 - Access: `/admin/website-editor` from admin dashboard
 - **Documentation**: See `WEBSITE_EDITOR.md` for full details
-- **Known Issues**:
-  - ⚠️ Live preview does not update in real-time when customizations are changed
-  - Customizations are tracked in state but not passed to iframe preview
-  - Workaround: Save changes and refresh to see updates
 
 ### 7. Wedding Microsites
 - Dynamic wedding pages at `/[slug]/`
@@ -762,7 +758,7 @@ God access tokens (for impersonation) have a **24-hour TTL** and are automatical
 4. ~~**Website Editor**: Visual customization for themes, colors, content, images~~ ✅ DONE
 5. ~~**Admin Dashboard Redesign**: Modern card-based UI with admin theme system~~ ✅ DONE
 6. ~~**RSVP Management**: Custom questions, responses viewer, pagination~~ ✅ DONE
-7. **Website Editor Live Preview**: Fix real-time preview updates (colors/content not reflecting)
+7. ~~**Website Editor Live Preview**: Fix real-time preview updates~~ ✅ DONE
 8. **Increase Test Coverage**: Target 100% for critical paths
 9. **Payment Integration**: Stripe checkout for $199 package
 10. **Email Notifications**: Welcome emails, upload notifications

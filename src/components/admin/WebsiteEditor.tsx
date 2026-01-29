@@ -57,6 +57,7 @@ export function WebsiteEditor({
   );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [previewKey, setPreviewKey] = useState(0);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [devicePreview, setDevicePreview] = useState<DevicePreview>('desktop');
   const [zoom, setZoom] = useState(100);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -192,6 +193,34 @@ export function WebsiteEditor({
       }
     };
   }, [customization, initialCustomization, performSave]);
+
+  // Debounce customization changes → trigger preview reload
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    // Skip initial render to avoid unnecessary reload on mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setPreviewKey((prev) => prev + 1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [customization]);
+
+  // Set loading when preview key changes
+  useEffect(() => {
+    if (previewKey > 0) {
+      setIsPreviewLoading(true);
+    }
+  }, [previewKey]);
+
+  // Handle iframe load - hide loading overlay
+  const handleIframeLoad = useCallback(() => {
+    setIsPreviewLoading(false);
+  }, []);
 
   // Cleanup localStorage on unmount
   useEffect(() => {
@@ -448,18 +477,25 @@ export function WebsiteEditor({
                 </div>
               )}
 
-              {/* Iframe Preview */}
-              <iframe
-                key={previewKey}
-                ref={iframeRef}
-                src={`/${weddingSlug}?preview=true&t=${Date.now()}`}
-                className="w-full h-full bg-white"
-                style={{
-                  height: devicePreview !== 'desktop' ? 'calc(100% - 24px)' : '100%'
-                }}
-                title="Aperçu du site"
-                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-              />
+              {/* Iframe Preview with Loading Overlay */}
+              <div className="relative w-full" style={{ height: devicePreview !== 'desktop' ? 'calc(100% - 24px)' : '100%' }}>
+                <iframe
+                  key={previewKey}
+                  ref={iframeRef}
+                  src={`/${weddingSlug}?preview=true&t=${Date.now()}`}
+                  className="w-full h-full bg-white"
+                  onLoad={handleIframeLoad}
+                  title="Aperçu du site"
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                />
+
+                {/* Loading overlay */}
+                {isPreviewLoading && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10">
+                    <Loader2 className="w-8 h-8 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
