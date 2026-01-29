@@ -736,9 +736,13 @@ describe('God Auth Module', () => {
   // createImpersonationToken Tests
   // ==========================================
   describe('createImpersonationToken', () => {
+    const sessionToken = 'test-session-token';
+
     beforeEach(() => {
       mockFetch.mockReset();
       global.fetch = mockFetch;
+      // Set up a valid session token in localStorage
+      localStorage.setItem('reflets_god_token', sessionToken);
     });
 
     it('should create impersonation token', async () => {
@@ -756,7 +760,7 @@ describe('God Auth Module', () => {
       expect(mockFetch).toHaveBeenCalledWith('/api/god/create-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ godAdminId: 'god-id', clientId: 'client-id' }),
+        body: JSON.stringify({ godAdminId: 'god-id', clientId: 'client-id', sessionToken }),
       });
     });
 
@@ -776,9 +780,19 @@ describe('God Auth Module', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
+    it('should fail when no session token in localStorage', async () => {
+      localStorage.removeItem('reflets_god_token');
+
+      const result = await createImpersonationToken('god-id', 'client-id');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('No active session');
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
     it('should fail when API returns error', async () => {
       mockFetch.mockResolvedValueOnce({
-        ok: false,
+        ok: false
         json: () => Promise.resolve({ success: false, error: 'Wedding not found' }),
       });
 

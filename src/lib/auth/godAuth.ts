@@ -437,10 +437,19 @@ export async function createImpersonationToken(
       return { success: false, error: 'Invalid god admin ID or client ID' };
     }
 
+    // Get the current session token from localStorage
+    const sessionToken = typeof window !== 'undefined'
+      ? localStorage.getItem(GOD_TOKEN_KEY)
+      : null;
+
+    if (!sessionToken) {
+      return { success: false, error: 'No active session' };
+    }
+
     const response = await fetch('/api/god/create-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ godAdminId, clientId }),
+      body: JSON.stringify({ godAdminId, clientId, sessionToken }),
     });
 
     const result = await response.json();

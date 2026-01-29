@@ -45,9 +45,10 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: session, error: sessionError } = await adminClient
       .from('auth_sessions')
       .select('user_id, user_type, expires_at')
-      .eq('session_token', sessionToken)
+      .eq('token', sessionToken)
       .eq('user_id', godAdminId)
       .eq('user_type', 'god')
+      .is('revoked_at', null)
       .single();
 
     if (sessionError || !session) {
