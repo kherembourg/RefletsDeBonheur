@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import {
   Palette,
   Type,
@@ -20,13 +20,16 @@ import {
   CloudOff,
   Loader2,
 } from 'lucide-react';
-import type { ThemeId } from '../../lib/themes';
-import { themeList, type Theme } from '../../lib/themes';
+import { themeList } from '../../lib/themes';
 import type { WeddingCustomization } from '../../lib/customization';
-import { DEFAULT_CUSTOMIZATION } from '../../lib/customization';
 import { ColorPaletteEditor } from './ColorPaletteEditor';
 import { ContentEditor } from './ContentEditor';
 import { ImageManager } from './ImageManager';
+import { useWebsiteEditor } from '../../hooks/useWebsiteEditor';
+
+// ============================================
+// Types
+// ============================================
 
 interface WebsiteEditorProps {
   weddingId: string;
@@ -39,10 +42,9 @@ interface WebsiteEditorProps {
 type EditorTab = 'theme' | 'colors' | 'content' | 'images';
 type DevicePreview = 'desktop' | 'tablet' | 'mobile';
 
-// localStorage key for live preview
-const PREVIEW_STORAGE_KEY = 'wedding_preview_customization';
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+// ============================================
+// Main Component
+// ============================================
 
 export function WebsiteEditor({
   weddingId,
@@ -51,200 +53,44 @@ export function WebsiteEditor({
   initialCustomization,
   onSave,
 }: WebsiteEditorProps) {
+  // UI-only state (not part of the hook)
   const [activeTab, setActiveTab] = useState<EditorTab>('theme');
-  const [customization, setCustomization] = useState<WeddingCustomization>(
-    initialCustomization || DEFAULT_CUSTOMIZATION
-  );
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-  const [previewKey, setPreviewKey] = useState(0);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [devicePreview, setDevicePreview] = useState<DevicePreview>('desktop');
   const [zoom, setZoom] = useState(100);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedRef = useRef<string>(JSON.stringify(initialCustomization || DEFAULT_CUSTOMIZATION));
 
-  // Use demoMode prop (passed from Astro page based on Supabase configuration)
-  const isDemoMode = demoMode;
+  // All editor logic is in the hook
+  const {
+    customization,
+    saveStatus,
+    hasUnsavedChanges,
+    updateTheme,
+    updateColors,
+    updateContent,
+    updateImages,
+    setCustomization,
+    resetToDefault,
+    previewKey,
+    isPreviewLoading,
+    iframeRef,
+    refreshPreview,
+    handleIframeLoad,
+    uploadImage,
+    uploadProgress,
+  } = useWebsiteEditor({
+    weddingId,
+    weddingSlug,
+    demoMode,
+    initialCustomization,
+    onSave,
+  });
 
-  // Load saved customization from localStorage on mount (demo mode)
-  useEffect(() => {
-    if (!isDemoMode) return;
-
-    const storageKey = `wedding_customization_${weddingSlug}`;
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsedCustomization = JSON.parse(saved) as WeddingCustomization;
-        setCustomization(parsedCustomization);
-        lastSavedRef.current = saved;
-      }
-    } catch (error) {
-      console.warn('Failed to load saved customization from localStorage:', error);
-    }
-  }, [isDemoMode, weddingSlug]);
-
-  // Store customization in localStorage for live preview
-  useEffect(() => {
-    const previewData = {
-      weddingSlug,
-      customization,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify(previewData));
-
-    // Notify iframe of changes via postMessage
-    if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        { type: 'CUSTOMIZATION_UPDATE', customization },
-        '*'
-      );
-    }
-  }, [customization, weddingSlug]);
-
-  // Save customization - localStorage for demo, API for production
-  const saveToApi = useCallback(async (data: WeddingCustomization) => {
-    // In demo mode, save to localStorage instead of API
-    if (isDemoMode) {
-      const storageKey = `wedding_customization_${weddingSlug}`;
-      localStorage.setItem(storageKey, JSON.stringify(data));
-      return { success: true, message: 'Customization saved to local storage (demo mode)' };
-    }
-
-    // Production mode: save to API
-    const response = await fetch('/api/customization/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ weddingId, customization: data }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to save customization');
-    }
-
-    return response.json();
-  }, [weddingId, weddingSlug, isDemoMode]);
-
-  // Ref to track current customization for debounced save
-  const customizationRef = useRef(customization);
-  useEffect(() => {
-    customizationRef.current = customization;
-  }, [customization]);
-
-  // Debounced auto-save (2 seconds after changes)
-  const performSave = useCallback(async () => {
-    const currentCustomization = customizationRef.current;
-    const currentJson = JSON.stringify(currentCustomization);
-    if (currentJson === lastSavedRef.current) {
-      return; // No actual changes to save
-    }
-
-    try {
-      setSaveStatus('saving');
-      const dataToSave = {
-        ...currentCustomization,
-        lastUpdated: new Date().toISOString(),
-      };
-
-      // Use provided onSave or default to API call
-      if (onSave) {
-        await onSave(dataToSave);
-      } else {
-        await saveToApi(dataToSave);
-      }
-
-      lastSavedRef.current = currentJson;
-      setSaveStatus('saved');
-
-      // Reset to idle after 2 seconds
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
-      console.error('Failed to save customization:', error);
-      setSaveStatus('error');
-      // Reset to idle after 3 seconds on error
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    }
-  }, [onSave, saveToApi]);
-
-  // Trigger debounced save when customization changes
-  useEffect(() => {
-    const currentJson = JSON.stringify(customization);
-    const initialJson = JSON.stringify(initialCustomization || DEFAULT_CUSTOMIZATION);
-
-    // Don't save if it matches initial state and we haven't saved before
-    if (currentJson === initialJson && lastSavedRef.current === initialJson) {
-      return;
-    }
-
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout for auto-save
-    saveTimeoutRef.current = setTimeout(() => {
-      performSave();
-    }, 2000);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [customization, initialCustomization, performSave]);
-
-  // Debounce customization changes → trigger preview reload
-  const isInitialMount = useRef(true);
-  useEffect(() => {
-    // Skip initial render to avoid unnecessary reload on mount
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setPreviewKey((prev) => prev + 1);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [customization]);
-
-  // Set loading when preview key changes
-  useEffect(() => {
-    if (previewKey > 0) {
-      setIsPreviewLoading(true);
-    }
-  }, [previewKey]);
-
-  // Handle iframe load - hide loading overlay
-  const handleIframeLoad = useCallback(() => {
-    setIsPreviewLoading(false);
-  }, []);
-
-  // Cleanup localStorage on unmount
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem(PREVIEW_STORAGE_KEY);
-    };
-  }, []);
-
-  // Handle reset
+  // Handle reset with confirmation
   const handleReset = () => {
     if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes les personnalisations ?')) {
-      const resetValue = initialCustomization || DEFAULT_CUSTOMIZATION;
-      setCustomization(resetValue);
-      lastSavedRef.current = JSON.stringify(resetValue);
+      resetToDefault();
     }
   };
-
-  // Refresh preview
-  const refreshPreview = () => {
-    setPreviewKey((prev) => prev + 1);
-  };
-
-  // Check if there are unsaved changes
-  const hasUnsavedChanges = JSON.stringify(customization) !== lastSavedRef.current;
 
   // Get device width for preview
   const getPreviewWidth = () => {
@@ -436,8 +282,13 @@ export function WebsiteEditor({
                 <EditorContent
                   activeTab={activeTab}
                   customization={customization}
-                  onUpdate={setCustomization}
-                  weddingSlug={weddingSlug}
+                  onThemeChange={updateTheme}
+                  onColorsChange={updateColors}
+                  onContentChange={updateContent}
+                  onImagesChange={updateImages}
+                  onFullUpdate={setCustomization}
+                  onUpload={uploadImage}
+                  uploadProgress={uploadProgress}
                 />
               </div>
             </div>
@@ -453,7 +304,7 @@ export function WebsiteEditor({
           </button>
         </aside>
 
-        {/* Preview Panel - Takes most of the space */}
+        {/* Preview Panel */}
         <main className="flex-1 bg-[#0a0a0a] p-6 flex flex-col overflow-hidden">
           {/* Preview Container */}
           <div
@@ -482,7 +333,7 @@ export function WebsiteEditor({
                 <iframe
                   key={previewKey}
                   ref={iframeRef}
-                  src={`/${weddingSlug}?preview=true&t=${Date.now()}`}
+                  src={`/${weddingSlug}?preview=true&v=${previewKey}`}
                   className="w-full h-full bg-white"
                   onLoad={handleIframeLoad}
                   title="Aperçu du site"
@@ -509,23 +360,37 @@ export function WebsiteEditor({
           </div>
         </main>
       </div>
-
     </div>
   );
 }
 
 // ============================================
-// EDITOR CONTENT COMPONENT
+// Editor Content Component
 // ============================================
 
 interface EditorContentProps {
   activeTab: EditorTab;
   customization: WeddingCustomization;
-  onUpdate: (customization: WeddingCustomization) => void;
-  weddingSlug: string;
+  onThemeChange: (themeId: string) => void;
+  onColorsChange: (palette: Record<string, string | undefined>) => void;
+  onContentChange: (content: Record<string, string | undefined>) => void;
+  onImagesChange: (images: Record<string, string | undefined>) => void;
+  onFullUpdate: (customization: WeddingCustomization) => void;
+  onUpload: (file: File, key: string) => Promise<string>;
+  uploadProgress: number | null;
 }
 
-function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: EditorContentProps) {
+function EditorContent({
+  activeTab,
+  customization,
+  onThemeChange,
+  onColorsChange,
+  onContentChange,
+  onImagesChange,
+  onFullUpdate,
+  onUpload,
+  uploadProgress,
+}: EditorContentProps) {
   // Theme Tab
   if (activeTab === 'theme') {
     return (
@@ -548,7 +413,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
             return (
               <button
                 key={theme.id}
-                onClick={() => onUpdate({ ...customization, themeId: theme.id })}
+                onClick={() => onThemeChange(theme.id)}
                 className={`relative p-3 rounded-xl border-2 transition-all text-left group ${
                   isSelected
                     ? 'border-burgundy bg-burgundy/10'
@@ -628,7 +493,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
       <ColorPaletteEditor
         themeId={customization.themeId}
         customPalette={customization.customPalette}
-        onChange={(palette) => onUpdate({ ...customization, customPalette: palette })}
+        onChange={onColorsChange}
       />
     );
   }
@@ -638,7 +503,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
     return (
       <ContentEditor
         customContent={customization.customContent}
-        onChange={(content) => onUpdate({ ...customization, customContent: content })}
+        onChange={onContentChange}
       />
     );
   }
@@ -648,13 +513,9 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
     return (
       <ImageManager
         customImages={customization.customImages}
-        onChange={(images) => onUpdate({ ...customization, customImages: images })}
-        onUpload={async (file, key) => {
-          // TODO: Implement actual upload to R2
-          console.log('Upload file:', file, 'for key:', key);
-          // For now, return a placeholder URL
-          return URL.createObjectURL(file);
-        }}
+        onChange={onImagesChange}
+        onUpload={onUpload}
+        uploadProgress={uploadProgress}
       />
     );
   }

@@ -792,7 +792,7 @@ describe('God Auth Module', () => {
 
     it('should fail when API returns error', async () => {
       mockFetch.mockResolvedValueOnce({
-        ok: false
+        ok: false,
         json: () => Promise.resolve({ success: false, error: 'Wedding not found' }),
       });
 

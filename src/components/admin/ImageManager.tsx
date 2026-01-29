@@ -4,8 +4,9 @@ import type { CustomImages } from '../../lib/customization';
 
 interface ImageManagerProps {
   customImages?: CustomImages;
-  onChange: (images: CustomImages | undefined) => void;
+  onChange: (images: Partial<CustomImages>) => void;
   onUpload?: (file: File, key: keyof CustomImages) => Promise<string>;
+  uploadProgress?: number | null;
 }
 
 interface ImageField {
@@ -61,7 +62,7 @@ const IMAGE_FIELDS: ImageField[] = [
   },
 ];
 
-export function ImageManager({ customImages, onChange, onUpload }: ImageManagerProps) {
+export function ImageManager({ customImages, onChange, onUpload, uploadProgress }: ImageManagerProps) {
   const [editingImages, setEditingImages] = useState<CustomImages>(customImages || {});
   const [uploadingKey, setUploadingKey] = useState<keyof CustomImages | null>(null);
   const [urlInputMode, setUrlInputMode] = useState<keyof CustomImages | null>(null);
@@ -293,12 +294,23 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                       <button
                         onClick={() => fileInputRefs.current[field.key]?.click()}
                         disabled={isUploading}
-                        className="px-2.5 py-1.5 bg-burgundy text-white rounded-md text-xs hover:bg-burgundy-light transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                        className="px-2.5 py-1.5 bg-burgundy text-white rounded-md text-xs hover:bg-burgundy-light transition-colors flex items-center gap-1.5 disabled:opacity-50 relative overflow-hidden min-w-[70px]"
                       >
                         {isUploading ? (
                           <>
-                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Upload...
+                            {/* Progress bar background */}
+                            {uploadProgress !== null && uploadProgress !== undefined && (
+                              <div
+                                className="absolute inset-0 bg-burgundy-light transition-all duration-200"
+                                style={{ width: `${uploadProgress}%` }}
+                              />
+                            )}
+                            <span className="relative flex items-center gap-1.5">
+                              <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              {uploadProgress !== null && uploadProgress !== undefined
+                                ? `${uploadProgress}%`
+                                : 'Upload...'}
+                            </span>
                           </>
                         ) : (
                           <>
