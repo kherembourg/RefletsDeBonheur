@@ -1,10 +1,18 @@
 import type { APIRoute } from 'astro';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase/client';
 import { RESERVED_SLUGS, isValidSlugFormat, generateSlugSuggestions } from '../../../lib/slugValidation';
+import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ request, url }) => {
+  // Rate limit check - 30 requests per IP per minute
+  const clientIP = getClientIP(request);
+  const rateLimitResult = checkRateLimit(clientIP, RATE_LIMITS.slugCheck);
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   const slug = url.searchParams.get('slug')?.toLowerCase().trim();
 
   if (!slug) {

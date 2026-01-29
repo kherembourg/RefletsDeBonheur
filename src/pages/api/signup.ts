@@ -4,6 +4,7 @@ import { isSupabaseConfigured, supabase } from '../../lib/supabase/client';
 import type { ThemeId } from '../../lib/themes';
 import { RESERVED_SLUGS, isValidSlugFormat, normalizeSlug } from '../../lib/slugValidation';
 import { validatePassword, getPasswordRequirementsMessage } from '../../lib/passwordValidation';
+import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../lib/rateLimit';
 
 export const prerender = false;
 
@@ -28,6 +29,13 @@ interface SignupRequest {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limit check - 5 attempts per IP per hour
+  const clientIP = getClientIP(request);
+  const rateLimitResult = checkRateLimit(clientIP, RATE_LIMITS.signup);
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   // Check Supabase configuration
   if (!isSupabaseConfigured()) {
     return new Response(

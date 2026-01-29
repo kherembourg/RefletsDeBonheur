@@ -1,9 +1,10 @@
 ---
-status: pending
+status: resolved
 priority: p1
 issue_id: "002"
 tags: [code-review, security, pr-25]
 dependencies: []
+resolved_date: 2026-01-29
 ---
 
 # Upload Endpoints Lack Authorization
@@ -76,17 +77,18 @@ _To be filled during triage_
 
 ## Acceptance Criteria
 
-- [ ] Presign endpoint verifies requester has access to the wedding
-- [ ] Confirm endpoint verifies requester has access to the wedding
-- [ ] Guest uploads still work with valid PIN/session
-- [ ] Owner uploads work with valid auth session
-- [ ] Unauthorized requests return 401/403
+- [x] Presign endpoint verifies requester has access to the wedding
+- [x] Confirm endpoint verifies requester has access to the wedding
+- [x] Guest uploads still work with valid PIN/session
+- [x] Owner uploads work with valid auth session
+- [x] Unauthorized requests return 401/403
 
 ## Work Log
 
 | Date | Action | Learnings |
 |------|--------|-----------|
 | 2026-01-28 | Created during PR #25 code review | Identified by security-sentinel agent |
+| 2026-01-29 | Implemented Option B - validateUploadAuthorization() | Checks both Bearer token and guest session |
 
 ## Resources
 
