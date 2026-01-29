@@ -1,10 +1,12 @@
 import type { APIRoute } from 'astro';
 import { supabase } from '../../../lib/supabase/client';
 import type { WeddingCustomization } from '../../../lib/customization';
+import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 
 /**
  * POST /api/customization/save
  * Saves wedding website customization (theme, colors, content, images)
+ * Requires authorization: user must be the wedding owner
  */
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -28,10 +30,29 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Get current wedding config
+    // Authorization check - verify user is the wedding owner
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Authorization required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.slice(7);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired token' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get current wedding config and verify ownership
     const { data: wedding, error: fetchError } = await supabase
       .from('weddings')
-      .select('config')
+      .select('config, owner_id')
       .eq('id', weddingId)
       .single();
 
@@ -39,6 +60,14 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(
         JSON.stringify({ error: 'Wedding not found' }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify user is the owner
+    if (wedding.owner_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Not authorized to modify this wedding' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
