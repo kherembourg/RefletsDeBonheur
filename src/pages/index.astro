@@ -83,7 +83,7 @@ const faqs = [
     <!-- Background Image with better overlay -->
     <div class="absolute inset-0">
       <img
-        src="https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80"
+        src="/images/hero-wedding.jpg"
         alt="Elegant wedding"
         class="w-full h-full object-cover"
         loading="eager"
@@ -102,11 +102,11 @@ const faqs = [
           <div class="flex items-center gap-3">
             <span class="text-2xl opacity-80">🌸</span>
             <span class="text-xl opacity-70">💫</span>
-            <Heart class="w-5 h-5 text-rose-gold animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+            <Heart class="w-5 h-5 text-rose-gold animate-pulse motion-reduce:animate-none" fill="currentColor" aria-hidden="true" />
             <p class="font-script text-4xl sm:text-5xl text-white drop-shadow-lg">
               Reflets&nbsp;de&nbsp;Bonheur
             </p>
-            <Heart class="w-5 h-5 text-rose-gold animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+            <Heart class="w-5 h-5 text-rose-gold animate-pulse motion-reduce:animate-none" fill="currentColor" aria-hidden="true" />
             <span class="text-xl opacity-70">💫</span>
             <span class="text-2xl opacity-80">🌸</span>
           </div>
@@ -204,7 +204,7 @@ const faqs = [
         </div>
         <div class="bg-white dark:bg-[#141414] rounded-b-xl shadow-2xl overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&q=80"
+            src="/images/gallery-preview.jpg"
             alt="Gallery preview"
             class="w-full h-[300px] sm:h-[400px] object-cover"
             loading="lazy"
@@ -331,7 +331,7 @@ const faqs = [
           <!-- Image -->
           <div class="relative order-2 lg:order-1">
           <img
-            src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80"
+            src="/images/wedding-couple.jpg"
             alt="Wedding couple"
             class="w-full h-[450px] object-cover rounded-2xl shadow-xl"
             loading="lazy"
@@ -435,7 +435,7 @@ const faqs = [
               <div class="flex gap-1 mb-4" role="img" aria-label={`Rated ${testimonial.rating} out of 5`}>
                 <span class="sr-only">Rated {testimonial.rating} out of 5</span>
                 {[...Array(testimonial.rating)].map(() => (
-                  <Star class="w-4 h-4 fill-burgundy text-burgundy" aria-hidden="true" />
+                  <Star class="w-4 h-4 text-amber-400" fill="currentColor" aria-hidden="true" />
                 ))}
               </div>
 
