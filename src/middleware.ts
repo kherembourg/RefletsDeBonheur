@@ -12,7 +12,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Add security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN'); // Allow same-origin embedding (for website editor preview)
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
@@ -27,7 +27,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.supabase.co",
       "media-src 'self' blob: https://*.r2.cloudflarestorage.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com",
-      "frame-ancestors 'none'",
+      "frame-ancestors 'self'", // Allow same-origin embedding (for website editor preview)
       "form-action 'self'",
       "base-uri 'self'",
     ].join('; ')
