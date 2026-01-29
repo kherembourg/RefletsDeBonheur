@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Palette,
   Type,
@@ -92,6 +92,31 @@ export function WebsiteEditor({
     }
   };
 
+  // Handle back navigation with unsaved changes warning
+  const handleBack = useCallback(() => {
+    if (hasUnsavedChanges) {
+      if (confirm('Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?')) {
+        window.location.href = weddingSlug ? `/${weddingSlug}/admin` : '/admin';
+      }
+    } else {
+      window.location.href = weddingSlug ? `/${weddingSlug}/admin` : '/admin';
+    }
+  }, [hasUnsavedChanges, weddingSlug]);
+
+  // Warn on browser navigation/refresh with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   // Get device width for preview
   const getPreviewWidth = () => {
     switch (devicePreview) {
@@ -117,13 +142,13 @@ export function WebsiteEditor({
       <header className="h-14 bg-white border-b border-charcoal/10 flex items-center justify-between px-4 shrink-0 shadow-xs">
         {/* Left section */}
         <div className="flex items-center gap-4">
-          <a
-            href={weddingSlug ? `/${weddingSlug}/admin` : '/admin'}
+          <button
+            onClick={handleBack}
             className="flex items-center gap-2 text-charcoal/60 hover:text-charcoal transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             <span className="text-sm font-medium">Retour</span>
-          </a>
+          </button>
 
           <div className="h-6 w-px bg-charcoal/10" />
 
