@@ -23,11 +23,68 @@
 import type { APIRoute } from 'astro';
 import { generatePresignedUploadUrl, isR2Configured } from '../../../lib/r2';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
-import { isSupabaseConfigured } from '../../../lib/supabase/client';
+import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
+import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 
 export const prerender = false;
 
+/**
+ * Validate upload authorization
+ * User must be either the wedding owner or have a valid guest session
+ */
+async function validateUploadAuthorization(
+  request: Request,
+  weddingId: string,
+  guestIdentifier: string | undefined,
+  adminClient: ReturnType<typeof getSupabaseAdminClient>,
+  ownerId: string
+): Promise<{ authorized: boolean; uploaderId?: string; error?: string }> {
+  // Method 1: Check Supabase auth token from Authorization header
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (!error && user) {
+        // Check if user is the wedding owner
+        if (user.id === ownerId) {
+          return { authorized: true, uploaderId: user.id };
+        }
+      }
+    } catch {
+      // Token invalid, continue to other methods
+    }
+  }
+
+  // Method 2: Check guest session token
+  if (guestIdentifier) {
+    const { data: guestSession, error } = await adminClient
+      .from('guest_sessions')
+      .select('id, wedding_id')
+      .eq('session_token', guestIdentifier)
+      .eq('wedding_id', weddingId)
+      .maybeSingle();
+
+    if (!error && guestSession) {
+      return { authorized: true, uploaderId: `guest:${guestSession.id}` };
+    }
+  }
+
+  // No valid authorization found
+  return {
+    authorized: false,
+    error: 'Upload authorization required. Provide a valid session or guest identifier.',
+  };
+}
+
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limit check - 20 requests per IP per minute
+  const clientIP = getClientIP(request);
+  const rateLimitResult = checkRateLimit(clientIP, RATE_LIMITS.upload);
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   // Check if R2 is configured
   if (!isR2Configured()) {
     return new Response(
@@ -102,6 +159,28 @@ export const POST: APIRoute = async ({ request }) => {
           }),
           {
             status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Authorization check - user must be owner or have valid guest session
+      const authResult = await validateUploadAuthorization(
+        request,
+        weddingId,
+        guestIdentifier,
+        adminClient,
+        weddingData.owner_id
+      );
+
+      if (!authResult.authorized) {
+        return new Response(
+          JSON.stringify({
+            error: 'Unauthorized',
+            message: authResult.error,
+          }),
+          {
+            status: 401,
             headers: { 'Content-Type': 'application/json' },
           }
         );

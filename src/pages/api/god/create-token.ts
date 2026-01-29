@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const body = await request.json();
-    const { godAdminId, clientId } = body;
+    const { godAdminId, clientId, sessionToken } = body;
 
     if (!godAdminId || !clientId) {
       return new Response(
@@ -32,6 +32,52 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const adminClient = getSupabaseAdminClient();
+
+    // Verify the god admin session is valid
+    if (!sessionToken) {
+      return new Response(
+        JSON.stringify({ error: 'Session token required for authentication' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if the session is valid for this god admin
+    const { data: session, error: sessionError } = await adminClient
+      .from('auth_sessions')
+      .select('user_id, user_type, expires_at')
+      .eq('session_token', sessionToken)
+      .eq('user_id', godAdminId)
+      .eq('user_type', 'god')
+      .single();
+
+    if (sessionError || !session) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired session' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if session is expired
+    if (new Date(session.expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ error: 'Session expired' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify the god admin exists in the god_admins table
+    const { data: godAdmin, error: godError } = await adminClient
+      .from('god_admins')
+      .select('id')
+      .eq('id', godAdminId)
+      .single();
+
+    if (godError || !godAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'God admin not found' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Get the wedding for this client
     const { data: wedding, error: weddingError } = await adminClient

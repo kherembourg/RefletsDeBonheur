@@ -1,9 +1,10 @@
 ---
-status: pending
+status: resolved
 priority: p2
 issue_id: "008"
 tags: [code-review, data-integrity, performance, pr-25]
 dependencies: []
+resolved_date: 2026-01-29
 ---
 
 # Trial Limit Race Condition in Upload Flow
@@ -78,15 +79,16 @@ _To be filled during triage_
 
 ## Acceptance Criteria
 
-- [ ] Concurrent uploads cannot exceed trial limits
-- [ ] Error message is user-friendly when limit exceeded
-- [ ] Performance impact is acceptable
+- [x] Concurrent uploads cannot exceed trial limits
+- [x] Error message is user-friendly when limit exceeded
+- [x] Performance impact is acceptable
 
 ## Work Log
 
 | Date | Action | Learnings |
 |------|--------|-----------|
 | 2026-01-28 | Created during PR #25 code review | Business logic issue, not data corruption |
+| 2026-01-29 | Implemented Option A - Database trigger | Created 005_trial_limit_trigger.sql migration |
 
 ## Resources
 

@@ -1,9 +1,10 @@
 ---
-status: pending
+status: resolved
 priority: p2
 issue_id: "016"
 tags: [code-review, security, pr-25]
 dependencies: []
+resolved_date: 2026-01-29
 ---
 
 # Missing CSRF Protection
@@ -55,15 +56,16 @@ _To be filled during triage_
 
 ## Acceptance Criteria
 
-- [ ] CSRF protection implemented
-- [ ] State-changing endpoints are protected
-- [ ] Legitimate requests still work
+- [x] CSRF protection implemented
+- [x] State-changing endpoints are protected
+- [x] Legitimate requests still work
 
 ## Work Log
 
 | Date | Action | Learnings |
 |------|--------|-----------|
 | 2026-01-28 | Created during PR #25 code review | Identified by security-sentinel agent |
+| 2026-01-29 | Implemented via Astro middleware | Origin header validation + security headers (CSP, X-Frame-Options, etc.) |
 
 ## Resources
 
