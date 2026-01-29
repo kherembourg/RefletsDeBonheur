@@ -43,7 +43,7 @@ describe('AccountStep', () => {
   it('shows error for invalid email format', async () => {
     const { container } = render(
       <AccountStep
-        data={{ email: 'invalid', password: 'password123', confirmPassword: 'password123' }}
+        data={{ email: 'invalid', password: 'Password123', confirmPassword: 'Password123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
       />
@@ -80,7 +80,7 @@ describe('AccountStep', () => {
   it('shows error when passwords do not match', () => {
     render(
       <AccountStep
-        data={{ email: 'test@example.com', password: 'password123', confirmPassword: 'different' }}
+        data={{ email: 'test@example.com', password: 'Password123', confirmPassword: 'Different123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
       />
@@ -96,7 +96,7 @@ describe('AccountStep', () => {
   it('calls onNext with valid data', () => {
     render(
       <AccountStep
-        data={{ email: 'test@example.com', password: 'password123', confirmPassword: 'password123' }}
+        data={{ email: 'test@example.com', password: 'Password123', confirmPassword: 'Password123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
       />
@@ -106,6 +106,54 @@ describe('AccountStep', () => {
     fireEvent.click(submitButton);
 
     expect(mockOnNext).toHaveBeenCalled();
+  });
+
+  it('shows error for password without uppercase', () => {
+    render(
+      <AccountStep
+        data={{ email: 'test@example.com', password: 'password123', confirmPassword: 'password123' }}
+        onChange={mockOnChange}
+        onNext={mockOnNext}
+      />
+    );
+
+    const submitButton = screen.getByRole('button', { name: /continue/i });
+    fireEvent.click(submitButton);
+
+    expect(screen.getByText(/uppercase|number/i)).toBeInTheDocument();
+    expect(mockOnNext).not.toHaveBeenCalled();
+  });
+
+  it('shows error for password without lowercase', () => {
+    render(
+      <AccountStep
+        data={{ email: 'test@example.com', password: 'PASSWORD123', confirmPassword: 'PASSWORD123' }}
+        onChange={mockOnChange}
+        onNext={mockOnNext}
+      />
+    );
+
+    const submitButton = screen.getByRole('button', { name: /continue/i });
+    fireEvent.click(submitButton);
+
+    expect(screen.getByText(/lowercase|number/i)).toBeInTheDocument();
+    expect(mockOnNext).not.toHaveBeenCalled();
+  });
+
+  it('shows error for password without number', () => {
+    render(
+      <AccountStep
+        data={{ email: 'test@example.com', password: 'PasswordAbc', confirmPassword: 'PasswordAbc' }}
+        onChange={mockOnChange}
+        onNext={mockOnNext}
+      />
+    );
+
+    const submitButton = screen.getByRole('button', { name: /continue/i });
+    fireEvent.click(submitButton);
+
+    expect(screen.getByText(/number/i)).toBeInTheDocument();
+    expect(mockOnNext).not.toHaveBeenCalled();
   });
 
   it('displays API errors passed via props', () => {
@@ -135,7 +183,7 @@ describe('AccountStep', () => {
       <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} />
     );
 
-    const passwordInput = screen.getByPlaceholderText('At least 8 characters');
+    const passwordInput = screen.getByPlaceholderText('8+ chars, upper, lower, number');
     expect(passwordInput).toHaveAttribute('type', 'password');
 
     // Find and click the toggle button (first one for password)
