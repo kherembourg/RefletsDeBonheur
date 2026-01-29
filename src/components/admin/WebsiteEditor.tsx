@@ -112,28 +112,28 @@ export function WebsiteEditor({
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-[#0f0f0f] text-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-cream text-charcoal overflow-hidden">
       {/* Top Toolbar */}
-      <header className="h-14 bg-[#1a1a1a] border-b border-[#2a2a2a] flex items-center justify-between px-4 shrink-0">
+      <header className="h-14 bg-white border-b border-charcoal/10 flex items-center justify-between px-4 shrink-0 shadow-xs">
         {/* Left section */}
         <div className="flex items-center gap-4">
           <a
             href={weddingSlug ? `/${weddingSlug}/admin` : '/admin'}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-charcoal/60 hover:text-charcoal transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             <span className="text-sm font-medium">Retour</span>
           </a>
 
-          <div className="h-6 w-px bg-[#2a2a2a]" />
+          <div className="h-6 w-px bg-charcoal/10" />
 
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-burgundy to-rose-gold flex items-center justify-center">
-              <Layers className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-burgundy/10 flex items-center justify-center">
+              <Layers className="w-4 h-4 text-burgundy" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-white">Éditeur de site</h1>
-              <p className="text-xs text-gray-500">Personnalisation</p>
+              <h1 className="text-sm font-semibold text-charcoal">Éditeur de site</h1>
+              <p className="text-xs text-charcoal/50">Personnalisation</p>
             </div>
           </div>
 
@@ -166,7 +166,7 @@ export function WebsiteEditor({
         </div>
 
         {/* Center section - Device Preview */}
-        <div className="flex items-center gap-1 bg-[#0f0f0f] rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-charcoal/5 rounded-lg p-1">
           {[
             { id: 'desktop' as const, icon: Monitor, label: 'Bureau' },
             { id: 'tablet' as const, icon: Tablet, label: 'Tablette' },
@@ -177,8 +177,8 @@ export function WebsiteEditor({
               onClick={() => setDevicePreview(id)}
               className={`p-2 rounded-md transition-all ${
                 devicePreview === id
-                  ? 'bg-[#2a2a2a] text-white'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'bg-white text-charcoal shadow-sm'
+                  : 'text-charcoal/50 hover:text-charcoal'
               }`}
               title={label}
             >
@@ -193,25 +193,25 @@ export function WebsiteEditor({
           <div className="flex items-center gap-1 mr-2">
             <button
               onClick={() => setZoom(Math.max(50, zoom - 10))}
-              className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+              className="p-1.5 rounded text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="text-xs text-gray-400 w-12 text-center">{zoom}%</span>
+            <span className="text-xs text-charcoal/60 w-12 text-center">{zoom}%</span>
             <button
               onClick={() => setZoom(Math.min(150, zoom + 10))}
-              className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+              className="p-1.5 rounded text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="h-6 w-px bg-[#2a2a2a]" />
+          <div className="h-6 w-px bg-charcoal/10" />
 
           {/* Refresh */}
           <button
             onClick={refreshPreview}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
+            className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
             title="Actualiser l'aperçu"
           >
             <RefreshCw className="w-4 h-4" />
@@ -220,7 +220,7 @@ export function WebsiteEditor({
           {/* Reset */}
           <button
             onClick={handleReset}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
+            className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
             title="Réinitialiser"
           >
             <RotateCcw className="w-4 h-4" />
@@ -231,7 +231,7 @@ export function WebsiteEditor({
             href={`/${weddingSlug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
+            className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
             title="Ouvrir dans un nouvel onglet"
           >
             <ExternalLink className="w-4 h-4" />
@@ -243,12 +243,12 @@ export function WebsiteEditor({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Editor Panel */}
         <aside
-          className={`bg-[#1a1a1a] border-r border-[#2a2a2a] flex flex-col transition-all duration-300 ${
+          className={`bg-white border-r border-charcoal/10 flex flex-col transition-all duration-300 shadow-sm ${
             sidebarCollapsed ? 'w-16' : 'w-[340px]'
           }`}
         >
           {/* Tab Navigation */}
-          <nav className="flex border-b border-[#2a2a2a]">
+          <nav className="flex border-b border-charcoal/10">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -260,7 +260,7 @@ export function WebsiteEditor({
                   className={`flex-1 py-3 flex flex-col items-center gap-1 transition-all relative ${
                     isActive
                       ? 'text-burgundy'
-                      : 'text-gray-500 hover:text-gray-300'
+                      : 'text-charcoal/50 hover:text-charcoal'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -297,7 +297,7 @@ export function WebsiteEditor({
           {/* Collapse Toggle */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-3 border-t border-[#2a2a2a] text-gray-500 hover:text-white hover:bg-[#2a2a2a] transition-all flex items-center justify-center gap-2"
+            className="p-3 border-t border-charcoal/10 text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all flex items-center justify-center gap-2"
           >
             <ChevronLeft className={`w-4 h-4 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
             {!sidebarCollapsed && <span className="text-xs">Réduire</span>}
@@ -305,7 +305,7 @@ export function WebsiteEditor({
         </aside>
 
         {/* Preview Panel */}
-        <main className="flex-1 bg-[#0a0a0a] p-6 flex flex-col overflow-hidden">
+        <main className="flex-1 bg-charcoal/5 p-6 flex flex-col overflow-hidden">
           {/* Preview Container */}
           <div
             className="flex-1 flex items-center justify-center overflow-hidden"
@@ -313,7 +313,7 @@ export function WebsiteEditor({
           >
             <div
               className={`bg-white rounded-xl shadow-2xl overflow-hidden transition-all duration-300 ${
-                devicePreview !== 'desktop' ? 'border-8 border-[#1a1a1a] rounded-[2rem]' : ''
+                devicePreview !== 'desktop' ? 'border-8 border-charcoal rounded-[2rem]' : ''
               }`}
               style={{
                 width: getPreviewWidth(),
@@ -323,8 +323,8 @@ export function WebsiteEditor({
             >
               {/* Device frame for mobile/tablet */}
               {devicePreview !== 'desktop' && (
-                <div className="h-6 bg-[#1a1a1a] flex items-center justify-center">
-                  <div className="w-20 h-1 bg-[#3a3a3a] rounded-full" />
+                <div className="h-6 bg-charcoal flex items-center justify-center">
+                  <div className="w-20 h-1 bg-charcoal-light rounded-full" />
                 </div>
               )}
 
@@ -352,10 +352,10 @@ export function WebsiteEditor({
 
           {/* Preview URL bar */}
           <div className="mt-4 flex items-center justify-center">
-            <div className="bg-[#1a1a1a] rounded-full px-4 py-2 flex items-center gap-2 text-sm">
-              <Eye className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-400">/{weddingSlug}</span>
-              <span className="text-gray-600">• Aperçu en direct</span>
+            <div className="bg-white rounded-full px-4 py-2 flex items-center gap-2 text-sm shadow-sm border border-charcoal/10">
+              <Eye className="w-4 h-4 text-charcoal/50" />
+              <span className="text-charcoal/70">/{weddingSlug}</span>
+              <span className="text-charcoal/40">• Aperçu en direct</span>
             </div>
           </div>
         </main>
@@ -396,11 +396,11 @@ function EditorContent({
     return (
       <div className="space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-burgundy" />
             Sélectionner un thème
           </h3>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-charcoal/50">
             Choisissez le style de base pour votre site
           </p>
         </div>
@@ -416,8 +416,8 @@ function EditorContent({
                 onClick={() => onThemeChange(theme.id)}
                 className={`relative p-3 rounded-xl border-2 transition-all text-left group ${
                   isSelected
-                    ? 'border-burgundy bg-burgundy/10'
-                    : 'border-[#2a2a2a] hover:border-[#3a3a3a] bg-[#0f0f0f]'
+                    ? 'border-burgundy bg-burgundy/5'
+                    : 'border-charcoal/10 hover:border-charcoal/20 bg-charcoal/5'
                 }`}
               >
                 {isSelected && (
@@ -428,7 +428,7 @@ function EditorContent({
 
                 {/* Theme Preview */}
                 <div
-                  className="h-16 rounded-lg mb-2 overflow-hidden"
+                  className="h-16 rounded-lg mb-2 overflow-hidden border border-charcoal/10"
                   style={{ backgroundColor: theme.colors.background }}
                 >
                   <div className="w-full h-full p-2 flex flex-col items-center justify-center">
@@ -443,7 +443,7 @@ function EditorContent({
                   </div>
                 </div>
 
-                <h4 className="text-sm font-medium text-white mb-1 truncate">
+                <h4 className="text-sm font-medium text-charcoal mb-1 truncate">
                   {theme.name}
                 </h4>
 
@@ -454,7 +454,7 @@ function EditorContent({
                     .map(([key, color]) => (
                       <div
                         key={key}
-                        className="w-4 h-4 rounded-full border border-[#3a3a3a]"
+                        className="w-4 h-4 rounded-full border border-charcoal/10"
                         style={{ backgroundColor: color }}
                         title={key}
                       />
@@ -467,16 +467,16 @@ function EditorContent({
 
         {/* Selected Theme Details */}
         {customization.themeId && (
-          <div className="mt-4 p-3 bg-[#0f0f0f] rounded-xl border border-[#2a2a2a]">
+          <div className="mt-4 p-3 bg-charcoal/5 rounded-xl border border-charcoal/10">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-burgundy/20 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-burgundy/10 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-burgundy" />
               </div>
               <div>
-                <h4 className="text-sm font-medium text-white">
+                <h4 className="text-sm font-medium text-charcoal">
                   {themeList.find(t => t.id === customization.themeId)?.name}
                 </h4>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-charcoal/50 mt-0.5">
                   {themeList.find(t => t.id === customization.themeId)?.description}
                 </p>
               </div>

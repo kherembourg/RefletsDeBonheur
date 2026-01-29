@@ -97,7 +97,7 @@ export interface UseWebsiteEditorReturn {
 - Handle R2 image uploads
 - Only increment `previewKey` for theme changes (not color/content)
 
-### Phase 2: Fix Preview Performance
+### Phase 2: Fix Preview Performance ✅ COMPLETE (done in Phase 1)
 
 **Remove iframe reload for non-structural changes:**
 
@@ -125,9 +125,9 @@ const updateTheme = useCallback((themeId: ThemeId) => {
 - Overrides Tailwind classes ✅
 - Dispatches `customization-update` CustomEvent ✅
 
-### Phase 3: Implement R2 Image Upload
+### Phase 3: Implement R2 Image Upload ✅ COMPLETE (done in Phase 1)
 
-Use existing R2 upload infrastructure:
+Created dedicated `/api/upload/website-image` endpoint. Using existing R2 upload infrastructure:
 
 ```typescript
 // In useWebsiteEditor hook
@@ -161,9 +161,9 @@ const uploadImage = useCallback(async (file: File, key: keyof CustomImages): Pro
 
 **Note:** May need to modify `/api/upload/presign` to accept `customPath` parameter, or create dedicated `/api/upload/website-image` endpoint.
 
-### Phase 4: Light Theme + AdminUI Components
+### Phase 4: Light Theme + AdminUI Components ✅ COMPLETE
 
-Replace inline Tailwind with AdminUI components and light theme colors.
+Replaced dark theme with light theme matching AdminPanel. Updated colors:
 
 **Color Mapping:**
 | Current (Dark) | New (Light) | Usage |

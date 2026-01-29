@@ -189,7 +189,7 @@ const SectionTab = memo(function SectionTab({
       className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
         isActive
           ? 'bg-burgundy text-white'
-          : 'bg-[#1a1a1a] text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
+          : 'bg-charcoal/5 text-charcoal/60 hover:text-charcoal hover:bg-charcoal/10'
       }`}
     >
       <span>{section.icon}</span>
@@ -234,11 +234,11 @@ const FieldEditor = memo(function FieldEditor({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+        <label className="text-xs font-medium text-charcoal/70 flex items-center gap-1.5">
           {field.label}
           {customized && <Check className="w-3 h-3 text-burgundy" />}
         </label>
-        <span className={`text-[10px] ${charCount > maxLength * 0.9 ? 'text-amber-400' : 'text-gray-600'}`}>
+        <span className={`text-[10px] ${charCount > maxLength * 0.9 ? 'text-amber-600' : 'text-charcoal/40'}`}>
           {charCount}/{maxLength}
         </span>
       </div>
@@ -250,10 +250,10 @@ const FieldEditor = memo(function FieldEditor({
           onChange={handleChange}
           placeholder={field.placeholder}
           maxLength={maxLength}
-          className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors bg-[#0f0f0f] placeholder-gray-600 ${
+          className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors bg-white placeholder-charcoal/30 ${
             customized
-              ? 'border-burgundy/50 text-white'
-              : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
+              ? 'border-burgundy/50 text-charcoal'
+              : 'border-charcoal/10 text-charcoal/70 hover:border-charcoal/20'
           }`}
         />
       ) : (
@@ -263,10 +263,10 @@ const FieldEditor = memo(function FieldEditor({
           placeholder={field.placeholder}
           maxLength={maxLength}
           rows={3}
-          className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors resize-none bg-[#0f0f0f] placeholder-gray-600 ${
+          className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors resize-none bg-white placeholder-charcoal/30 ${
             customized
-              ? 'border-burgundy/50 text-white'
-              : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
+              ? 'border-burgundy/50 text-charcoal'
+              : 'border-charcoal/10 text-charcoal/70 hover:border-charcoal/20'
           }`}
         />
       )}
@@ -274,7 +274,7 @@ const FieldEditor = memo(function FieldEditor({
       {customized && (
         <button
           onClick={handleReset}
-          className="text-[10px] text-gray-500 hover:text-burgundy transition-colors"
+          className="text-[10px] text-charcoal/50 hover:text-burgundy transition-colors"
         >
           Réinitialiser ce champ
         </button>
@@ -347,29 +347,29 @@ export function ContentEditor({
       {/* Header */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-charcoal flex items-center gap-2">
             <Type className="w-4 h-4 text-burgundy" />
             Contenu textuel
           </h3>
           {hasCustomContent && (
             <button
               onClick={handleReset}
-              className="text-xs text-gray-500 hover:text-burgundy transition-colors flex items-center gap-1"
+              className="text-xs text-charcoal/50 hover:text-burgundy transition-colors flex items-center gap-1"
             >
               <RotateCcw className="w-3 h-3" />
               Reset
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-charcoal/50">
           Personnalisez les textes de votre site
         </p>
       </div>
 
       {/* Info Tip */}
-      <div className="flex items-start gap-2 p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-        <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-purple-300">
+      <div className="flex items-start gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+        <Info className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
+        <p className="text-xs text-purple-700">
           Les champs vides utiliseront les textes par défaut.
         </p>
       </div>
