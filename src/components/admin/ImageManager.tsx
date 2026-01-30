@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Image, Upload, X, Check, AlertCircle, Link as LinkIcon, Info } from 'lucide-react';
 import type { CustomImages } from '../../lib/customization';
 
@@ -69,6 +69,11 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  // Sync with prop changes (e.g., when parent resets)
+  useEffect(() => {
+    setEditingImages(customImages || {});
+  }, [customImages]);
+
   // Handle image change
   const handleImageChange = (key: keyof CustomImages, value: string) => {
     const newImages = {
@@ -100,8 +105,8 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, [key]: 'L\'image doit faire moins de 10 MB' }));
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, [key]: 'L\'image doit faire moins de 5 Mo' }));
       return;
     }
 

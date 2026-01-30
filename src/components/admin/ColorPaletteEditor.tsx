@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Palette, RotateCcw, Check, AlertCircle, Info } from 'lucide-react';
 import type { CustomPalette } from '../../lib/customization';
 import { isValidHexColor } from '../../lib/customization';
@@ -95,6 +95,11 @@ export function ColorPaletteEditor({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [expandedGroup, setExpandedGroup] = useState<string>('primary');
   const theme = getTheme(themeId);
+
+  // Sync with prop changes (e.g., when parent resets)
+  useEffect(() => {
+    setEditingPalette(customPalette || {});
+  }, [customPalette]);
 
   // Handle color change
   const handleColorChange = (key: keyof CustomPalette, value: string) => {

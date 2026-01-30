@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, useEffect, memo } from 'react';
 import { Type, RotateCcw, Check, Info } from 'lucide-react';
 import type { CustomContent } from '../../lib/customization';
 
@@ -292,6 +292,11 @@ export function ContentEditor({
     customContent || {}
   );
   const [activeSection, setActiveSection] = useState<string>('hero');
+
+  // Sync with prop changes (e.g., when parent resets)
+  useEffect(() => {
+    setEditingContent(customContent || {});
+  }, [customContent]);
 
   // Handle content change - memoized for FieldEditor
   const handleContentChange = useCallback((key: keyof CustomContent, value: string) => {

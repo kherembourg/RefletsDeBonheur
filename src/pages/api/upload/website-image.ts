@@ -15,6 +15,7 @@
  *   weddingId: string,
  *   fileName: string,
  *   contentType: string,
+ *   fileSize?: number (optional, for server-side validation),
  *   imageKey: string (e.g., 'heroImage', 'couplePhoto')
  * }
  *
@@ -113,7 +114,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const body = await request.json();
-    const { weddingId, fileName, contentType, imageKey } = body;
+    const { weddingId, fileName, contentType, imageKey, fileSize } = body;
 
     // Validate required fields
     if (!weddingId || !fileName || !contentType || !imageKey) {
@@ -124,6 +125,21 @@ export const POST: APIRoute = async ({ request }) => {
         }),
         {
           status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Validate file size (5MB max for website images)
+    const maxFileSize = 5 * 1024 * 1024;
+    if (fileSize && fileSize > maxFileSize) {
+      return new Response(
+        JSON.stringify({
+          error: 'File too large',
+          message: 'Website images must be under 5 Mo.',
+        }),
+        {
+          status: 413,
           headers: { 'Content-Type': 'application/json' },
         }
       );

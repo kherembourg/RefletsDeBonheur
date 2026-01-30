@@ -94,6 +94,7 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
     JSON.stringify(initialCustomization || DEFAULT_CUSTOMIZATION)
   );
   const customizationRef = useRef(customization);
+  const blobUrlsRef = useRef<Set<string>>(new Set());
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -317,6 +318,14 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
     setIsPreviewLoading(false);
   }, []);
 
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      blobUrlsRef.current.clear();
+    };
+  }, []);
+
   // ----------------------------------------
   // Image Upload (R2)
   // ----------------------------------------
@@ -324,7 +333,15 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
     async (file: File, key: keyof CustomImages): Promise<string> => {
       // Demo mode: use blob URL (temporary)
       if (demoMode) {
+        // Revoke previous blob URL for this key if it exists
+        const prevUrl = customizationRef.current.customImages?.[key];
+        if (prevUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(prevUrl);
+          blobUrlsRef.current.delete(prevUrl);
+        }
+
         const blobUrl = URL.createObjectURL(file);
+        blobUrlsRef.current.add(blobUrl);
         updateImages({ [key]: blobUrl });
         return blobUrl;
       }
@@ -359,6 +376,7 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
             weddingId,
             fileName: file.name,
             contentType: file.type,
+            fileSize: file.size,
             imageKey: key,
           }),
         });
