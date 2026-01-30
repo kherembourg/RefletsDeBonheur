@@ -1,11 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Image, Upload, X, Check, AlertCircle, Link as LinkIcon, Info } from 'lucide-react';
 import type { CustomImages } from '../../lib/customization';
 
 interface ImageManagerProps {
   customImages?: CustomImages;
-  onChange: (images: CustomImages | undefined) => void;
+  onChange: (images: Partial<CustomImages>) => void;
   onUpload?: (file: File, key: keyof CustomImages) => Promise<string>;
+  uploadProgress?: number | null;
 }
 
 interface ImageField {
@@ -61,12 +62,17 @@ const IMAGE_FIELDS: ImageField[] = [
   },
 ];
 
-export function ImageManager({ customImages, onChange, onUpload }: ImageManagerProps) {
+export function ImageManager({ customImages, onChange, onUpload, uploadProgress }: ImageManagerProps) {
   const [editingImages, setEditingImages] = useState<CustomImages>(customImages || {});
   const [uploadingKey, setUploadingKey] = useState<keyof CustomImages | null>(null);
   const [urlInputMode, setUrlInputMode] = useState<keyof CustomImages | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Sync with prop changes (e.g., when parent resets)
+  useEffect(() => {
+    setEditingImages(customImages || {});
+  }, [customImages]);
 
   // Handle image change
   const handleImageChange = (key: keyof CustomImages, value: string) => {
@@ -99,8 +105,8 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, [key]: 'L\'image doit faire moins de 10 MB' }));
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, [key]: 'L\'image doit faire moins de 5 Mo' }));
       return;
     }
 
@@ -173,29 +179,29 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
       {/* Header */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-charcoal flex items-center gap-2">
             <Image className="w-4 h-4 text-burgundy" />
             Images
           </h3>
           {hasCustomImages && (
             <button
               onClick={handleResetAll}
-              className="text-xs text-gray-500 hover:text-burgundy transition-colors flex items-center gap-1"
+              className="text-xs text-charcoal/50 hover:text-burgundy transition-colors flex items-center gap-1"
             >
               <X className="w-3 h-3" />
               Reset tout
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-charcoal/50">
           Personnalisez les images de votre site
         </p>
       </div>
 
       {/* Info Tip */}
-      <div className="flex items-start gap-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-        <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-300">
+      <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+        <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-700">
           JPEG ou PNG recommandés. Max 10 MB.
         </p>
       </div>
@@ -215,12 +221,12 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
               className={`border rounded-xl p-3 transition-all ${
                 customized
                   ? 'border-burgundy/50 bg-burgundy/5'
-                  : 'border-[#2a2a2a] bg-[#0f0f0f]'
+                  : 'border-charcoal/10 bg-charcoal/5'
               }`}
             >
               <div className="flex gap-3">
                 {/* Image Preview */}
-                <div className="w-20 h-20 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden shrink-0 relative">
+                <div className="w-20 h-20 rounded-lg bg-white border border-charcoal/10 overflow-hidden shrink-0 relative">
                   {imageUrl ? (
                     <>
                       <img
@@ -235,7 +241,7 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                       )}
                     </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-600">
+                    <div className="w-full h-full flex items-center justify-center text-charcoal/30">
                       <Image className="w-6 h-6" />
                     </div>
                   )}
@@ -245,11 +251,11 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                 <div className="flex-1 min-w-0">
                   {/* Label */}
                   <div className="mb-2">
-                    <h4 className="text-sm font-medium text-white flex items-center gap-1.5">
+                    <h4 className="text-sm font-medium text-charcoal flex items-center gap-1.5">
                       {field.label}
                       {customized && <Check className="w-3 h-3 text-burgundy" />}
                     </h4>
-                    <p className="text-[10px] text-gray-500">
+                    <p className="text-[10px] text-charcoal/50">
                       {field.recommendedSize} {field.aspectRatio && `• ${field.aspectRatio}`}
                     </p>
                   </div>
@@ -268,7 +274,7 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                             setUrlInputMode(null);
                           }
                         }}
-                        className="flex-1 px-2 py-1.5 rounded-md border border-[#2a2a2a] bg-[#1a1a1a] text-xs text-white placeholder-gray-600"
+                        className="flex-1 px-2 py-1.5 rounded-md border border-charcoal/10 bg-white text-xs text-charcoal placeholder-charcoal/30"
                         autoFocus
                       />
                       <button
@@ -282,7 +288,7 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                       </button>
                       <button
                         onClick={() => setUrlInputMode(null)}
-                        className="px-2 py-1.5 bg-[#2a2a2a] text-gray-400 rounded-md text-xs hover:bg-[#3a3a3a] transition-colors"
+                        className="px-2 py-1.5 bg-charcoal/10 text-charcoal/60 rounded-md text-xs hover:bg-charcoal/20 transition-colors"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -293,12 +299,23 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                       <button
                         onClick={() => fileInputRefs.current[field.key]?.click()}
                         disabled={isUploading}
-                        className="px-2.5 py-1.5 bg-burgundy text-white rounded-md text-xs hover:bg-burgundy-light transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                        className="px-2.5 py-1.5 bg-burgundy text-white rounded-md text-xs hover:bg-burgundy-light transition-colors flex items-center gap-1.5 disabled:opacity-50 relative overflow-hidden min-w-[70px]"
                       >
                         {isUploading ? (
                           <>
-                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Upload...
+                            {/* Progress bar background */}
+                            {uploadProgress !== null && uploadProgress !== undefined && (
+                              <div
+                                className="absolute inset-0 bg-burgundy-light transition-all duration-200"
+                                style={{ width: `${uploadProgress}%` }}
+                              />
+                            )}
+                            <span className="relative flex items-center gap-1.5">
+                              <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              {uploadProgress !== null && uploadProgress !== undefined
+                                ? `${uploadProgress}%`
+                                : 'Upload...'}
+                            </span>
                           </>
                         ) : (
                           <>
@@ -311,7 +328,7 @@ export function ImageManager({ customImages, onChange, onUpload }: ImageManagerP
                       {/* URL Button */}
                       <button
                         onClick={() => setUrlInputMode(field.key)}
-                        className="px-2.5 py-1.5 bg-[#2a2a2a] text-gray-300 rounded-md text-xs hover:bg-[#3a3a3a] transition-colors flex items-center gap-1.5"
+                        className="px-2.5 py-1.5 bg-charcoal/10 text-charcoal/70 rounded-md text-xs hover:bg-charcoal/20 transition-colors flex items-center gap-1.5"
                       >
                         <LinkIcon className="w-3 h-3" />
                         URL

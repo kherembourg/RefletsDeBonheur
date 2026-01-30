@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Palette,
   Type,
@@ -20,13 +20,16 @@ import {
   CloudOff,
   Loader2,
 } from 'lucide-react';
-import type { ThemeId } from '../../lib/themes';
-import { themeList, type Theme } from '../../lib/themes';
+import { themeList } from '../../lib/themes';
 import type { WeddingCustomization } from '../../lib/customization';
-import { DEFAULT_CUSTOMIZATION } from '../../lib/customization';
 import { ColorPaletteEditor } from './ColorPaletteEditor';
 import { ContentEditor } from './ContentEditor';
 import { ImageManager } from './ImageManager';
+import { useWebsiteEditor } from '../../hooks/useWebsiteEditor';
+
+// ============================================
+// Types
+// ============================================
 
 interface WebsiteEditorProps {
   weddingId: string;
@@ -39,10 +42,9 @@ interface WebsiteEditorProps {
 type EditorTab = 'theme' | 'colors' | 'content' | 'images';
 type DevicePreview = 'desktop' | 'tablet' | 'mobile';
 
-// localStorage key for live preview
-const PREVIEW_STORAGE_KEY = 'wedding_preview_customization';
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+// ============================================
+// Main Component
+// ============================================
 
 export function WebsiteEditor({
   weddingId,
@@ -51,200 +53,68 @@ export function WebsiteEditor({
   initialCustomization,
   onSave,
 }: WebsiteEditorProps) {
+  // UI-only state (not part of the hook)
   const [activeTab, setActiveTab] = useState<EditorTab>('theme');
-  const [customization, setCustomization] = useState<WeddingCustomization>(
-    initialCustomization || DEFAULT_CUSTOMIZATION
-  );
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-  const [previewKey, setPreviewKey] = useState(0);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [devicePreview, setDevicePreview] = useState<DevicePreview>('desktop');
   const [zoom, setZoom] = useState(100);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedRef = useRef<string>(JSON.stringify(initialCustomization || DEFAULT_CUSTOMIZATION));
 
-  // Use demoMode prop (passed from Astro page based on Supabase configuration)
-  const isDemoMode = demoMode;
+  // All editor logic is in the hook
+  const {
+    customization,
+    saveStatus,
+    hasUnsavedChanges,
+    updateTheme,
+    updateColors,
+    updateContent,
+    updateImages,
+    resetToDefault,
+    previewKey,
+    isPreviewLoading,
+    iframeRef,
+    refreshPreview,
+    handleIframeLoad,
+    uploadImage,
+    uploadProgress,
+  } = useWebsiteEditor({
+    weddingId,
+    weddingSlug,
+    demoMode,
+    initialCustomization,
+    onSave,
+  });
 
-  // Load saved customization from localStorage on mount (demo mode)
-  useEffect(() => {
-    if (!isDemoMode) return;
-
-    const storageKey = `wedding_customization_${weddingSlug}`;
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsedCustomization = JSON.parse(saved) as WeddingCustomization;
-        setCustomization(parsedCustomization);
-        lastSavedRef.current = saved;
-      }
-    } catch (error) {
-      console.warn('Failed to load saved customization from localStorage:', error);
-    }
-  }, [isDemoMode, weddingSlug]);
-
-  // Store customization in localStorage for live preview
-  useEffect(() => {
-    const previewData = {
-      weddingSlug,
-      customization,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify(previewData));
-
-    // Notify iframe of changes via postMessage
-    if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        { type: 'CUSTOMIZATION_UPDATE', customization },
-        '*'
-      );
-    }
-  }, [customization, weddingSlug]);
-
-  // Save customization - localStorage for demo, API for production
-  const saveToApi = useCallback(async (data: WeddingCustomization) => {
-    // In demo mode, save to localStorage instead of API
-    if (isDemoMode) {
-      const storageKey = `wedding_customization_${weddingSlug}`;
-      localStorage.setItem(storageKey, JSON.stringify(data));
-      return { success: true, message: 'Customization saved to local storage (demo mode)' };
-    }
-
-    // Production mode: save to API
-    const response = await fetch('/api/customization/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ weddingId, customization: data }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to save customization');
-    }
-
-    return response.json();
-  }, [weddingId, weddingSlug, isDemoMode]);
-
-  // Ref to track current customization for debounced save
-  const customizationRef = useRef(customization);
-  useEffect(() => {
-    customizationRef.current = customization;
-  }, [customization]);
-
-  // Debounced auto-save (2 seconds after changes)
-  const performSave = useCallback(async () => {
-    const currentCustomization = customizationRef.current;
-    const currentJson = JSON.stringify(currentCustomization);
-    if (currentJson === lastSavedRef.current) {
-      return; // No actual changes to save
-    }
-
-    try {
-      setSaveStatus('saving');
-      const dataToSave = {
-        ...currentCustomization,
-        lastUpdated: new Date().toISOString(),
-      };
-
-      // Use provided onSave or default to API call
-      if (onSave) {
-        await onSave(dataToSave);
-      } else {
-        await saveToApi(dataToSave);
-      }
-
-      lastSavedRef.current = currentJson;
-      setSaveStatus('saved');
-
-      // Reset to idle after 2 seconds
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
-      console.error('Failed to save customization:', error);
-      setSaveStatus('error');
-      // Reset to idle after 3 seconds on error
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    }
-  }, [onSave, saveToApi]);
-
-  // Trigger debounced save when customization changes
-  useEffect(() => {
-    const currentJson = JSON.stringify(customization);
-    const initialJson = JSON.stringify(initialCustomization || DEFAULT_CUSTOMIZATION);
-
-    // Don't save if it matches initial state and we haven't saved before
-    if (currentJson === initialJson && lastSavedRef.current === initialJson) {
-      return;
-    }
-
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout for auto-save
-    saveTimeoutRef.current = setTimeout(() => {
-      performSave();
-    }, 2000);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [customization, initialCustomization, performSave]);
-
-  // Debounce customization changes → trigger preview reload
-  const isInitialMount = useRef(true);
-  useEffect(() => {
-    // Skip initial render to avoid unnecessary reload on mount
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setPreviewKey((prev) => prev + 1);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [customization]);
-
-  // Set loading when preview key changes
-  useEffect(() => {
-    if (previewKey > 0) {
-      setIsPreviewLoading(true);
-    }
-  }, [previewKey]);
-
-  // Handle iframe load - hide loading overlay
-  const handleIframeLoad = useCallback(() => {
-    setIsPreviewLoading(false);
-  }, []);
-
-  // Cleanup localStorage on unmount
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem(PREVIEW_STORAGE_KEY);
-    };
-  }, []);
-
-  // Handle reset
+  // Handle reset with confirmation
   const handleReset = () => {
     if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes les personnalisations ?')) {
-      const resetValue = initialCustomization || DEFAULT_CUSTOMIZATION;
-      setCustomization(resetValue);
-      lastSavedRef.current = JSON.stringify(resetValue);
+      resetToDefault();
     }
   };
 
-  // Refresh preview
-  const refreshPreview = () => {
-    setPreviewKey((prev) => prev + 1);
-  };
+  // Handle back navigation with unsaved changes warning
+  const handleBack = useCallback(() => {
+    if (hasUnsavedChanges) {
+      if (confirm('Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?')) {
+        window.location.href = weddingSlug ? `/${weddingSlug}/admin` : '/admin';
+      }
+    } else {
+      window.location.href = weddingSlug ? `/${weddingSlug}/admin` : '/admin';
+    }
+  }, [hasUnsavedChanges, weddingSlug]);
 
-  // Check if there are unsaved changes
-  const hasUnsavedChanges = JSON.stringify(customization) !== lastSavedRef.current;
+  // Warn on browser navigation/refresh with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Get device width for preview
   const getPreviewWidth = () => {
@@ -266,28 +136,28 @@ export function WebsiteEditor({
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-[#0f0f0f] text-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-cream text-charcoal overflow-hidden">
       {/* Top Toolbar */}
-      <header className="h-14 bg-[#1a1a1a] border-b border-[#2a2a2a] flex items-center justify-between px-4 shrink-0">
+      <header className="h-14 bg-white border-b border-charcoal/10 flex items-center justify-between px-4 shrink-0 shadow-xs">
         {/* Left section */}
         <div className="flex items-center gap-4">
-          <a
-            href={weddingSlug ? `/${weddingSlug}/admin` : '/admin'}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-charcoal/60 hover:text-charcoal transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             <span className="text-sm font-medium">Retour</span>
-          </a>
+          </button>
 
-          <div className="h-6 w-px bg-[#2a2a2a]" />
+          <div className="h-6 w-px bg-charcoal/10" />
 
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-burgundy to-rose-gold flex items-center justify-center">
-              <Layers className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-burgundy/10 flex items-center justify-center">
+              <Layers className="w-4 h-4 text-burgundy" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-white">Éditeur de site</h1>
-              <p className="text-xs text-gray-500">Personnalisation</p>
+              <h1 className="text-sm font-semibold text-charcoal">Éditeur de site</h1>
+              <p className="text-xs text-charcoal/50">Personnalisation</p>
             </div>
           </div>
 
@@ -320,7 +190,7 @@ export function WebsiteEditor({
         </div>
 
         {/* Center section - Device Preview */}
-        <div className="flex items-center gap-1 bg-[#0f0f0f] rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-charcoal/5 rounded-lg p-1">
           {[
             { id: 'desktop' as const, icon: Monitor, label: 'Bureau' },
             { id: 'tablet' as const, icon: Tablet, label: 'Tablette' },
@@ -331,8 +201,8 @@ export function WebsiteEditor({
               onClick={() => setDevicePreview(id)}
               className={`p-2 rounded-md transition-all ${
                 devicePreview === id
-                  ? 'bg-[#2a2a2a] text-white'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'bg-white text-charcoal shadow-sm'
+                  : 'text-charcoal/50 hover:text-charcoal'
               }`}
               title={label}
             >
@@ -347,25 +217,25 @@ export function WebsiteEditor({
           <div className="flex items-center gap-1 mr-2">
             <button
               onClick={() => setZoom(Math.max(50, zoom - 10))}
-              className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+              className="p-1.5 rounded text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="text-xs text-gray-400 w-12 text-center">{zoom}%</span>
+            <span className="text-xs text-charcoal/60 w-12 text-center">{zoom}%</span>
             <button
               onClick={() => setZoom(Math.min(150, zoom + 10))}
-              className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+              className="p-1.5 rounded text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="h-6 w-px bg-[#2a2a2a]" />
+          <div className="h-6 w-px bg-charcoal/10" />
 
           {/* Refresh */}
           <button
             onClick={refreshPreview}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
+            className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
             title="Actualiser l'aperçu"
           >
             <RefreshCw className="w-4 h-4" />
@@ -374,7 +244,7 @@ export function WebsiteEditor({
           {/* Reset */}
           <button
             onClick={handleReset}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
+            className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
             title="Réinitialiser"
           >
             <RotateCcw className="w-4 h-4" />
@@ -385,7 +255,7 @@ export function WebsiteEditor({
             href={`/${weddingSlug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
+            className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
             title="Ouvrir dans un nouvel onglet"
           >
             <ExternalLink className="w-4 h-4" />
@@ -397,12 +267,12 @@ export function WebsiteEditor({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Editor Panel */}
         <aside
-          className={`bg-[#1a1a1a] border-r border-[#2a2a2a] flex flex-col transition-all duration-300 ${
+          className={`bg-white border-r border-charcoal/10 flex flex-col transition-all duration-300 shadow-sm ${
             sidebarCollapsed ? 'w-16' : 'w-[340px]'
           }`}
         >
           {/* Tab Navigation */}
-          <nav className="flex border-b border-[#2a2a2a]">
+          <nav className="flex border-b border-charcoal/10">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -414,7 +284,7 @@ export function WebsiteEditor({
                   className={`flex-1 py-3 flex flex-col items-center gap-1 transition-all relative ${
                     isActive
                       ? 'text-burgundy'
-                      : 'text-gray-500 hover:text-gray-300'
+                      : 'text-charcoal/50 hover:text-charcoal'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -436,8 +306,12 @@ export function WebsiteEditor({
                 <EditorContent
                   activeTab={activeTab}
                   customization={customization}
-                  onUpdate={setCustomization}
-                  weddingSlug={weddingSlug}
+                  onThemeChange={updateTheme}
+                  onColorsChange={updateColors}
+                  onContentChange={updateContent}
+                  onImagesChange={updateImages}
+                  onUpload={uploadImage}
+                  uploadProgress={uploadProgress}
                 />
               </div>
             </div>
@@ -446,15 +320,15 @@ export function WebsiteEditor({
           {/* Collapse Toggle */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-3 border-t border-[#2a2a2a] text-gray-500 hover:text-white hover:bg-[#2a2a2a] transition-all flex items-center justify-center gap-2"
+            className="p-3 border-t border-charcoal/10 text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all flex items-center justify-center gap-2"
           >
             <ChevronLeft className={`w-4 h-4 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
             {!sidebarCollapsed && <span className="text-xs">Réduire</span>}
           </button>
         </aside>
 
-        {/* Preview Panel - Takes most of the space */}
-        <main className="flex-1 bg-[#0a0a0a] p-6 flex flex-col overflow-hidden">
+        {/* Preview Panel */}
+        <main className="flex-1 bg-charcoal/5 p-6 flex flex-col overflow-hidden">
           {/* Preview Container */}
           <div
             className="flex-1 flex items-center justify-center overflow-hidden"
@@ -462,7 +336,7 @@ export function WebsiteEditor({
           >
             <div
               className={`bg-white rounded-xl shadow-2xl overflow-hidden transition-all duration-300 ${
-                devicePreview !== 'desktop' ? 'border-8 border-[#1a1a1a] rounded-[2rem]' : ''
+                devicePreview !== 'desktop' ? 'border-8 border-charcoal rounded-[2rem]' : ''
               }`}
               style={{
                 width: getPreviewWidth(),
@@ -472,8 +346,8 @@ export function WebsiteEditor({
             >
               {/* Device frame for mobile/tablet */}
               {devicePreview !== 'desktop' && (
-                <div className="h-6 bg-[#1a1a1a] flex items-center justify-center">
-                  <div className="w-20 h-1 bg-[#3a3a3a] rounded-full" />
+                <div className="h-6 bg-charcoal flex items-center justify-center">
+                  <div className="w-20 h-1 bg-charcoal-light rounded-full" />
                 </div>
               )}
 
@@ -482,7 +356,7 @@ export function WebsiteEditor({
                 <iframe
                   key={previewKey}
                   ref={iframeRef}
-                  src={`/${weddingSlug}?preview=true&t=${Date.now()}`}
+                  src={`/${weddingSlug}?preview=true&v=${previewKey}`}
                   className="w-full h-full bg-white"
                   onLoad={handleIframeLoad}
                   title="Aperçu du site"
@@ -501,41 +375,53 @@ export function WebsiteEditor({
 
           {/* Preview URL bar */}
           <div className="mt-4 flex items-center justify-center">
-            <div className="bg-[#1a1a1a] rounded-full px-4 py-2 flex items-center gap-2 text-sm">
-              <Eye className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-400">/{weddingSlug}</span>
-              <span className="text-gray-600">• Aperçu en direct</span>
+            <div className="bg-white rounded-full px-4 py-2 flex items-center gap-2 text-sm shadow-sm border border-charcoal/10">
+              <Eye className="w-4 h-4 text-charcoal/50" />
+              <span className="text-charcoal/70">/{weddingSlug}</span>
+              <span className="text-charcoal/40">• Aperçu en direct</span>
             </div>
           </div>
         </main>
       </div>
-
     </div>
   );
 }
 
 // ============================================
-// EDITOR CONTENT COMPONENT
+// Editor Content Component
 // ============================================
 
 interface EditorContentProps {
   activeTab: EditorTab;
   customization: WeddingCustomization;
-  onUpdate: (customization: WeddingCustomization) => void;
-  weddingSlug: string;
+  onThemeChange: (themeId: string) => void;
+  onColorsChange: (palette: Record<string, string | undefined>) => void;
+  onContentChange: (content: Record<string, string | undefined>) => void;
+  onImagesChange: (images: Record<string, string | undefined>) => void;
+  onUpload: (file: File, key: string) => Promise<string>;
+  uploadProgress: number | null;
 }
 
-function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: EditorContentProps) {
+function EditorContent({
+  activeTab,
+  customization,
+  onThemeChange,
+  onColorsChange,
+  onContentChange,
+  onImagesChange,
+  onUpload,
+  uploadProgress,
+}: EditorContentProps) {
   // Theme Tab
   if (activeTab === 'theme') {
     return (
       <div className="space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-burgundy" />
             Sélectionner un thème
           </h3>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-charcoal/50">
             Choisissez le style de base pour votre site
           </p>
         </div>
@@ -548,11 +434,11 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
             return (
               <button
                 key={theme.id}
-                onClick={() => onUpdate({ ...customization, themeId: theme.id })}
+                onClick={() => onThemeChange(theme.id)}
                 className={`relative p-3 rounded-xl border-2 transition-all text-left group ${
                   isSelected
-                    ? 'border-burgundy bg-burgundy/10'
-                    : 'border-[#2a2a2a] hover:border-[#3a3a3a] bg-[#0f0f0f]'
+                    ? 'border-burgundy bg-burgundy/5'
+                    : 'border-charcoal/10 hover:border-charcoal/20 bg-charcoal/5'
                 }`}
               >
                 {isSelected && (
@@ -563,7 +449,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
 
                 {/* Theme Preview */}
                 <div
-                  className="h-16 rounded-lg mb-2 overflow-hidden"
+                  className="h-16 rounded-lg mb-2 overflow-hidden border border-charcoal/10"
                   style={{ backgroundColor: theme.colors.background }}
                 >
                   <div className="w-full h-full p-2 flex flex-col items-center justify-center">
@@ -578,7 +464,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
                   </div>
                 </div>
 
-                <h4 className="text-sm font-medium text-white mb-1 truncate">
+                <h4 className="text-sm font-medium text-charcoal mb-1 truncate">
                   {theme.name}
                 </h4>
 
@@ -589,7 +475,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
                     .map(([key, color]) => (
                       <div
                         key={key}
-                        className="w-4 h-4 rounded-full border border-[#3a3a3a]"
+                        className="w-4 h-4 rounded-full border border-charcoal/10"
                         style={{ backgroundColor: color }}
                         title={key}
                       />
@@ -602,16 +488,16 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
 
         {/* Selected Theme Details */}
         {customization.themeId && (
-          <div className="mt-4 p-3 bg-[#0f0f0f] rounded-xl border border-[#2a2a2a]">
+          <div className="mt-4 p-3 bg-charcoal/5 rounded-xl border border-charcoal/10">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-burgundy/20 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-burgundy/10 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-burgundy" />
               </div>
               <div>
-                <h4 className="text-sm font-medium text-white">
+                <h4 className="text-sm font-medium text-charcoal">
                   {themeList.find(t => t.id === customization.themeId)?.name}
                 </h4>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-charcoal/50 mt-0.5">
                   {themeList.find(t => t.id === customization.themeId)?.description}
                 </p>
               </div>
@@ -628,7 +514,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
       <ColorPaletteEditor
         themeId={customization.themeId}
         customPalette={customization.customPalette}
-        onChange={(palette) => onUpdate({ ...customization, customPalette: palette })}
+        onChange={onColorsChange}
       />
     );
   }
@@ -638,7 +524,7 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
     return (
       <ContentEditor
         customContent={customization.customContent}
-        onChange={(content) => onUpdate({ ...customization, customContent: content })}
+        onChange={onContentChange}
       />
     );
   }
@@ -648,13 +534,9 @@ function EditorContent({ activeTab, customization, onUpdate, weddingSlug }: Edit
     return (
       <ImageManager
         customImages={customization.customImages}
-        onChange={(images) => onUpdate({ ...customization, customImages: images })}
-        onUpload={async (file, key) => {
-          // TODO: Implement actual upload to R2
-          console.log('Upload file:', file, 'for key:', key);
-          // For now, return a placeholder URL
-          return URL.createObjectURL(file);
-        }}
+        onChange={onImagesChange}
+        onUpload={onUpload}
+        uploadProgress={uploadProgress}
       />
     );
   }

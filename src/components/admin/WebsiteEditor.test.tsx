@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { WebsiteEditor } from './WebsiteEditor';
 
 // Mock child components to simplify testing
@@ -62,6 +62,15 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
+// Mock window.location.origin for postMessage
+Object.defineProperty(window, 'location', {
+  value: {
+    origin: 'http://localhost:3000',
+    href: 'http://localhost:3000',
+  },
+  writable: true,
+});
+
 describe('WebsiteEditor', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -81,7 +90,7 @@ describe('WebsiteEditor', () => {
   };
 
   describe('Live Preview', () => {
-    it('does not show loading overlay before debounce timeout', () => {
+    it('shows loading overlay immediately when theme changes', () => {
       const { container } = render(<WebsiteEditor {...defaultProps} />);
 
       const getSpinner = () => container.querySelector('.animate-spin');
@@ -89,39 +98,14 @@ describe('WebsiteEditor', () => {
       // Initially no loading overlay
       expect(getSpinner()).toBeFalsy();
 
-      // Click on Luxe theme to trigger customization change
+      // Click on Luxe theme to trigger theme change
+      // Theme changes trigger IMMEDIATE reload (no debounce)
       const luxeThemeButton = screen.getByRole('button', { name: /Luxe/i });
       act(() => {
         fireEvent.click(luxeThemeButton);
       });
 
-      // Advance timers by 499ms - loading should NOT show yet (within debounce)
-      act(() => {
-        vi.advanceTimersByTime(499);
-      });
-      expect(getSpinner()).toBeFalsy();
-    });
-
-    it('shows loading overlay after 500ms debounce when customization changes', () => {
-      const { container } = render(<WebsiteEditor {...defaultProps} />);
-
-      const getSpinner = () => container.querySelector('.animate-spin');
-
-      // Initially no loading overlay
-      expect(getSpinner()).toBeFalsy();
-
-      // Trigger a customization change
-      const luxeThemeButton = screen.getByRole('button', { name: /Luxe/i });
-      act(() => {
-        fireEvent.click(luxeThemeButton);
-      });
-
-      // Advance past debounce time to trigger reload
-      act(() => {
-        vi.advanceTimersByTime(500);
-      });
-
-      // Loading overlay should be visible (previewKey incremented, loading = true)
+      // Loading should show IMMEDIATELY for theme changes (no debounce)
       expect(getSpinner()).toBeTruthy();
     });
 
@@ -130,15 +114,10 @@ describe('WebsiteEditor', () => {
 
       const getSpinner = () => container.querySelector('.animate-spin');
 
-      // Trigger customization change
+      // Trigger theme change (immediate loading)
       const luxeThemeButton = screen.getByRole('button', { name: /Luxe/i });
       act(() => {
         fireEvent.click(luxeThemeButton);
-      });
-
-      // Wait for debounce
-      act(() => {
-        vi.advanceTimersByTime(500);
       });
 
       // Loading should be showing
@@ -156,46 +135,59 @@ describe('WebsiteEditor', () => {
       expect(getSpinner()).toBeFalsy();
     });
 
-    it('resets debounce timer when customization changes again', () => {
+    it('does not show loading for theme toggle back and forth', () => {
       const { container } = render(<WebsiteEditor {...defaultProps} />);
 
       const getSpinner = () => container.querySelector('.animate-spin');
 
-      // First customization change - click Luxe
+      // First theme change - click Luxe
       const luxeThemeButton = screen.getByRole('button', { name: /Luxe/i });
       act(() => {
         fireEvent.click(luxeThemeButton);
       });
 
-      // Wait 300ms (less than 500ms debounce)
+      // Loading should show
+      expect(getSpinner()).toBeTruthy();
+
+      // Simulate iframe load
+      const iframe = container.querySelector('iframe');
       act(() => {
-        vi.advanceTimersByTime(300);
+        fireEvent.load(iframe!);
       });
 
-      // No spinner yet
+      // Loading should be hidden
       expect(getSpinner()).toBeFalsy();
 
-      // Another click (should reset debounce timer)
+      // Click back to Classic
       const classicThemeButton = screen.getByRole('button', { name: /Classic/i });
       act(() => {
         fireEvent.click(classicThemeButton);
       });
 
-      // Wait another 300ms (600ms total from first click, but only 300ms from second)
-      act(() => {
-        vi.advanceTimersByTime(300);
-      });
-
-      // Still no spinner (only 300ms since last change)
-      expect(getSpinner()).toBeFalsy();
-
-      // Wait remaining 200ms (500ms from second click)
-      act(() => {
-        vi.advanceTimersByTime(200);
-      });
-
-      // Now spinner should show (debounce completed from second change)
+      // Loading should show again
       expect(getSpinner()).toBeTruthy();
+    });
+
+    it('updates iframe src when theme changes', () => {
+      const { container } = render(<WebsiteEditor {...defaultProps} />);
+
+      // Get initial iframe src
+      const getIframeSrc = () => container.querySelector('iframe')?.getAttribute('src');
+      const initialSrc = getIframeSrc();
+      expect(initialSrc).toContain('v=0');
+
+      // Change theme - the click will trigger state updates
+      const luxeThemeButton = screen.getByRole('button', { name: /Luxe/i });
+      act(() => {
+        fireEvent.click(luxeThemeButton);
+      });
+
+      // Query the iframe src again AFTER the state update
+      // The iframe has key={previewKey}, so it gets remounted with a new src
+      const newSrc = getIframeSrc();
+      expect(newSrc).toContain('/marie-et-jean?preview=true');
+      // After theme change, previewKey should increment to 1
+      expect(newSrc).toContain('v=1');
     });
   });
 
@@ -224,6 +216,36 @@ describe('WebsiteEditor', () => {
       expect(screen.getByTitle('Bureau')).toBeTruthy();
       expect(screen.getByTitle('Tablette')).toBeTruthy();
       expect(screen.getByTitle('Mobile')).toBeTruthy();
+    });
+  });
+
+  describe('Auto-save', () => {
+    it('triggers auto-save after 2 seconds of no changes', async () => {
+      render(<WebsiteEditor {...defaultProps} />);
+
+      // Change theme
+      const luxeThemeButton = screen.getByRole('button', { name: /Luxe/i });
+      act(() => {
+        fireEvent.click(luxeThemeButton);
+      });
+
+      // Before auto-save timeout, localStorage should not have the new value
+      // (auto-save is debounced 2s)
+      expect(localStorageMock.setItem).not.toHaveBeenCalledWith(
+        'wedding_customization_marie-et-jean',
+        expect.stringContaining('luxe')
+      );
+
+      // Advance timers past auto-save debounce (2000ms)
+      act(() => {
+        vi.advanceTimersByTime(2100);
+      });
+
+      // Now localStorage should have been called with the customization
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'wedding_customization_marie-et-jean',
+        expect.stringContaining('luxe')
+      );
     });
   });
 });
