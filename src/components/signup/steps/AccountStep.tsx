@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { AdminInput } from '../../admin/ui/AdminInput';
 import { AdminButton } from '../../admin/ui/AdminButton';
-import { getPasswordError, getPasswordRequirementsMessage } from '../../../lib/passwordValidation';
+import { getPasswordErrorKey } from '../../../lib/passwordValidation';
 import { t } from '../../../i18n/utils';
 import type { Language } from '../../../i18n/translations';
 
@@ -40,10 +40,9 @@ export function AccountStep({ data, onChange, onNext, errors = {}, lang }: Accou
     if (!data.password) {
       newErrors.password = t(lang, 'signup.errors.passwordRequired');
     } else {
-      const passwordError = getPasswordError(data.password);
-      if (passwordError) {
-        // Use the actual validation error which is already descriptive
-        newErrors.password = passwordError;
+      const passwordErrorKey = getPasswordErrorKey(data.password);
+      if (passwordErrorKey) {
+        newErrors.password = t(lang, passwordErrorKey);
       }
     }
 

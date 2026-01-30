@@ -37,7 +37,7 @@ export function WeddingStep({ data, onChange, onNext, onBack, lang }: WeddingSte
     if (data.weddingDate) {
       const date = new Date(data.weddingDate);
       if (isNaN(date.getTime())) {
-        newErrors.weddingDate = t(lang, 'common.error');
+        newErrors.weddingDate = t(lang, 'signup.errors.invalidDate');
       }
     }
 

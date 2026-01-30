@@ -64,3 +64,27 @@ export function getPasswordError(password: string): string | null {
 
   return result.errors[0];
 }
+
+/**
+ * Get the translation key for password validation error
+ * Returns null if password is valid, or a translation key string
+ */
+export function getPasswordErrorKey(password: string): string | null {
+  if (password.length < 8) {
+    return 'signup.errors.passwordTooShort';
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return 'signup.errors.passwordNoUppercase';
+  }
+
+  if (!/[a-z]/.test(password)) {
+    return 'signup.errors.passwordNoLowercase';
+  }
+
+  if (!/[0-9]/.test(password)) {
+    return 'signup.errors.passwordNoNumber';
+  }
+
+  return null;
+}
