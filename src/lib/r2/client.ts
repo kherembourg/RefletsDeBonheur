@@ -12,7 +12,7 @@ import type { R2Config, PresignedUrlResult, MediaUploadOptions, UploadResult } f
 // Configuration
 // ============================================
 
-function getR2Config(): R2Config | null {
+export function getR2Config(): R2Config | null {
   // Server-side only - check for environment variables
   const accountId = import.meta.env.R2_ACCOUNT_ID;
   const accessKeyId = import.meta.env.R2_ACCESS_KEY_ID;
@@ -43,7 +43,7 @@ export function isR2Configured(): boolean {
 
 let s3Client: S3Client | null = null;
 
-function getS3Client(): S3Client {
+export function getS3Client(): S3Client {
   if (s3Client) return s3Client;
 
   const config = getR2Config();
