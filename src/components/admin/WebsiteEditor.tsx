@@ -68,7 +68,6 @@ export function WebsiteEditor({
     updateColors,
     updateContent,
     updateImages,
-    setCustomization,
     resetToDefault,
     previewKey,
     isPreviewLoading,
@@ -311,7 +310,6 @@ export function WebsiteEditor({
                   onColorsChange={updateColors}
                   onContentChange={updateContent}
                   onImagesChange={updateImages}
-                  onFullUpdate={setCustomization}
                   onUpload={uploadImage}
                   uploadProgress={uploadProgress}
                 />
@@ -400,7 +398,6 @@ interface EditorContentProps {
   onColorsChange: (palette: Record<string, string | undefined>) => void;
   onContentChange: (content: Record<string, string | undefined>) => void;
   onImagesChange: (images: Record<string, string | undefined>) => void;
-  onFullUpdate: (customization: WeddingCustomization) => void;
   onUpload: (file: File, key: string) => Promise<string>;
   uploadProgress: number | null;
 }
@@ -412,7 +409,6 @@ function EditorContent({
   onColorsChange,
   onContentChange,
   onImagesChange,
-  onFullUpdate,
   onUpload,
   uploadProgress,
 }: EditorContentProps) {

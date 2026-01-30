@@ -5,7 +5,7 @@
  * Handles customization, auto-save, live preview, and image uploads.
  */
 
-import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, type RefObject } from 'react';
 import type { ThemeId } from '../lib/themes';
 import type {
   WeddingCustomization,
@@ -104,7 +104,10 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
   // ----------------------------------------
   // Computed
   // ----------------------------------------
-  const hasUnsavedChanges = JSON.stringify(customization) !== lastSavedRef.current;
+  const hasUnsavedChanges = useMemo(
+    () => JSON.stringify(customization) !== lastSavedRef.current,
+    [customization]
+  );
 
   // ----------------------------------------
   // Load from localStorage (demo mode)
