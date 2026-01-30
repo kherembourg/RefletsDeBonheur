@@ -6,9 +6,10 @@ import { SUBSCRIPTION_STATUS_LABELS } from '../../lib/stripe/types';
 interface SubscriptionStatusProps {
   profileId: string;
   demoMode?: boolean;
+  refreshKey?: number;
 }
 
-export function SubscriptionStatus({ profileId, demoMode = false }: SubscriptionStatusProps) {
+export function SubscriptionStatus({ profileId, demoMode = false, refreshKey = 0 }: SubscriptionStatusProps) {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -35,7 +36,7 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
 
     // Fetch subscription status from API
     fetchSubscriptionStatus();
-  }, [profileId, demoMode]);
+  }, [profileId, demoMode, refreshKey]);
 
   const fetchSubscriptionStatus = async () => {
     try {
@@ -69,7 +70,13 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to create checkout session');
+        // Handle specific error codes
+        if (data.code === 'ALREADY_ACTIVE') {
+          setError('Vous avez déjà un abonnement actif.');
+          setCheckoutLoading(false);
+          return;
+        }
+        throw new Error(data.error || data.message || 'Failed to create checkout session');
       }
 
       const { url } = await response.json();

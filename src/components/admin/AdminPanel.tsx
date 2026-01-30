@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Settings,
   ImageIcon,
@@ -26,6 +26,7 @@ import { SubscriptionStatus } from './SubscriptionStatus';
 import { RSVPManager } from './rsvp';
 import { GalleryGrid } from '../gallery/GalleryGrid';
 import { AdminSection, AdminCard, AdminButton } from './ui';
+import { useToast } from '../ui/Toast';
 import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
 import { DataService, type Album, type GallerySettings, type WeddingStatistics } from '../../lib/services/dataService';
 import { mockAPI, downloadBlob } from '../../lib/api';
@@ -75,6 +76,8 @@ export function AdminPanel({
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('classic');
+  const [subscriptionRefreshKey, setSubscriptionRefreshKey] = useState(0);
+  const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
     // Check authentication and admin status (skip in demo mode)
@@ -135,6 +138,23 @@ export function AdminPanel({
 
     loadStats();
   }, [demoMode, dataService]);
+
+  // Handle payment query parameters (success/cancel from Stripe)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+
+    if (payment === 'success') {
+      showToast('success', 'Paiement réussi ! Votre abonnement est maintenant actif.');
+      // Remove query param from URL to prevent re-showing on refresh
+      window.history.replaceState({}, '', window.location.pathname);
+      // Trigger subscription status refresh
+      setSubscriptionRefreshKey(prev => prev + 1);
+    } else if (payment === 'cancelled') {
+      showToast('info', 'Paiement annulé. Vous pouvez réessayer à tout moment.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [showToast]);
 
   const [settingsLoading, setSettingsLoading] = useState(false);
 
@@ -490,6 +510,7 @@ export function AdminPanel({
           <SubscriptionStatus
             profileId={profileId || ''}
             demoMode={demoMode}
+            refreshKey={subscriptionRefreshKey}
           />
         </AdminCard>
       </AdminSection>
@@ -669,6 +690,7 @@ export function AdminPanel({
 
   return (
     <div className="min-h-screen h-screen bg-[#f3f0f4] flex relative overflow-hidden">
+      <ToastContainer />
       <div className="w-full h-full bg-white overflow-hidden flex flex-col md:flex-row">
         <aside className="hidden md:flex w-64 bg-[#eeebf0] flex-col justify-between border-r border-charcoal/5">
           <div>

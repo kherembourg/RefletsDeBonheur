@@ -31,12 +31,31 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Validate redirect URLs are same-origin to prevent open redirect vulnerability
+    const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+    const isValidUrl = (url: string): boolean => {
+      try {
+        const parsed = new URL(url);
+        const allowed = new URL(siteUrl);
+        return parsed.origin === allowed.origin;
+      } catch {
+        return false;
+      }
+    };
+
+    if (!isValidUrl(successUrl) || !isValidUrl(cancelUrl)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid redirect URL', code: 'INVALID_URL' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const adminClient = getSupabaseAdminClient();
 
-    // Get profile data
+    // Get profile data including subscription status
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('id, email, full_name, stripe_customer_id')
+      .select('id, email, full_name, stripe_customer_id, subscription_status')
       .eq('id', profileId)
       .single();
 
@@ -44,6 +63,17 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(
         JSON.stringify({ error: 'Profile not found' }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user already has an active subscription (prevent duplicate payments)
+    if (profile.subscription_status === 'active') {
+      return new Response(
+        JSON.stringify({
+          error: 'You already have an active subscription',
+          code: 'ALREADY_ACTIVE'
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 

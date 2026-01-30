@@ -38,6 +38,42 @@ export const POST: APIRoute = async ({ request }) => {
 
   const adminClient = getSupabaseAdminClient();
 
+  // Check if event was already processed (idempotency)
+  const { data: existingEvent } = await adminClient
+    .from('stripe_events')
+    .select('id')
+    .eq('stripe_event_id', event.id)
+    .single();
+
+  if (existingEvent) {
+    console.log(`[Webhook] Event ${event.id} already processed, skipping`);
+    return new Response(JSON.stringify({ received: true, duplicate: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Store event before processing to prevent race conditions
+  const { error: insertError } = await adminClient
+    .from('stripe_events')
+    .insert({
+      stripe_event_id: event.id,
+      type: event.type,
+    });
+
+  if (insertError) {
+    // If insert fails with unique constraint, another request is processing this event
+    if (insertError.code === '23505') {
+      console.log(`[Webhook] Event ${event.id} being processed by another request`);
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    console.error('[Webhook] Failed to store event:', insertError);
+    // Continue processing even if storage fails - better to process twice than not at all
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
