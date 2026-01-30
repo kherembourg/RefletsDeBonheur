@@ -335,12 +335,73 @@ Use any future expiry (e.g., `12/34`) and any CVC (e.g., `123`).
 
 ## Success Criteria
 
-- [ ] All Phase 1 security fixes implemented and tested
-- [ ] Phase 2 UX improvements show proper feedback
+- [x] All Phase 1 security fixes implemented and tested
+- [x] Phase 2 UX improvements show proper feedback
 - [ ] Phase 3 end-to-end tests all pass
-- [ ] Phase 4 documentation allows new developers to onboard
+- [x] Phase 4 documentation allows new developers to onboard
 - [ ] No console errors during payment flow
 - [ ] Profile correctly transitions from `trial` → `active`
+
+---
+
+## 🚀 NEXT SESSION: Manual Setup & Testing
+
+**Status:** Code complete, needs manual Stripe setup and testing.
+
+### Step 1: Create Stripe Account (5 min)
+```bash
+# Go to https://dashboard.stripe.com/register
+# Complete registration, verify email
+# Stay in TEST MODE (toggle in top-right)
+```
+
+### Step 2: Get API Keys (2 min)
+```bash
+# Dashboard → Developers → API keys
+# Copy these to .env:
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+### Step 3: Install Stripe CLI (2 min)
+```bash
+brew install stripe/stripe-cli/stripe
+stripe login
+```
+
+### Step 4: Start Webhook Forwarding
+```bash
+# In a separate terminal:
+stripe listen --forward-to localhost:4321/api/stripe/webhook
+
+# Copy the whsec_... secret to .env:
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+### Step 5: Run the Migration
+```bash
+# Apply the new stripe_events table
+# (via Supabase dashboard or CLI)
+```
+
+### Step 6: Test the Flow
+```bash
+npm run dev
+
+# Then test:
+# 1. Log in as trial user
+# 2. Go to Admin → Settings → Abonnement
+# 3. Click "Passer au forfait complet"
+# 4. Use test card: 4242 4242 4242 4242
+# 5. Verify success toast appears
+# 6. Verify status shows "Actif"
+```
+
+### After Testing: Merge PR
+```bash
+# If all tests pass:
+gh pr merge 32 --squash
+```
 
 ---
 
