@@ -157,7 +157,10 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Validate wedding ownership
+    // Check if demo mode is explicitly enabled
+    const isDemoMode = import.meta.env.DEMO_MODE === 'true';
+
+    // Validate wedding ownership (skip in demo mode)
     if (isSupabaseConfigured() && isSupabaseServiceRoleConfigured()) {
       const adminClient = getSupabaseAdminClient();
 
@@ -181,7 +184,7 @@ export const POST: APIRoute = async ({ request }) => {
         );
       }
 
-      // Check authorization via Supabase auth token
+      // Check authorization via Supabase auth token (required unless demo mode)
       const authHeader = request.headers.get('Authorization');
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.slice(7);
@@ -212,8 +215,20 @@ export const POST: APIRoute = async ({ request }) => {
             }
           );
         }
+      } else if (!isDemoMode) {
+        // No auth header and not in demo mode - reject
+        return new Response(
+          JSON.stringify({
+            error: 'Unauthorized',
+            message: 'Authorization required. Please provide a valid Bearer token.',
+          }),
+          {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
       }
-      // Note: For demo mode or development, we allow uploads without auth
+      // Demo mode: allow uploads without auth for testing
     }
 
     // Generate storage key for website images

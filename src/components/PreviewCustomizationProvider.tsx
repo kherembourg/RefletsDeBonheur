@@ -59,6 +59,12 @@ export function PreviewCustomizationProvider({
   // Listen for postMessage from editor
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      // Security: Validate origin to prevent XSS via malicious postMessage
+      if (event.origin !== window.location.origin) {
+        // Silently ignore messages from other origins
+        return;
+      }
+
       if (event.data?.type === 'CUSTOMIZATION_UPDATE') {
         setCustomization(event.data.customization);
       }

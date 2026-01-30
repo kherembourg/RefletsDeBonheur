@@ -25,6 +25,7 @@ export interface UseWebsiteEditorOptions {
   weddingId: string;
   weddingSlug: string;
   demoMode?: boolean;
+  authToken?: string;
   initialCustomization?: WeddingCustomization;
   onSave?: (customization: WeddingCustomization) => Promise<void>;
 }
@@ -68,6 +69,7 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
     weddingId,
     weddingSlug,
     demoMode = false,
+    authToken,
     initialCustomization,
     onSave,
   } = options;
@@ -174,7 +176,10 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
       // Production mode: save to API
       const response = await fetch('/api/customization/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
+        },
         body: JSON.stringify({ weddingId, customization: data }),
       });
 
@@ -184,7 +189,7 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
 
       return response.json();
     },
-    [weddingId, weddingSlug, demoMode]
+    [weddingId, weddingSlug, demoMode, authToken]
   );
 
   const performSave = useCallback(async () => {
@@ -346,7 +351,10 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
         // Step 1: Get presigned URL
         const presignResponse = await fetch('/api/upload/website-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authToken && { Authorization: `Bearer ${authToken}` }),
+          },
           body: JSON.stringify({
             weddingId,
             fileName: file.name,
@@ -400,7 +408,7 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
         throw error;
       }
     },
-    [weddingId, demoMode, updateImages]
+    [weddingId, demoMode, authToken, updateImages]
   );
 
   // ----------------------------------------
