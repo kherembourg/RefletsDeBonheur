@@ -29,52 +29,14 @@
  */
 
 import type { APIRoute } from 'astro';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+import { getR2Config, getS3Client } from '../../../lib/r2';
 
 export const prerender = false;
-
-// R2 Configuration
-function getR2Config() {
-  const accountId = import.meta.env.R2_ACCOUNT_ID;
-  const accessKeyId = import.meta.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = import.meta.env.R2_SECRET_ACCESS_KEY;
-  const bucketName = import.meta.env.R2_BUCKET_NAME;
-  const publicUrl = import.meta.env.R2_PUBLIC_URL;
-
-  if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
-    return null;
-  }
-
-  return {
-    accountId,
-    accessKeyId,
-    secretAccessKey,
-    bucketName,
-    publicUrl: publicUrl || `https://${bucketName}.${accountId}.r2.cloudflarestorage.com`,
-  };
-}
-
-// S3 Client (singleton)
-let s3Client: S3Client | null = null;
-
-function getS3Client(config: NonNullable<ReturnType<typeof getR2Config>>): S3Client {
-  if (s3Client) return s3Client;
-
-  s3Client = new S3Client({
-    region: 'auto',
-    endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-  });
-
-  return s3Client;
-}
 
 // Allowed image types for website customization
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -254,9 +216,9 @@ export const POST: APIRoute = async ({ request }) => {
     const key = `weddings/${weddingId}/website/${imageKey}-${timestamp}-${random}.${extension}`;
 
     // Generate presigned URL
-    const client = getS3Client(r2Config);
+    const client = getS3Client();
     const command = new PutObjectCommand({
-      Bucket: r2Config.bucketName,
+      Bucket: r2Config!.bucketName,
       Key: key,
       ContentType: contentType,
       Metadata: {
@@ -272,7 +234,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         uploadUrl,
-        publicUrl: `${r2Config.publicUrl}/${key}`,
+        publicUrl: `${r2Config!.publicUrl}/${key}`,
         key,
         expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
       }),

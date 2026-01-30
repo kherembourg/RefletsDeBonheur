@@ -95,6 +95,8 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
   );
   const customizationRef = useRef(customization);
   const blobUrlsRef = useRef<Set<string>>(new Set());
+  const saveInProgressRef = useRef(false);
+  const pendingSaveRef = useRef(false);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -205,6 +207,14 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
       return;
     }
 
+    // Prevent concurrent saves - queue for later if already saving
+    if (saveInProgressRef.current) {
+      pendingSaveRef.current = true;
+      return;
+    }
+
+    saveInProgressRef.current = true;
+
     try {
       setSaveStatus('saving');
       const dataToSave = {
@@ -229,6 +239,15 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
       setSaveStatus('error');
       // Reset to idle after 3 seconds on error
       setTimeout(() => setSaveStatus('idle'), 3000);
+    } finally {
+      saveInProgressRef.current = false;
+
+      // If changes were made during save, trigger another save
+      if (pendingSaveRef.current) {
+        pendingSaveRef.current = false;
+        // Use setTimeout to avoid stack overflow with rapid changes
+        setTimeout(() => performSave(), 100);
+      }
     }
   }, [onSave, saveToApi]);
 
