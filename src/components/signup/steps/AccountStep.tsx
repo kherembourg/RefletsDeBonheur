@@ -3,6 +3,8 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { AdminInput } from '../../admin/ui/AdminInput';
 import { AdminButton } from '../../admin/ui/AdminButton';
 import { getPasswordError, getPasswordRequirementsMessage } from '../../../lib/passwordValidation';
+import { t } from '../../../i18n/utils';
+import type { Language } from '../../../i18n/translations';
 
 export interface AccountData {
   email: string;
@@ -15,9 +17,10 @@ interface AccountStepProps {
   onChange: (data: AccountData) => void;
   onNext: () => void;
   errors?: Record<string, string>;
+  lang: Language;
 }
 
-export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStepProps) {
+export function AccountStep({ data, onChange, onNext, errors = {}, lang }: AccountStepProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
@@ -28,26 +31,27 @@ export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStep
     // Email validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!data.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t(lang, 'signup.errors.emailRequired');
     } else if (!emailPattern.test(data.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t(lang, 'signup.errors.emailInvalid');
     }
 
     // Password validation
     if (!data.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t(lang, 'signup.errors.passwordRequired');
     } else {
       const passwordError = getPasswordError(data.password);
       if (passwordError) {
+        // Use the actual validation error which is already descriptive
         newErrors.password = passwordError;
       }
     }
 
     // Confirm password
     if (!data.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = t(lang, 'signup.errors.confirmRequired');
     } else if (data.password !== data.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t(lang, 'signup.errors.passwordMismatch');
     }
 
     setLocalErrors(newErrors);
@@ -66,14 +70,14 @@ export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStep
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="font-serif text-2xl text-charcoal mb-2">Create Your Account</h2>
-        <p className="text-charcoal/60 text-sm">Start your 1-month free trial. No credit card required.</p>
+        <h2 className="font-serif text-2xl text-charcoal mb-2">{t(lang, 'signup.account.title')}</h2>
+        <p className="text-charcoal/60 text-sm">{t(lang, 'signup.account.subtitle')}</p>
       </div>
 
       <AdminInput
-        label="Email Address"
+        label={t(lang, 'signup.account.email')}
         type="email"
-        placeholder="you@example.com"
+        placeholder={t(lang, 'signup.account.emailPlaceholder')}
         value={data.email}
         onChange={(e) => onChange({ ...data, email: e.target.value })}
         error={mergedErrors.email}
@@ -83,9 +87,9 @@ export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStep
       />
 
       <AdminInput
-        label="Password"
+        label={t(lang, 'signup.account.password')}
         type={showPassword ? 'text' : 'password'}
-        placeholder="8+ chars, upper, lower, number"
+        placeholder={t(lang, 'signup.account.passwordPlaceholder')}
         value={data.password}
         onChange={(e) => onChange({ ...data, password: e.target.value })}
         error={mergedErrors.password}
@@ -105,9 +109,9 @@ export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStep
       />
 
       <AdminInput
-        label="Confirm Password"
+        label={t(lang, 'signup.account.confirmPassword')}
         type={showConfirm ? 'text' : 'password'}
-        placeholder="Re-enter your password"
+        placeholder={t(lang, 'signup.account.confirmPlaceholder')}
         value={data.confirmPassword}
         onChange={(e) => onChange({ ...data, confirmPassword: e.target.value })}
         error={mergedErrors.confirmPassword}
@@ -128,14 +132,14 @@ export function AccountStep({ data, onChange, onNext, errors = {} }: AccountStep
 
       <div className="pt-4">
         <AdminButton type="submit" variant="primary" size="lg" fullWidth>
-          Continue
+          {t(lang, 'signup.navigation.continue')}
         </AdminButton>
       </div>
 
       <p className="text-center text-xs text-charcoal/50 mt-4">
-        Already have an account?{' '}
+        {t(lang, 'signup.account.alreadyHaveAccount')}{' '}
         <a href="/connexion" className="text-burgundy-old hover:underline">
-          Sign in
+          {t(lang, 'signup.account.signIn')}
         </a>
       </p>
     </form>

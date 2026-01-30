@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { AdminInput } from '../../admin/ui/AdminInput';
 import { AdminButton } from '../../admin/ui/AdminButton';
+import { t } from '../../../i18n/utils';
+import type { Language } from '../../../i18n/translations';
 
 export interface SlugData {
   slug: string;
@@ -14,6 +16,7 @@ interface SlugStepProps {
   onBack: () => void;
   partner1Name: string;
   partner2Name: string;
+  lang: Language;
 }
 
 interface SlugCheckResult {
@@ -41,6 +44,7 @@ export function SlugStep({
   onBack,
   partner1Name,
   partner2Name,
+  lang,
 }: SlugStepProps) {
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<SlugCheckResult | null>(null);
@@ -107,17 +111,17 @@ export function SlugStep({
     e.preventDefault();
 
     if (!data.slug) {
-      setError('Please enter a URL for your wedding site');
+      setError(t(lang, 'signup.errors.slugRequired'));
       return;
     }
 
     if (data.slug.length < 3) {
-      setError('URL must be at least 3 characters');
+      setError(t(lang, 'signup.errors.slugTooShort'));
       return;
     }
 
     if (checkResult && !checkResult.available) {
-      setError(checkResult.message || 'This URL is not available');
+      setError(checkResult.message || t(lang, 'signup.slug.taken'));
       return;
     }
 
@@ -136,15 +140,15 @@ export function SlugStep({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="font-serif text-2xl text-charcoal mb-2">Choose Your URL</h2>
-        <p className="text-charcoal/60 text-sm">This will be the address for your wedding website.</p>
+        <h2 className="font-serif text-2xl text-charcoal mb-2">{t(lang, 'signup.slug.title')}</h2>
+        <p className="text-charcoal/60 text-sm">{t(lang, 'signup.slug.subtitle')}</p>
       </div>
 
       <div className="space-y-2">
         <AdminInput
-          label="Wedding Site URL"
+          label={t(lang, 'signup.slug.label')}
           type="text"
-          placeholder="marie-thomas"
+          placeholder={t(lang, 'signup.slug.placeholder')}
           value={data.slug}
           onChange={(e) => handleSlugChange(e.target.value)}
           error={error}
@@ -164,7 +168,7 @@ export function SlugStep({
 
         {/* URL Preview */}
         <p className="text-sm text-charcoal/50 pl-1">
-          Your site will be available at:{' '}
+          {t(lang, 'signup.slug.preview')}{' '}
           <span className="font-medium text-charcoal">
             {baseUrl}/{data.slug || 'your-names'}
           </span>
@@ -180,13 +184,13 @@ export function SlugStep({
             }`}
           >
             {checkResult.available ? (
-              'This URL is available!'
+              t(lang, 'signup.slug.available')
             ) : (
               <>
                 {checkResult.message}
                 {checkResult.suggestions && checkResult.suggestions.length > 0 && (
                   <div className="mt-2">
-                    <span className="font-medium">Try instead: </span>
+                    <span className="font-medium">{t(lang, 'signup.slug.suggestions')} </span>
                     {checkResult.suggestions.map((suggestion, index) => (
                       <button
                         key={suggestion}
@@ -207,11 +211,11 @@ export function SlugStep({
       </div>
 
       <div className="bg-cream/50 rounded-lg p-4 text-sm text-charcoal/70">
-        <p className="font-medium text-charcoal mb-1">URL Guidelines:</p>
+        <p className="font-medium text-charcoal mb-1">{t(lang, 'signup.slug.guidelines.title')}</p>
         <ul className="list-disc list-inside space-y-1 text-xs">
-          <li>Use lowercase letters, numbers, and hyphens only</li>
-          <li>Must be between 3 and 50 characters</li>
-          <li>Will be converted to lowercase automatically</li>
+          <li>{t(lang, 'signup.slug.guidelines.lowercase')}</li>
+          <li>{t(lang, 'signup.slug.guidelines.length')}</li>
+          <li>{t(lang, 'signup.slug.guidelines.auto')}</li>
         </ul>
       </div>
 
@@ -223,7 +227,7 @@ export function SlugStep({
           onClick={onBack}
           className="flex-1"
         >
-          Back
+          {t(lang, 'signup.navigation.back')}
         </AdminButton>
         <AdminButton
           type="submit"
@@ -232,7 +236,7 @@ export function SlugStep({
           className="flex-1"
           disabled={checking || (checkResult !== null && !checkResult.available)}
         >
-          {checking ? 'Checking...' : 'Continue'}
+          {checking ? t(lang, 'signup.navigation.checking') : t(lang, 'signup.navigation.continue')}
         </AdminButton>
       </div>
     </form>

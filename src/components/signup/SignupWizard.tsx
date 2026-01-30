@@ -5,6 +5,8 @@ import { WeddingStep, type WeddingData } from './steps/WeddingStep';
 import { SlugStep, type SlugData } from './steps/SlugStep';
 import { ThemeStep, type ThemeData } from './steps/ThemeStep';
 import type { ThemeId } from '../../lib/themes';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 
 const STORAGE_KEY = 'signup_wizard_state';
 
@@ -22,15 +24,8 @@ const initialState: WizardState = {
   theme: { themeId: 'classic' as ThemeId },
 };
 
-const steps: Step[] = [
-  { id: 1, label: 'Account' },
-  { id: 2, label: 'Details' },
-  { id: 3, label: 'URL' },
-  { id: 4, label: 'Theme' },
-];
-
 interface SignupWizardProps {
-  lang?: 'en' | 'fr' | 'es';
+  lang?: Language;
 }
 
 export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
@@ -39,6 +34,14 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiErrors, setApiErrors] = useState<Record<string, string>>({});
+
+  // Create steps with translated labels
+  const steps: Step[] = [
+    { id: 1, label: t(lang, 'signup.steps.account') },
+    { id: 2, label: t(lang, 'signup.steps.details') },
+    { id: 3, label: t(lang, 'signup.steps.url') },
+    { id: 4, label: t(lang, 'signup.steps.theme') },
+  ];
 
   // Load state from sessionStorage on mount
   useEffect(() => {
@@ -162,7 +165,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
       window.location.href = result.redirect || `/${state.slug.slug}/admin`;
     } catch (err) {
       console.error('Signup error:', err);
-      setError('Network error. Please check your connection and try again.');
+      setError(t(lang, 'signup.errors.networkError'));
     } finally {
       setLoading(false);
     }
@@ -188,6 +191,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
             onChange={handleAccountChange}
             onNext={() => goToStep(2)}
             errors={apiErrors}
+            lang={lang}
           />
         )}
 
@@ -197,6 +201,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
             onChange={handleWeddingChange}
             onNext={() => goToStep(3)}
             onBack={() => goToStep(1)}
+            lang={lang}
           />
         )}
 
@@ -208,6 +213,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
             onBack={() => goToStep(2)}
             partner1Name={state.wedding.partner1Name}
             partner2Name={state.wedding.partner2Name}
+            lang={lang}
           />
         )}
 
@@ -218,6 +224,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
             onNext={handleSubmit}
             onBack={() => goToStep(3)}
             loading={loading}
+            lang={lang}
           />
         )}
       </div>
@@ -225,8 +232,8 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
       {/* Trial Info */}
       <div className="mt-6 text-center">
         <p className="text-sm text-charcoal/50">
-          <span className="font-medium text-burgundy-old">1-month free trial</span>
-          {' '}• Up to 50 photos • 1 video • No credit card required
+          <span className="font-medium text-burgundy-old">{t(lang, 'signup.trial.info')}</span>
+          {' '}• {t(lang, 'signup.trial.photos')} • {t(lang, 'signup.trial.video')} • {t(lang, 'signup.trial.noCard')}
         </p>
       </div>
     </div>

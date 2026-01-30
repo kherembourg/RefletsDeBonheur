@@ -23,6 +23,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -39,6 +40,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -54,6 +56,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -72,6 +75,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -88,6 +92,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -104,6 +109,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
         loading={true}
       />
     );
@@ -119,6 +125,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
         loading={true}
       />
     );
@@ -134,6 +141,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -148,6 +156,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -162,6 +171,7 @@ describe('ThemeStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 

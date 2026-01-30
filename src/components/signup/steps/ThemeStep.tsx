@@ -2,6 +2,8 @@ import { Check } from 'lucide-react';
 import { AdminButton } from '../../admin/ui/AdminButton';
 import { themeList, type ThemeId, type Theme } from '../../../lib/themes';
 import { cn } from '../../../styles/admin-theme';
+import { t } from '../../../i18n/utils';
+import type { Language } from '../../../i18n/translations';
 
 export interface ThemeData {
   themeId: ThemeId;
@@ -13,6 +15,7 @@ interface ThemeStepProps {
   onNext: () => void;
   onBack: () => void;
   loading?: boolean;
+  lang: Language;
 }
 
 function ThemeCard({
@@ -86,7 +89,7 @@ function ThemeCard({
   );
 }
 
-export function ThemeStep({ data, onChange, onNext, onBack, loading }: ThemeStepProps) {
+export function ThemeStep({ data, onChange, onNext, onBack, loading, lang }: ThemeStepProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (data.themeId) {
@@ -97,9 +100,9 @@ export function ThemeStep({ data, onChange, onNext, onBack, loading }: ThemeStep
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="font-serif text-2xl text-charcoal mb-2">Choose Your Theme</h2>
+        <h2 className="font-serif text-2xl text-charcoal mb-2">{t(lang, 'signup.theme.title')}</h2>
         <p className="text-charcoal/60 text-sm">
-          Select a style for your wedding website. You can customize it later.
+          {t(lang, 'signup.theme.subtitle')}
         </p>
       </div>
 
@@ -123,7 +126,7 @@ export function ThemeStep({ data, onChange, onNext, onBack, loading }: ThemeStep
           className="flex-1"
           disabled={loading}
         >
-          Back
+          {t(lang, 'signup.navigation.back')}
         </AdminButton>
         <AdminButton
           type="submit"
@@ -133,15 +136,15 @@ export function ThemeStep({ data, onChange, onNext, onBack, loading }: ThemeStep
           disabled={!data.themeId}
           loading={loading}
         >
-          {loading ? 'Creating...' : 'Create My Wedding Site'}
+          {loading ? t(lang, 'signup.theme.creating') : t(lang, 'signup.theme.submit')}
         </AdminButton>
       </div>
 
       <p className="text-center text-xs text-charcoal/50">
-        By creating an account, you agree to our{' '}
-        <a href="/cgv" className="text-burgundy-old hover:underline">Terms</a>
-        {' '}and{' '}
-        <a href="/politique-confidentialite" className="text-burgundy-old hover:underline">Privacy Policy</a>.
+        {t(lang, 'signup.theme.terms')}{' '}
+        <a href="/cgv" className="text-burgundy-old hover:underline">{t(lang, 'signup.theme.termsLink')}</a>
+        {' '}{t(lang, 'signup.theme.and')}{' '}
+        <a href="/politique-confidentialite" className="text-burgundy-old hover:underline">{t(lang, 'signup.theme.privacyLink')}</a>.
       </p>
     </form>
   );

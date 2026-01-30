@@ -22,6 +22,7 @@ describe('SlugStep', () => {
     onBack: mockOnBack,
     partner1Name: 'Marie',
     partner2Name: 'Thomas',
+    lang: 'en' as const,
   };
 
   beforeEach(() => {

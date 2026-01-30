@@ -18,7 +18,7 @@ describe('AccountStep', () => {
 
   it('renders all form fields', () => {
     render(
-      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} />
+      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} lang="en" />
     );
 
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
@@ -28,7 +28,7 @@ describe('AccountStep', () => {
 
   it('calls onChange when email is entered', () => {
     render(
-      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} />
+      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} lang="en" />
     );
 
     const emailInput = screen.getByPlaceholderText('you@example.com');
@@ -46,6 +46,7 @@ describe('AccountStep', () => {
         data={{ email: 'invalid', password: 'Password123', confirmPassword: 'Password123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
+        lang="en"
       />
     );
 
@@ -67,6 +68,7 @@ describe('AccountStep', () => {
         data={{ email: 'test@example.com', password: 'short', confirmPassword: 'short' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
+        lang="en"
       />
     );
 
@@ -83,6 +85,7 @@ describe('AccountStep', () => {
         data={{ email: 'test@example.com', password: 'Password123', confirmPassword: 'Different123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
+        lang="en"
       />
     );
 
@@ -99,6 +102,7 @@ describe('AccountStep', () => {
         data={{ email: 'test@example.com', password: 'Password123', confirmPassword: 'Password123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
+        lang="en"
       />
     );
 
@@ -114,6 +118,7 @@ describe('AccountStep', () => {
         data={{ email: 'test@example.com', password: 'password123', confirmPassword: 'password123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
+        lang="en"
       />
     );
 
@@ -130,6 +135,7 @@ describe('AccountStep', () => {
         data={{ email: 'test@example.com', password: 'PASSWORD123', confirmPassword: 'PASSWORD123' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
+        lang="en"
       />
     );
 
@@ -146,6 +152,7 @@ describe('AccountStep', () => {
         data={{ email: 'test@example.com', password: 'PasswordAbc', confirmPassword: 'PasswordAbc' }}
         onChange={mockOnChange}
         onNext={mockOnNext}
+        lang="en"
       />
     );
 
@@ -163,6 +170,7 @@ describe('AccountStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         errors={{ email: 'An account with this email already exists.' }}
+        lang="en"
       />
     );
 
@@ -171,7 +179,7 @@ describe('AccountStep', () => {
 
   it('has link to sign in page', () => {
     render(
-      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} />
+      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} lang="en" />
     );
 
     const signInLink = screen.getByRole('link', { name: /sign in/i });
@@ -180,10 +188,10 @@ describe('AccountStep', () => {
 
   it('toggles password visibility', () => {
     render(
-      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} />
+      <AccountStep data={defaultData} onChange={mockOnChange} onNext={mockOnNext} lang="en" />
     );
 
-    const passwordInput = screen.getByPlaceholderText('8+ chars, upper, lower, number');
+    const passwordInput = screen.getByPlaceholderText('At least 8 characters');
     expect(passwordInput).toHaveAttribute('type', 'password');
 
     // Find and click the toggle button (first one for password)

@@ -24,6 +24,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -39,6 +40,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -58,6 +60,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -75,6 +78,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -92,6 +96,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -108,6 +113,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -124,6 +130,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
@@ -137,6 +144,7 @@ describe('WeddingStep', () => {
         onChange={mockOnChange}
         onNext={mockOnNext}
         onBack={mockOnBack}
+        lang="en"
       />
     );
 
