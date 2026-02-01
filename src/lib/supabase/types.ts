@@ -225,6 +225,18 @@ export interface AuditLog {
   created_at: string;
 }
 
+export type StripeEventStatus = 'processing' | 'completed' | 'failed';
+
+export interface StripeEvent {
+  id: string;
+  stripe_event_id: string;
+  type: string;
+  status: StripeEventStatus;
+  error_message: string | null;
+  processed_at: string | null;
+  created_at: string;
+}
+
 // ============================================
 // Views
 // ============================================
@@ -315,6 +327,11 @@ export interface Database {
         Row: AuditLog;
         Insert: Omit<AuditLog, 'id' | 'created_at'>;
         Update: never;
+      };
+      stripe_events: {
+        Row: StripeEvent;
+        Insert: Omit<StripeEvent, 'id' | 'created_at' | 'processed_at'>;
+        Update: Partial<Omit<StripeEvent, 'id' | 'stripe_event_id' | 'created_at'>>;
       };
     };
     Views: {

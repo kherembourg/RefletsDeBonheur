@@ -2,28 +2,29 @@ import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 import { isSupabaseConfigured } from '../../../lib/supabase/client';
 import type { SubscriptionInfo } from '../../../lib/stripe/types';
+import { verifyProfileOwnership, errorResponse } from '../../../lib/stripe/apiAuth';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ request, url }) => {
   const profileId = url.searchParams.get('profileId');
 
   if (!profileId) {
-    return new Response(
-      JSON.stringify({ error: 'Missing profileId parameter' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Missing profileId parameter');
   }
 
   if (!isSupabaseConfigured() || !isSupabaseServiceRoleConfigured()) {
-    return new Response(
-      JSON.stringify({ error: 'Database not configured' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Database not configured', 503);
   }
 
+  const adminClient = getSupabaseAdminClient();
+
   try {
-    const adminClient = getSupabaseAdminClient();
+    // Verify the authenticated user owns this profile (prevent IDOR)
+    const authResult = await verifyProfileOwnership(request, profileId, adminClient);
+    if (!authResult.authorized) {
+      return errorResponse(authResult.error || 'Unauthorized', 403);
+    }
 
     const { data: profile, error } = await adminClient
       .from('profiles')
@@ -32,10 +33,7 @@ export const GET: APIRoute = async ({ url }) => {
       .single();
 
     if (error || !profile) {
-      return new Response(
-        JSON.stringify({ error: 'Profile not found', message: error?.message }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Profile not found', 404);
     }
 
     const now = new Date();
@@ -61,9 +59,6 @@ export const GET: APIRoute = async ({ url }) => {
     );
   } catch (error) {
     console.error('[API] Subscription status error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500);
   }
 };

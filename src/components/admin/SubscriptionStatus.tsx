@@ -38,11 +38,21 @@ export function SubscriptionStatus({ profileId, demoMode = false, refreshKey = 0
     fetchSubscriptionStatus();
   }, [profileId, demoMode, refreshKey]);
 
+  // Get auth token from localStorage for API requests
+  const getAuthToken = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('reflets_client_token');
+  };
+
   const fetchSubscriptionStatus = async () => {
     try {
-      const response = await fetch(`/api/stripe/subscription?profileId=${profileId}`);
+      const token = getAuthToken();
+      const response = await fetch(`/api/stripe/subscription?profileId=${profileId}`, {
+        headers: token ? { 'x-client-token': token } : {},
+      });
       if (!response.ok) {
-        throw new Error('Failed to fetch subscription status');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to fetch subscription status');
       }
       const data = await response.json();
       setSubscription(data);
@@ -58,9 +68,13 @@ export function SubscriptionStatus({ profileId, demoMode = false, refreshKey = 0
     setCheckoutLoading(true);
     setError(null);
     try {
+      const token = getAuthToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['x-client-token'] = token;
+
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           profileId,
           successUrl: `${window.location.origin}${window.location.pathname}?payment=success`,
@@ -92,9 +106,13 @@ export function SubscriptionStatus({ profileId, demoMode = false, refreshKey = 0
     setPortalLoading(true);
     setError(null);
     try {
+      const token = getAuthToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['x-client-token'] = token;
+
       const response = await fetch('/api/stripe/portal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           profileId,
           returnUrl: `${window.location.origin}${window.location.pathname}`,
