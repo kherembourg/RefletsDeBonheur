@@ -6,9 +6,10 @@ import { SUBSCRIPTION_STATUS_LABELS } from '../../lib/stripe/types';
 interface SubscriptionStatusProps {
   profileId: string;
   demoMode?: boolean;
+  refreshKey?: number;
 }
 
-export function SubscriptionStatus({ profileId, demoMode = false }: SubscriptionStatusProps) {
+export function SubscriptionStatus({ profileId, demoMode = false, refreshKey = 0 }: SubscriptionStatusProps) {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -35,13 +36,23 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
 
     // Fetch subscription status from API
     fetchSubscriptionStatus();
-  }, [profileId, demoMode]);
+  }, [profileId, demoMode, refreshKey]);
+
+  // Get auth token from localStorage for API requests
+  const getAuthToken = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('reflets_client_token');
+  };
 
   const fetchSubscriptionStatus = async () => {
     try {
-      const response = await fetch(`/api/stripe/subscription?profileId=${profileId}`);
+      const token = getAuthToken();
+      const response = await fetch(`/api/stripe/subscription?profileId=${profileId}`, {
+        headers: token ? { 'x-client-token': token } : {},
+      });
       if (!response.ok) {
-        throw new Error('Failed to fetch subscription status');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to fetch subscription status');
       }
       const data = await response.json();
       setSubscription(data);
@@ -57,19 +68,29 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
     setCheckoutLoading(true);
     setError(null);
     try {
+      const token = getAuthToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['x-client-token'] = token;
+
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           profileId,
-          successUrl: `${window.location.origin}/admin?payment=success`,
-          cancelUrl: `${window.location.origin}/admin?payment=cancelled`,
+          successUrl: `${window.location.origin}${window.location.pathname}?payment=success`,
+          cancelUrl: `${window.location.origin}${window.location.pathname}?payment=cancelled`,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to create checkout session');
+        // Handle specific error codes
+        if (data.code === 'ALREADY_ACTIVE') {
+          setError('Vous avez déjà un abonnement actif.');
+          setCheckoutLoading(false);
+          return;
+        }
+        throw new Error(data.error || data.message || 'Failed to create checkout session');
       }
 
       const { url } = await response.json();
@@ -85,12 +106,16 @@ export function SubscriptionStatus({ profileId, demoMode = false }: Subscription
     setPortalLoading(true);
     setError(null);
     try {
+      const token = getAuthToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['x-client-token'] = token;
+
       const response = await fetch('/api/stripe/portal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           profileId,
-          returnUrl: `${window.location.origin}/admin`,
+          returnUrl: `${window.location.origin}${window.location.pathname}`,
         }),
       });
 

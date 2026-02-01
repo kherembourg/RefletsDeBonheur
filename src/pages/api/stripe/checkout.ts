@@ -2,49 +2,55 @@ import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 import { isSupabaseConfigured } from '../../../lib/supabase/client';
 import { getStripeClient, isStripeConfigured, PRODUCT_CONFIG } from '../../../lib/stripe/server';
+import { verifyProfileOwnership, validateSameOrigin, errorResponse } from '../../../lib/stripe/apiAuth';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
   if (!isSupabaseConfigured() || !isSupabaseServiceRoleConfigured()) {
-    return new Response(
-      JSON.stringify({ error: 'Database not configured' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Database not configured', 503);
   }
 
   if (!isStripeConfigured()) {
-    return new Response(
-      JSON.stringify({ error: 'Payment system not configured' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Payment system not configured', 503);
   }
+
+  const adminClient = getSupabaseAdminClient();
 
   try {
     const body = await request.json();
     const { profileId, successUrl, cancelUrl } = body;
 
     if (!profileId || !successUrl || !cancelUrl) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Missing required fields');
     }
 
-    const adminClient = getSupabaseAdminClient();
+    // Verify the authenticated user owns this profile (prevent IDOR)
+    const authResult = await verifyProfileOwnership(request, profileId, adminClient);
+    if (!authResult.authorized) {
+      return errorResponse(authResult.error || 'Unauthorized', 403);
+    }
 
-    // Get profile data
+    // Validate redirect URLs are same-origin to prevent open redirect vulnerability
+    const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+    if (!validateSameOrigin(successUrl, siteUrl) || !validateSameOrigin(cancelUrl, siteUrl)) {
+      return errorResponse('Invalid redirect URL', 400, 'INVALID_URL');
+    }
+
+    // Get profile data including subscription status
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('id, email, full_name, stripe_customer_id')
+      .select('id, email, full_name, stripe_customer_id, subscription_status')
       .eq('id', profileId)
       .single();
 
     if (profileError || !profile) {
-      return new Response(
-        JSON.stringify({ error: 'Profile not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Profile not found', 404);
+    }
+
+    // Check if user already has an active subscription (prevent duplicate payments)
+    if (profile.subscription_status === 'active') {
+      return errorResponse('You already have an active subscription', 400, 'ALREADY_ACTIVE');
     }
 
     const stripe = getStripeClient();
@@ -112,12 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error) {
     console.error('[API] Checkout error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to create checkout session',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    // Don't expose internal error details to clients
+    return errorResponse('Failed to create checkout session', 500);
   }
 };

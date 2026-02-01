@@ -38,6 +38,29 @@ export const POST: APIRoute = async ({ request }) => {
 
   const adminClient = getSupabaseAdminClient();
 
+  // Atomic idempotency: try to insert first
+  // This prevents TOCTOU race conditions - if insert succeeds, we own this event
+  const { error: insertError } = await adminClient
+    .from('stripe_events')
+    .insert({
+      stripe_event_id: event.id,
+      type: event.type,
+      status: 'processing',
+    });
+
+  if (insertError) {
+    // If insert fails with unique constraint (23505), event is already being/been processed
+    if (insertError.code === '23505') {
+      console.log(`[Webhook] Event ${event.id} already processed or in progress, skipping`);
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    // For other errors, log but continue - better to process twice than not at all
+    console.error('[Webhook] Failed to store event:', insertError);
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -186,12 +209,28 @@ export const POST: APIRoute = async ({ request }) => {
         console.log(`[Webhook] Unhandled event type: ${event.type}`);
     }
 
+    // Mark event as completed
+    await adminClient
+      .from('stripe_events')
+      .update({ status: 'completed', processed_at: new Date().toISOString() })
+      .eq('stripe_event_id', event.id);
+
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('[Webhook] Handler error:', error);
+
+    // Mark event as failed for investigation
+    await adminClient
+      .from('stripe_events')
+      .update({
+        status: 'failed',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+      })
+      .eq('stripe_event_id', event.id);
+
     return new Response(
       JSON.stringify({ error: 'Webhook handler failed' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }

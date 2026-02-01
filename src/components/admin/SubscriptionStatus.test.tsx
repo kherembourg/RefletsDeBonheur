@@ -6,6 +6,20 @@ import { SubscriptionStatus } from './SubscriptionStatus';
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
+// Mock localStorage for auth token
+const mockLocalStorage = {
+  getItem: vi.fn().mockReturnValue('mock-auth-token'),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+};
+Object.defineProperty(window, 'localStorage', {
+  value: mockLocalStorage,
+  writable: true,
+});
+
 // Mock window.location
 const mockLocation = {
   href: '',
@@ -20,6 +34,7 @@ describe('SubscriptionStatus Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLocation.href = '';
+    mockLocalStorage.getItem.mockReturnValue('mock-auth-token');
   });
 
   describe('Demo Mode', () => {
@@ -97,11 +112,18 @@ describe('SubscriptionStatus Component', () => {
       });
     });
 
-    it('should fetch subscription status on mount', async () => {
+    it('should fetch subscription status on mount with auth token', async () => {
       render(<SubscriptionStatus profileId="test-profile-123" />);
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/stripe/subscription?profileId=test-profile-123');
+        expect(mockFetch).toHaveBeenCalledWith(
+          '/api/stripe/subscription?profileId=test-profile-123',
+          expect.objectContaining({
+            headers: expect.objectContaining({
+              'x-client-token': 'mock-auth-token',
+            }),
+          })
+        );
       });
     });
 
@@ -275,7 +297,7 @@ describe('SubscriptionStatus Component', () => {
         });
     });
 
-    it('should call checkout API when upgrade button clicked', async () => {
+    it('should call checkout API when upgrade button clicked with auth token', async () => {
       render(<SubscriptionStatus profileId="test-profile-123" />);
 
       await waitFor(() => {
@@ -288,7 +310,10 @@ describe('SubscriptionStatus Component', () => {
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith('/api/stripe/checkout', expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'x-client-token': 'mock-auth-token',
+          }),
         }));
       });
     });
@@ -334,7 +359,7 @@ describe('SubscriptionStatus Component', () => {
         });
     });
 
-    it('should call portal API when manage button clicked', async () => {
+    it('should call portal API when manage button clicked with auth token', async () => {
       render(<SubscriptionStatus profileId="test-profile-123" />);
 
       await waitFor(() => {
@@ -347,7 +372,10 @@ describe('SubscriptionStatus Component', () => {
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith('/api/stripe/portal', expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'x-client-token': 'mock-auth-token',
+          }),
         }));
       });
     });
