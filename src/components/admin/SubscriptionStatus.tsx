@@ -63,8 +63,8 @@ export function SubscriptionStatus({ profileId, demoMode = false, refreshKey = 0
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileId,
-          successUrl: `${window.location.origin}/admin?payment=success`,
-          cancelUrl: `${window.location.origin}/admin?payment=cancelled`,
+          successUrl: `${window.location.origin}${window.location.pathname}?payment=success`,
+          cancelUrl: `${window.location.origin}${window.location.pathname}?payment=cancelled`,
         }),
       });
 
@@ -97,7 +97,7 @@ export function SubscriptionStatus({ profileId, demoMode = false, refreshKey = 0
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileId,
-          returnUrl: `${window.location.origin}/admin`,
+          returnUrl: `${window.location.origin}${window.location.pathname}`,
         }),
       });
 
