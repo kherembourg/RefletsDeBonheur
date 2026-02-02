@@ -129,13 +129,24 @@ import '../../styles/global.css';
             is_admin: true,
           }));
 
-          // Update status
+          // Update status using safe DOM manipulation (prevent XSS)
           if (container) {
-            container.innerHTML = `
-              <div class="spinner"></div>
-              <p class="title">Accès autorisé</p>
-              <p class="subtitle">Redirection vers ${result.client.wedding_name}...</p>
-            `;
+            container.innerHTML = '';
+
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner';
+
+            const title = document.createElement('p');
+            title.className = 'title';
+            title.textContent = 'Accès autorisé';
+
+            const subtitle = document.createElement('p');
+            subtitle.className = 'subtitle';
+            subtitle.textContent = `Redirection vers ${result.client.wedding_name}...`;
+
+            container.appendChild(spinner);
+            container.appendChild(title);
+            container.appendChild(subtitle);
           }
 
           // Redirect to client admin interface
@@ -151,16 +162,32 @@ import '../../styles/global.css';
       }
     }
 
-    function showError(title: string, message: string) {
+    function showError(errorTitle: string, errorMessage: string) {
       const container = document.getElementById('status-container');
       if (container) {
-        container.innerHTML = `
-          <div class="error">
-            <p class="error-title">${title}</p>
-            <p class="error-message">${message}</p>
-            <a href="/god" class="back-link">← Retour au tableau de bord</a>
-          </div>
-        `;
+        // Use safe DOM manipulation to prevent XSS
+        container.innerHTML = '';
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+
+        const titleEl = document.createElement('p');
+        titleEl.className = 'error-title';
+        titleEl.textContent = errorTitle;
+
+        const messageEl = document.createElement('p');
+        messageEl.className = 'error-message';
+        messageEl.textContent = errorMessage;
+
+        const backLink = document.createElement('a');
+        backLink.href = '/god';
+        backLink.className = 'back-link';
+        backLink.textContent = '← Retour au tableau de bord';
+
+        errorDiv.appendChild(titleEl);
+        errorDiv.appendChild(messageEl);
+        errorDiv.appendChild(backLink);
+        container.appendChild(errorDiv);
       }
     }
 
