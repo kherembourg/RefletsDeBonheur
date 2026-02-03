@@ -65,32 +65,50 @@ export const POST: APIRoute = async ({ request }) => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const profileId = session.metadata?.profileId;
+        const sessionType = session.metadata?.type;
 
-        if (!profileId) {
-          console.error('[Webhook] No profileId in session metadata');
-          break;
-        }
-
-        if (session.payment_status === 'paid') {
-          // Calculate new subscription end date (2 years from now)
-          const endDate = new Date();
-          endDate.setFullYear(endDate.getFullYear() + PRODUCT_CONFIG.initialPeriodYears);
-
-          // Update profile to active status
+        if (sessionType === 'new_signup') {
+          // New signup flow - mark pending signup as completed
+          // The actual account creation is handled by /api/signup/verify-payment
           const { error } = await adminClient
-            .from('profiles')
-            .update({
-              subscription_status: 'active',
-              subscription_end_date: endDate.toISOString(),
-              stripe_customer_id: session.customer as string,
-            })
-            .eq('id', profileId);
+            .from('pending_signups')
+            .update({ stripe_checkout_status: 'completed' })
+            .eq('stripe_session_id', session.id);
 
           if (error) {
-            console.error('[Webhook] Failed to update profile:', error);
+            console.error('[Webhook] Failed to mark pending signup as completed:', error);
           } else {
-            console.log(`[Webhook] Profile ${profileId} upgraded to active`);
+            console.log(`[Webhook] Pending signup marked complete for session ${session.id}`);
+          }
+        } else {
+          // Existing profile upgrade flow
+          const profileId = session.metadata?.profileId;
+
+          if (!profileId) {
+            console.error('[Webhook] No profileId in session metadata');
+            break;
+          }
+
+          if (session.payment_status === 'paid') {
+            // Calculate new subscription end date (2 years from now)
+            const endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + PRODUCT_CONFIG.initialPeriodYears);
+
+            // Update profile to active status
+            const { error } = await adminClient
+              .from('profiles')
+              .update({
+                subscription_status: 'active',
+                subscription_end_date: endDate.toISOString(),
+                stripe_customer_id: session.customer as string,
+              })
+              .eq('id', profileId);
+
+            if (error) {
+              console.error('[Webhook] Failed to update profile:', error);
+            } else {
+              console.log(`[Webhook] Profile ${profileId} upgraded to active`);
+            }
           }
         }
         break;

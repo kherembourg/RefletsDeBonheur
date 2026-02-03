@@ -27,18 +27,22 @@
 - [x] **Démo fonctionnelle** (uploads et messages persistants)
 - [x] **i18n marketing** (FR/EN/ES)
 
-### Non Implémenté (Backend requis)
-- [ ] Authentification Supabase (mariés + invités)
-- [ ] Base de données PostgreSQL
-- [ ] Stockage Cloudflare R2
-- [ ] Upload resumable (TUS/Uppy)
-- [ ] Transcodage vidéo (Cloud Run + FFmpeg)
-- [ ] Live Wall temps réel (Supabase Realtime)
-- [ ] Système RSVP fonctionnel (actuellement mock)
-- [ ] Modération avec persistance
-- [ ] Géo-fencing
-- [ ] Paiement Stripe
-- [ ] Gestion multi-tenant
+### Implémenté (Backend)
+- [x] **Authentification Supabase** (mariés + invités + god admin)
+- [x] **Base de données PostgreSQL** (Supabase)
+- [x] **Stockage Cloudflare R2** (presigned URLs)
+- [x] **Système RSVP fonctionnel** (custom questions, responses viewer)
+- [x] **Modération avec persistance** (admin can delete content)
+- [x] **Paiement Stripe** (checkout, webhook, security) - **⚠️ NOT wired into signup flow**
+- [x] **Gestion multi-tenant** (profiles, weddings, god admin impersonation)
+
+### Non Implémenté (À venir)
+- [ ] Upload resumable (TUS/Uppy) - current: basic multipart upload
+- [ ] Transcodage vidéo (Cloud Run + FFmpeg) - current: direct video upload
+- [ ] Live Wall temps réel (Supabase Realtime) - current: manual refresh
+- [ ] Géo-fencing - planned feature
+- [ ] Email notifications (welcome, uploads) - **CRITICAL for launch**
+- [ ] Image thumbnails & optimization - **CRITICAL for performance**
 
 ---
 

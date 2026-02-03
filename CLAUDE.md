@@ -1,5 +1,38 @@
 # Reflets de Bonheur - Claude AI Context File
 
+## Mandatory Instructions to follow all the time
+
+### Shell Tools
+
+| Task | Tool |
+|------|------|
+| Find files | `fd` |
+| Find text/strings | `rg` |
+| Find code structures | `ast-grep` |
+| Select from results | pipe to `fzf` |
+| Process JSON | `jq` |
+| Process YAML/XML | `yq` |
+
+### Process
+
+Use git worktrees.
+Use sub-agents for each task. Parallelize tasks that can be parallelized.
+When picking up a milestone from a roadmap or general plan, if the milestone does not have a
+dedicated plan, a dedicated plan should be created.
+When a plan is deepened, the plan should be updated to reflect it (eg **Enhanced:** 2026-01-29 (via
+`/deepen-plan`) in the header).
+When a plan is reviewed, the plan should be updated to reflect it (eg **Reviewed:** 2026-01-29 (via
+`/$SKILL / $COMMAND`) in the header).
+When a plan is completed, the plan should be updated to reflect it (eg **Completed:** 2026-01-29 in
+the header).
+
+### Conventions
+
+- Favour ast-grep over grep when researching and operating over code
+- Commit early and eagerly. Favour atomic commits
+- Use a TDD approach
+- Run checks and gates (tests, linting,...) regularly to tighten your feedback loop
+
 ## Project Overview
 
 **Reflets de Bonheur** (*"Reflections of Happiness"*) is an elegant wedding photo and video sharing platform built with Astro 5 and React, featuring multi-language support, PWA capabilities, and a sophisticated design system.
@@ -16,8 +49,10 @@ The application is fully functional with:
 - **Supabase integration complete** - all components use DataService abstraction
 - Supabase Auth + profiles power client accounts
 - Client wedding pages (`/[slug]/*`) connect to Supabase when configured
+- **Stripe backend complete** - checkout, webhook, security tested in sandbox
+- 🚨 **Critical gap**: Stripe not integrated into pricing → signup flow (see Next Steps)
 
-**Last Updated:** January 24, 2026
+**Last Updated:** February 3, 2026
 
 ---
 
@@ -751,7 +786,7 @@ God access tokens (for impersonation) have a **24-hour TTL** and are automatical
 
 ## Next Steps
 
-### Immediate Priorities
+### Immediate Priorities (CRITICAL - Blocking Launch)
 1. ~~**Supabase Integration**: Connect components to real database~~ ✅ DONE
 2. ~~**R2 Media Storage**: Cloudflare R2 for file uploads~~ ✅ DONE
 3. ~~**Testing & God Token Fix**: Auth tests and 24h TTL~~ ✅ DONE
@@ -759,10 +794,22 @@ God access tokens (for impersonation) have a **24-hour TTL** and are automatical
 5. ~~**Admin Dashboard Redesign**: Modern card-based UI with admin theme system~~ ✅ DONE
 6. ~~**RSVP Management**: Custom questions, responses viewer, pagination~~ ✅ DONE
 7. ~~**Website Editor Live Preview**: Fix real-time preview updates~~ ✅ DONE
-8. **Increase Test Coverage**: Target 100% for critical paths
-9. **Payment Integration**: Stripe checkout for $199 package
-10. **Email Notifications**: Welcome emails, upload notifications
-11. **Image Processing**: Generate thumbnails and optimize images
+8. **Stripe Payment → Signup Integration**: 🚨 **CRITICAL GAP**
+   - Backend complete: checkout endpoint, webhook, security fixes, tested in sandbox ✅
+   - **Missing**: Pricing page doesn't trigger Stripe checkout before signup
+   - **Issue**: `/pricing` → `/signup` creates free account, bypassing payment
+   - **Fix needed**: Wire Stripe checkout into pricing → signup flow (2-4 hours)
+9. **Email Notifications**: Welcome emails after payment/signup (4-6 hours)
+   - Required for customer onboarding
+   - Service: Resend, SendGrid, or Supabase Auth emails
+10. **Image Thumbnails & Optimization**: Generate 400px thumbnails (6-8 hours)
+   - Current: Serving full-size images, slow gallery loads
+   - Impact: Performance issue with real usage
+
+### Pre-Launch Priorities
+11. **Increase Test Coverage**: Target 70%+ overall, 90%+ for critical paths
+   - Current: 39% overall (Auth: 91%, Admin: 91%, i18n: 97%)
+   - Focus: End-to-end Stripe flow, upload flow, RSVP responses
 
 ### Future Enhancements
 1. **Real-time sync**: WebSocket updates for gallery
@@ -798,7 +845,7 @@ Check that the file is in the `content` array in `tailwind.config.mjs`
 
 **Developer**: Kevin
 **Started**: January 2026
-**Last Updated**: January 21, 2026
+**Last Updated**: February 3, 2026
 
 ---
 

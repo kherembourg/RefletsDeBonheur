@@ -4,6 +4,7 @@ import { AccountStep, type AccountData } from './steps/AccountStep';
 import { WeddingStep, type WeddingData } from './steps/WeddingStep';
 import { SlugStep, type SlugData } from './steps/SlugStep';
 import { ThemeStep, type ThemeData } from './steps/ThemeStep';
+import { PaymentStep } from './steps/PaymentStep';
 import type { ThemeId } from '../../lib/themes';
 import { t } from '../../i18n/utils';
 import type { Language } from '../../i18n/translations';
@@ -31,7 +32,6 @@ interface SignupWizardProps {
 export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [state, setState] = useState<WizardState>(initialState);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiErrors, setApiErrors] = useState<Record<string, string>>({});
 
@@ -41,6 +41,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
     { id: 2, label: t(lang, 'signup.steps.details') },
     { id: 3, label: t(lang, 'signup.steps.url') },
     { id: 4, label: t(lang, 'signup.steps.theme') },
+    { id: 5, label: t(lang, 'signup.steps.payment') },
   ];
 
   // Load state from sessionStorage on mount
@@ -107,70 +108,6 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
     setError(null);
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setError(null);
-    setApiErrors({});
-
-    try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: state.account.email,
-          password: state.account.password,
-          partner1_name: state.wedding.partner1Name,
-          partner2_name: state.wedding.partner2Name,
-          wedding_date: state.wedding.weddingDate || null,
-          slug: state.slug.slug,
-          theme_id: state.theme.themeId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        // Handle field-specific errors
-        if (result.field) {
-          setApiErrors({ [result.field]: result.message });
-
-          // Navigate to the step with the error
-          if (result.field === 'email' || result.field === 'password') {
-            setCurrentStep(1);
-          } else if (result.field === 'slug') {
-            setCurrentStep(3);
-          }
-        } else {
-          setError(result.message || 'An error occurred. Please try again.');
-        }
-        return;
-      }
-
-      // Success!
-      clearStorage();
-
-      // Store session if provided
-      if (result.session) {
-        // Store tokens for Supabase client
-        localStorage.setItem('supabase.auth.token', JSON.stringify({
-          currentSession: {
-            access_token: result.session.access_token,
-            refresh_token: result.session.refresh_token,
-            expires_at: result.session.expires_at,
-          },
-        }));
-      }
-
-      // Redirect to admin dashboard
-      window.location.href = result.redirect || `/${state.slug.slug}/admin`;
-    } catch (err) {
-      console.error('Signup error:', err);
-      setError(t(lang, 'signup.errors.networkError'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="w-full max-w-xl mx-auto">
       {/* Step Indicator */}
@@ -221,21 +158,36 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
           <ThemeStep
             data={state.theme}
             onChange={handleThemeChange}
-            onNext={handleSubmit}
+            onNext={() => goToStep(5)}
             onBack={() => goToStep(3)}
-            loading={loading}
+            loading={false}
+            lang={lang}
+          />
+        )}
+
+        {currentStep === 5 && (
+          <PaymentStep
+            data={{
+              ...state.account,
+              ...state.wedding,
+              ...state.slug,
+              ...state.theme,
+            }}
+            onBack={() => goToStep(4)}
             lang={lang}
           />
         )}
       </div>
 
-      {/* Trial Info */}
-      <div className="mt-6 text-center">
-        <p className="text-sm text-charcoal/50">
-          <span className="font-medium text-burgundy-old">{t(lang, 'signup.trial.info')}</span>
-          {' '}• {t(lang, 'signup.trial.photos')} • {t(lang, 'signup.trial.video')} • {t(lang, 'signup.trial.noCard')}
-        </p>
-      </div>
+      {/* Features Info (only show before payment step) */}
+      {currentStep < 5 && (
+        <div className="mt-6 text-center">
+          <p className="text-sm text-charcoal/50">
+            <span className="font-medium text-burgundy-old">{t(lang, 'signup.features.included')}</span>
+            {' '}• {t(lang, 'signup.features.photos')} • {t(lang, 'signup.features.video')} • {t(lang, 'signup.features.support')}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

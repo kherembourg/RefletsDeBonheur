@@ -1,0 +1,120 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { supabase } from '../../lib/supabase/client';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
+
+export const prerender = false;
+
+const lang = (Astro.url.pathname.startsWith('/fr/') ? 'fr' :
+              Astro.url.pathname.startsWith('/es/') ? 'es' :
+              'en') as Language;
+
+const sessionId = Astro.url.searchParams.get('session_id');
+
+// Redirect if no session ID
+if (!sessionId) {
+  return Astro.redirect('/signup?error=invalid_session');
+}
+---
+
+<MainLayout title={t(lang, 'signup.success.title')} lang={lang}>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-cream to-white p-4">
+    <div class="w-full max-w-md">
+      {/* Loading State */}
+      <div id="loading-state" class="text-center">
+        <div class="bg-white rounded-xl shadow-sm border border-charcoal/5 p-8">
+          {/* Spinner */}
+          <div class="w-16 h-16 mx-auto mb-6">
+            <div class="relative w-full h-full">
+              <div class="absolute inset-0 rounded-full border-4 border-burgundy-old/20"></div>
+              <div class="absolute inset-0 rounded-full border-4 border-burgundy-old border-t-transparent animate-spin"></div>
+            </div>
+          </div>
+
+          <h1 class="font-serif text-2xl text-charcoal mb-2">{t(lang, 'signup.success.verifying')}</h1>
+          <p class="text-charcoal/60 text-sm">{t(lang, 'signup.success.creating')}</p>
+        </div>
+      </div>
+
+      {/* Error State */}
+      <div id="error-state" class="hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-red-200 p-8">
+          <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </div>
+
+          <h1 class="font-serif text-2xl text-charcoal mb-2 text-center">Payment Verification Failed</h1>
+          <p id="error-message" class="text-charcoal/60 text-sm text-center mb-6"></p>
+
+          <div class="flex gap-4">
+            <a
+              href="/signup"
+              class="flex-1 px-6 py-3 bg-burgundy-old hover:bg-burgundy-dark text-white rounded-lg transition-colors text-center font-medium"
+            >
+              Try Again
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ sessionId, lang }}>
+    async function verifyPayment() {
+      const loadingState = document.getElementById('loading-state');
+      const errorState = document.getElementById('error-state');
+      const errorMessage = document.getElementById('error-message');
+
+      try {
+        const response = await fetch('/api/signup/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          // Show error
+          if (loadingState) loadingState.classList.add('hidden');
+          if (errorState) errorState.classList.remove('hidden');
+          if (errorMessage) {
+            errorMessage.textContent = result.message || 'An error occurred. Please contact support.';
+          }
+          return;
+        }
+
+        // Success! Store session if provided
+        if (result.session) {
+          // Store tokens for Supabase client
+          localStorage.setItem('supabase.auth.token', JSON.stringify({
+            currentSession: {
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token,
+              expires_at: result.session.expires_at,
+            },
+          }));
+        }
+
+        // Small delay to show success state
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Redirect to admin dashboard
+        window.location.href = result.redirect || `/${result.slug}/admin`;
+      } catch (err) {
+        console.error('[Success Page] Error:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        if (errorState) errorState.classList.remove('hidden');
+        if (errorMessage) {
+          errorMessage.textContent = 'Network error. Please check your connection and try again.';
+        }
+      }
+    }
+
+    // Start verification when page loads
+    verifyPayment();
+  </script>
+</MainLayout>
