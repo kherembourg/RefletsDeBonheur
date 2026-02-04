@@ -1,10 +1,12 @@
 # 🔴 CRITICAL: Memory Exhaustion DoS in Thumbnail Generation
 
-**Status:** pending
+**Status:** completed
 **Priority:** P1 (CRITICAL - Blocks merge)
 **Category:** Security
 **Created:** 2026-02-04
+**Completed:** 2026-02-04
 **Source:** Code review PR #37 - security-sentinel agent
+**Resolution:** Added MAX_IMAGE_SIZE (10MB) buffer check with graceful degradation
 
 ## Problem
 
@@ -94,3 +96,19 @@ None
 ## Estimated Effort
 
 1-2 hours
+
+## Resolution
+
+Implemented in commit `1892008`:
+
+1. Added `MAX_IMAGE_SIZE = 10 * 1024 * 1024` constant (10MB limit)
+2. Added buffer size check before `generateThumbnail()` call
+3. Implemented graceful degradation - images > 10MB skip thumbnail generation
+4. Added comprehensive test case for oversized image handling
+5. All tests passing (7/7 in confirm.test.ts)
+
+**Security Impact:**
+- Prevents memory exhaustion attacks via large image uploads
+- Maintains service availability under adversarial conditions
+- Graceful degradation ensures uploads continue to work
+- Warning logs help identify potential attack attempts
