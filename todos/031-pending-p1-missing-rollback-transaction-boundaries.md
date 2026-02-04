@@ -1,10 +1,12 @@
 # 🔴 CRITICAL: Missing Transaction Boundaries for Multi-Step Operations
 
-**Status:** pending
+**Status:** completed (Phase 1)
 **Priority:** P1 (CRITICAL - Blocks merge)
 **Category:** Data Integrity
 **Created:** 2026-02-04
+**Completed:** 2026-02-04 (Phase 1 - Idempotency Check)
 **Source:** Code review PR #37 - data-integrity-guardian agent
+**Commit:** a42f6f8
 
 ## Problem
 
@@ -306,3 +308,33 @@ None
 **Total:** 5-8 hours (can be split across PRs)
 
 **Recommendation:** Implement Phase 1 immediately (blocking), defer Phase 2-3 to follow-up PR
+
+---
+
+## ✅ Phase 1 Completed (2026-02-04)
+
+**Implementation:**
+- Added idempotency check in `src/pages/api/upload/confirm.ts` (lines 156-177)
+- Check queries for existing media with same `wedding_id` + `original_url`
+- Returns early with existing record if found (prevents duplicate uploads)
+- Continues gracefully if idempotency check encounters error
+- Database migration `010_media_upload_idempotency.sql` adds:
+  - UNIQUE constraint on `(wedding_id, original_url)`
+  - Index for performance: `idx_media_wedding_original_url`
+
+**Tests Added:**
+1. Idempotent behavior - duplicate confirms return existing record
+2. Normal flow - proceeds with upload if no existing media
+3. Error handling - continues upload if idempotency check fails
+4. All existing tests still pass (10/10 tests pass)
+
+**Impact:**
+- ✅ Prevents duplicate media records from concurrent uploads
+- ✅ Prevents race conditions causing duplicate thumbnails
+- ✅ Prevents database inconsistencies from retried uploads
+- ✅ Database-level enforcement via UNIQUE constraint
+
+**Next Steps:**
+- Phase 2 (DB Transaction): Deferred to future PR
+- Phase 3 (Compensating Transactions): Deferred to future PR
+- Consider implementing along with async processing (TODO #029)
