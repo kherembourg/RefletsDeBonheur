@@ -490,6 +490,35 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       expect(mockFetchFile).not.toHaveBeenCalled();
       expect(mockUploadFile).not.toHaveBeenCalled();
     });
+
+    it('should reject cross-tenant upload attempts (key from different wedding)', async () => {
+      // User authorized for wedding-123 tries to upload with key from wedding-456
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-456/media/photo.jpg', // ❌ Wrong wedding!
+          publicUrl: 'https://r2.example.com/weddings/wedding-456/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+      const data = await response.json();
+
+      // Should reject with 403 Forbidden
+      expect(response.status).toBe(403);
+      expect(data.error).toBe('Invalid key');
+      expect(data.message).toContain('wedding-123');
+
+      // Should not attempt thumbnail generation
+      expect(mockFetchFile).not.toHaveBeenCalled();
+      expect(mockUploadFile).not.toHaveBeenCalled();
+    });
   });
 
   describe('Idempotency (Transaction Boundary Protection)', () => {

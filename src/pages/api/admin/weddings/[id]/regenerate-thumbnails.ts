@@ -190,10 +190,15 @@ export const POST: APIRoute = async ({ params, request, url }) => {
           });
 
           // Update database
-          await adminClient
+          const { error: updateError } = await adminClient
             .from('media')
             .update({ thumbnail_url: uploadResult.url })
             .eq('id', item.id);
+
+          // Check if update failed (e.g., row deleted, permission issue)
+          if (updateError) {
+            throw new Error(`Failed to update media record: ${updateError.message}`);
+          }
 
           return {
             mediaId: item.id,

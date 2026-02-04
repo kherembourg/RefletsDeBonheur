@@ -279,6 +279,45 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Cross-tenant validation: Verify the R2 key belongs to this wedding
+    // Prevents authorized user for wedding A from triggering thumbnail operations on wedding B's keys
+    const expectedKeyPrefix = `weddings/${weddingId}/`;
+    if (!key.startsWith(expectedKeyPrefix)) {
+      console.warn('[API] Cross-tenant write attempt detected:', {
+        weddingId,
+        key,
+        expectedPrefix: expectedKeyPrefix,
+      });
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid key',
+          message: `Key must belong to wedding ${weddingId}`,
+        }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Also validate publicUrl matches the key (additional safety check)
+    if (!publicUrl.includes(key)) {
+      console.warn('[API] Key/URL mismatch detected:', {
+        key,
+        publicUrl,
+      });
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid request',
+          message: 'Key and publicUrl must match',
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Idempotency check: Return existing media if already confirmed
     // This prevents duplicate uploads and race conditions
     const { data: existingMedia, error: existingError } = await adminClient
