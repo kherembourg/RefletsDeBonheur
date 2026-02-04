@@ -12,6 +12,9 @@ describe('imageProcessing', () => {
   let testImageBuffer: Buffer;
   let smallImageBuffer: Buffer;
   let invalidBuffer: Buffer;
+  let pngBuffer: Buffer;
+  let gifBuffer: Buffer;
+  let webpBuffer: Buffer;
 
   beforeAll(async () => {
     // Generate a test image (800x600 JPEG)
@@ -36,6 +39,42 @@ describe('imageProcessing', () => {
       },
     })
       .png()
+      .toBuffer();
+
+    // Generate PNG buffer
+    pngBuffer = await sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: { r: 0, g: 255, b: 0 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    // Generate GIF buffer
+    gifBuffer = await sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: { r: 0, g: 0, b: 255 },
+      },
+    })
+      .gif()
+      .toBuffer();
+
+    // Generate WEBP buffer
+    webpBuffer = await sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: { r: 255, g: 255, b: 0 },
+      },
+    })
+      .webp()
       .toBuffer();
 
     // Invalid buffer (not an image)
@@ -118,13 +157,84 @@ describe('imageProcessing', () => {
     it('should throw error for invalid image buffer', async () => {
       await expect(
         generateThumbnail(invalidBuffer)
-      ).rejects.toThrow('Failed to generate thumbnail');
+      ).rejects.toThrow('Invalid image: unrecognized format');
     });
 
     it('should handle empty buffer', async () => {
       await expect(
         generateThumbnail(Buffer.alloc(0))
-      ).rejects.toThrow('Failed to generate thumbnail');
+      ).rejects.toThrow('Invalid image: buffer too small');
+    });
+  });
+
+  describe('Image Validation', () => {
+    it('should reject non-image buffers', async () => {
+      const maliciousBuffer = Buffer.from('#!/bin/bash\nrm -rf /');
+      await expect(generateThumbnail(maliciousBuffer)).rejects.toThrow('unrecognized format');
+    });
+
+    it('should reject buffers with wrong magic numbers', async () => {
+      const fakeBuffer = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+      await expect(generateThumbnail(fakeBuffer)).rejects.toThrow('unrecognized format');
+    });
+
+    it('should reject buffers that are too small', async () => {
+      const tinyBuffer = Buffer.from([0xFF, 0xD8]); // Only 2 bytes
+      await expect(generateThumbnail(tinyBuffer)).rejects.toThrow('buffer too small');
+    });
+
+    it('should reject executable files masquerading as images', async () => {
+      // Windows PE executable header
+      const exeBuffer = Buffer.from([
+        0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00
+      ]);
+      await expect(generateThumbnail(exeBuffer)).rejects.toThrow('unrecognized format');
+    });
+
+    it('should reject PDF files', async () => {
+      const pdfBuffer = Buffer.from([
+        0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34, // %PDF-1.4
+        0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+      ]);
+      await expect(generateThumbnail(pdfBuffer)).rejects.toThrow('unrecognized format');
+    });
+
+    it('should reject ZIP files', async () => {
+      const zipBuffer = Buffer.from([
+        0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, // ZIP header
+        0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+      ]);
+      await expect(generateThumbnail(zipBuffer)).rejects.toThrow('unrecognized format');
+    });
+
+    it('should accept valid JPEG with proper magic numbers', async () => {
+      const result = await generateThumbnail(testImageBuffer);
+      expect(result).toBeDefined();
+      expect(result.buffer).toBeInstanceOf(Buffer);
+    });
+
+    it('should accept valid PNG with proper magic numbers', async () => {
+      const result = await generateThumbnail(pngBuffer);
+      expect(result).toBeDefined();
+      expect(result.buffer).toBeInstanceOf(Buffer);
+    });
+
+    it('should accept valid GIF with proper magic numbers', async () => {
+      const result = await generateThumbnail(gifBuffer);
+      expect(result).toBeDefined();
+      expect(result.buffer).toBeInstanceOf(Buffer);
+    });
+
+    it('should accept valid WEBP with proper magic numbers', async () => {
+      const result = await generateThumbnail(webpBuffer);
+      expect(result).toBeDefined();
+      expect(result.buffer).toBeInstanceOf(Buffer);
+    });
+
+    it('should provide detailed error message for invalid format', async () => {
+      const invalidBuffer = Buffer.from([0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF, 0x00, 0x00, 0x00, 0x00]);
+      await expect(generateThumbnail(invalidBuffer)).rejects.toThrow('Supported formats: JPEG, PNG, GIF, WEBP');
     });
   });
 
