@@ -4,7 +4,7 @@
  * R2 is S3-compatible, so we use the AWS SDK with custom endpoint
  */
 
-import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { R2Config, PresignedUrlResult, MediaUploadOptions, UploadResult } from './types';
 
@@ -201,4 +201,72 @@ export function extractKeyFromUrl(url: string): string | null {
   }
 
   return url.replace(`${config.publicUrl}/`, '');
+}
+
+/**
+ * Generate a thumbnail storage key from an original media key
+ *
+ * @param originalKey - Original media storage key (e.g., "weddings/123/media/file.jpg")
+ * @param suffix - Optional suffix to append (e.g., "400w" for 400px wide)
+ * @returns Thumbnail storage key (e.g., "weddings/123/thumbnails/file-400w.webp")
+ *
+ * @example
+ * ```ts
+ * const originalKey = "weddings/abc/media/1234-photo.jpg";
+ * const thumbnailKey = generateThumbnailKey(originalKey, "400w");
+ * // Returns: "weddings/abc/thumbnails/1234-photo-400w.webp"
+ * ```
+ */
+export function generateThumbnailKey(originalKey: string, suffix: string = '400w'): string {
+  // Extract wedding ID and filename from original key
+  // Format: weddings/{weddingId}/media/{filename}
+  const parts = originalKey.split('/');
+  const weddingId = parts[1];
+  const filename = parts[parts.length - 1];
+
+  // Remove extension and add suffix
+  const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+
+  // Return thumbnail key with .webp extension
+  return `weddings/${weddingId}/thumbnails/${nameWithoutExt}-${suffix}.webp`;
+}
+
+/**
+ * Fetch a file from R2 storage as a buffer
+ *
+ * @param key - Storage key of the file to fetch
+ * @returns File buffer
+ */
+export async function fetchFile(key: string): Promise<Buffer> {
+  const config = getR2Config();
+  if (!config) {
+    throw new Error('R2 is not configured');
+  }
+
+  const client = getS3Client();
+
+  try {
+    const command = new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+    });
+
+    const response = await client.send(command);
+
+    if (!response.Body) {
+      throw new Error('File not found or empty response');
+    }
+
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
+      chunks.push(chunk);
+    }
+
+    return Buffer.concat(chunks);
+  } catch (error) {
+    throw new Error(
+      `Failed to fetch file from R2: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
 }

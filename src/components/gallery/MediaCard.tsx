@@ -167,8 +167,8 @@ export const MediaCard = memo(function MediaCard({
               )
             )}
             <img
-              src={item.url}
-              srcSet={generateSrcSet(item.url)}
+              src={item.thumbnailUrl || item.url}
+              srcSet={generateSrcSet(item.thumbnailUrl || item.url)}
               sizes="(max-width: 640px) 320px, (max-width: 1024px) 480px, 400px"
               alt={item.caption || `Photo par ${item.author}`}
               className={`w-full object-cover transition-opacity duration-300 ${isAdminView ? 'aspect-[4/3]' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}

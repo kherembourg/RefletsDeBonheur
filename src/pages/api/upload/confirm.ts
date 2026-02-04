@@ -28,6 +28,8 @@ import { supabase } from '../../../lib/supabase/client';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { generateThumbnail } from '../../../lib/imageProcessing';
+import { extractKeyFromUrl, fetchFile, uploadFile, generateThumbnailKey } from '../../../lib/r2';
 
 export const prerender = false;
 
@@ -145,6 +147,46 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Generate thumbnail for images (but not videos)
+    let thumbnailUrl: string | null = null;
+
+    if (type === 'image') {
+      try {
+        console.log('[API] Generating thumbnail for:', key);
+
+        // Fetch original image from R2
+        const originalImageBuffer = await fetchFile(key);
+
+        // Generate 400px WEBP thumbnail
+        const thumbnail = await generateThumbnail(originalImageBuffer, {
+          width: 400,
+          quality: 85,
+          format: 'webp',
+        });
+
+        // Upload thumbnail to R2
+        const thumbnailKey = generateThumbnailKey(key, '400w');
+        const uploadResult = await uploadFile(
+          thumbnailKey,
+          thumbnail.buffer,
+          'image/webp',
+          {
+            'wedding-id': weddingId,
+            'original-key': key,
+            'thumbnail-size': '400w',
+          }
+        );
+
+        thumbnailUrl = uploadResult.url;
+
+        console.log('[API] Thumbnail generated successfully:', thumbnailUrl);
+      } catch (thumbnailError) {
+        // Log error but don't fail the upload
+        console.error('[API] Failed to generate thumbnail:', thumbnailError);
+        // Continue without thumbnail - the upload should still succeed
+      }
+    }
+
     // Create media record in database
     const { data: media, error } = await adminClient
       .from('media')
@@ -152,12 +194,12 @@ export const POST: APIRoute = async ({ request }) => {
         wedding_id: weddingId,
         type,
         original_url: publicUrl,
-        optimized_url: null, // Will be set by background processing
-        thumbnail_url: null, // Will be set by background processing
+        optimized_url: null, // Could be set in future for additional optimization
+        thumbnail_url: thumbnailUrl, // Generated above for images, null for videos
         caption: caption || null,
         guest_name: guestName || null,
         guest_identifier: guestIdentifier || null,
-        status: 'ready', // For now, mark as ready immediately
+        status: 'ready',
         moderation_status: 'approved', // Auto-approve for now
       })
       .select()
