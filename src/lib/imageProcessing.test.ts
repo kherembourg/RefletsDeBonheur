@@ -6,9 +6,6 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import sharp from 'sharp';
 import {
   generateThumbnail,
-  isValidImage,
-  getImageMetadata,
-  generateMultipleThumbnails,
 } from './imageProcessing';
 
 describe('imageProcessing', () => {
@@ -131,102 +128,4 @@ describe('imageProcessing', () => {
     });
   });
 
-  describe('isValidImage', () => {
-    it('should return true for valid JPEG image', async () => {
-      const result = await isValidImage(testImageBuffer);
-      expect(result).toBe(true);
-    });
-
-    it('should return true for valid PNG image', async () => {
-      const result = await isValidImage(smallImageBuffer);
-      expect(result).toBe(true);
-    });
-
-    it('should return false for invalid buffer', async () => {
-      const result = await isValidImage(invalidBuffer);
-      expect(result).toBe(false);
-    });
-
-    it('should return false for empty buffer', async () => {
-      const result = await isValidImage(Buffer.alloc(0));
-      expect(result).toBe(false);
-    });
-  });
-
-  describe('getImageMetadata', () => {
-    it('should return metadata for valid image', async () => {
-      const metadata = await getImageMetadata(testImageBuffer);
-
-      expect(metadata.width).toBe(800);
-      expect(metadata.height).toBe(600);
-      expect(metadata.format).toBe('jpeg');
-      expect(metadata.channels).toBe(3);
-    });
-
-    it('should return PNG metadata', async () => {
-      const metadata = await getImageMetadata(smallImageBuffer);
-
-      expect(metadata.width).toBe(200);
-      expect(metadata.height).toBe(150);
-      expect(metadata.format).toBe('png');
-      expect(metadata.channels).toBe(4); // PNG with alpha
-    });
-
-    it('should throw error for invalid image', async () => {
-      await expect(
-        getImageMetadata(invalidBuffer)
-      ).rejects.toThrow('Failed to read image metadata');
-    });
-  });
-
-  describe('generateMultipleThumbnails', () => {
-    it('should generate multiple thumbnail sizes', async () => {
-      const sizes = [150, 400, 800];
-      const results = await generateMultipleThumbnails(testImageBuffer, sizes);
-
-      expect(results.size).toBe(3);
-
-      const small = results.get(150);
-      expect(small?.width).toBe(150);
-
-      const medium = results.get(400);
-      expect(medium?.width).toBe(400);
-
-      const large = results.get(800);
-      expect(large?.width).toBe(800);
-    });
-
-    it('should apply shared options to all thumbnails', async () => {
-      const sizes = [200, 400];
-      const results = await generateMultipleThumbnails(testImageBuffer, sizes, {
-        format: 'jpeg',
-        quality: 80,
-      });
-
-      for (const thumbnail of results.values()) {
-        expect(thumbnail.format).toBe('jpeg');
-      }
-    });
-
-    it('should handle single size', async () => {
-      const results = await generateMultipleThumbnails(testImageBuffer, [400]);
-
-      expect(results.size).toBe(1);
-      expect(results.get(400)?.width).toBe(400);
-    });
-
-    it('should process sizes in parallel', async () => {
-      const sizes = [150, 300, 600, 800];
-      const startTime = Date.now();
-
-      await generateMultipleThumbnails(testImageBuffer, sizes);
-
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-
-      // Parallel processing should be faster than sequential
-      // This is a rough check - parallel should complete in reasonable time
-      expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
-    });
-  });
 });

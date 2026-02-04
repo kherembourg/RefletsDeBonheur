@@ -68,6 +68,36 @@ export function getS3Client(): S3Client {
 // ============================================
 
 /**
+ * Validate that a storage key follows expected pattern
+ * Prevents SSRF attacks by ensuring keys only access wedding resources
+ *
+ * @param key - Storage key to validate
+ * @throws Error if key is invalid or contains path traversal attempts
+ */
+function validateStorageKey(key: string): void {
+  // Must start with weddings/ prefix
+  if (!key.startsWith('weddings/')) {
+    throw new Error('Invalid storage key: must start with weddings/');
+  }
+
+  // No path traversal attempts
+  if (key.includes('..') || key.includes('//')) {
+    throw new Error('Invalid storage key: path traversal detected');
+  }
+
+  // Must match expected pattern: weddings/{id}/(media|thumbnails)/{filename}
+  const validPattern = /^weddings\/[a-zA-Z0-9-]+\/(media|thumbnails)\/[a-zA-Z0-9._-]+$/;
+  if (!validPattern.test(key)) {
+    throw new Error('Invalid storage key: does not match expected pattern');
+  }
+
+  // Additional safeguards
+  if (key.length > 500) {
+    throw new Error('Invalid storage key: too long');
+  }
+}
+
+/**
  * Generate a unique storage key for a media file
  */
 export function generateStorageKey(options: MediaUploadOptions): string {
@@ -128,6 +158,9 @@ export async function uploadFile(
   contentType: string,
   metadata?: Record<string, string>
 ): Promise<UploadResult> {
+  // Validate key before processing
+  validateStorageKey(key);
+
   const config = getR2Config();
   if (!config) {
     throw new Error('R2 is not configured');
@@ -164,6 +197,9 @@ export async function uploadFile(
  * Delete a file from R2
  */
 export async function deleteFile(key: string): Promise<void> {
+  // Validate key before processing
+  validateStorageKey(key);
+
   const config = getR2Config();
   if (!config) {
     throw new Error('R2 is not configured');
@@ -238,6 +274,9 @@ export function generateThumbnailKey(originalKey: string, suffix: string = '400w
  * @returns File buffer
  */
 export async function fetchFile(key: string): Promise<Buffer> {
+  // Validate key before processing
+  validateStorageKey(key);
+
   const config = getR2Config();
   if (!config) {
     throw new Error('R2 is not configured');
