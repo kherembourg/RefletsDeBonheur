@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { AdminInput } from '../../admin/ui/AdminInput';
 import { AdminButton } from '../../admin/ui/AdminButton';
 import { getPasswordErrorKey } from '../../../lib/passwordValidation';
+import { isValidEmail } from '../../../lib/validation/emailValidation';
 import { t } from '../../../i18n/utils';
 import type { Language } from '../../../i18n/translations';
 
@@ -29,10 +30,9 @@ export function AccountStep({ data, onChange, onNext, errors = {}, lang }: Accou
     const newErrors: Record<string, string> = {};
 
     // Email validation
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!data.email) {
       newErrors.email = t(lang, 'signup.errors.emailRequired');
-    } else if (!emailPattern.test(data.email)) {
+    } else if (!isValidEmail(data.email)) {
       newErrors.email = t(lang, 'signup.errors.emailInvalid');
     }
 

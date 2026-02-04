@@ -24,9 +24,10 @@
  */
 
 import type { APIRoute } from 'astro';
-import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
+import { supabase } from '../../../lib/supabase/client';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 
 export const prerender = false;
 
@@ -93,31 +94,11 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   // Check if Supabase is configured
-  if (!isSupabaseConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database not configured',
-        message: 'Supabase is not configured. Please set environment variables.',
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const supabaseGuard = apiGuards.requireSupabase();
+  if (supabaseGuard) return supabaseGuard;
 
-  if (!isSupabaseServiceRoleConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database admin not configured',
-        message: 'SUPABASE_SERVICE_ROLE_KEY is required for uploads. Configure it on the server.',
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const serviceRoleGuard = apiGuards.requireServiceRole();
+  if (serviceRoleGuard) return serviceRoleGuard;
 
   try {
     const body = await request.json();

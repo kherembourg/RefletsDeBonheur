@@ -1,18 +1,25 @@
 import type { APIRoute } from 'astro';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
-import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
-import { getStripeClient, isStripeConfigured } from '../../../lib/stripe/server';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import { getStripeClient } from '../../../lib/stripe/server';
+import { apiGuards } from '../../../lib/api/middleware';
+import crypto from 'crypto';
 
 export const prerender = false;
 
-// Generate a random guest code (6 uppercase chars/numbers, excluding confusing ones)
-function generateShortCode(length: number = 6): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = '';
+/**
+ * Generate a cryptographically secure random temporary password
+ * This password is only used temporarily - user will immediately receive password reset email
+ */
+function generateSecureTemporaryPassword(length: number = 32): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const randomBytes = crypto.randomBytes(length);
+  let password = '';
+
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    password += charset[randomBytes[i] % charset.length];
   }
-  return result;
+
+  return password;
 }
 
 interface VerifyPaymentRequest {
@@ -21,23 +28,14 @@ interface VerifyPaymentRequest {
 
 export const POST: APIRoute = async ({ request }) => {
   // Check configuration
-  if (!isSupabaseConfigured() || !isSupabaseServiceRoleConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database not configured',
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+  const supabaseGuard = apiGuards.requireSupabase();
+  if (supabaseGuard) return supabaseGuard;
 
-  if (!isStripeConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Payment system not configured',
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+  const serviceRoleGuard = apiGuards.requireServiceRole();
+  if (serviceRoleGuard) return serviceRoleGuard;
+
+  const stripeGuard = apiGuards.requireStripe();
+  if (stripeGuard) return stripeGuard;
 
   try {
     const body: VerifyPaymentRequest = await request.json();
@@ -122,14 +120,17 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Create account (same logic as /api/signup.ts)
+    // Create account using atomic transaction
     const coupleNames = `${pendingSignup.partner1_name} & ${pendingSignup.partner2_name}`;
-    const weddingName = `${pendingSignup.partner1_name} & ${pendingSignup.partner2_name}'s Wedding`;
 
-    // Create user in Supabase Auth using the password from pending_signups
+    // Generate a secure random temporary password
+    // User will immediately receive a password reset email and won't need this password
+    const temporaryPassword = generateSecureTemporaryPassword();
+
+    // Step 1: Create user in Supabase Auth (cannot be part of DB transaction)
     const authResult = await adminClient.auth.admin.createUser({
       email: pendingSignup.email,
-      password: pendingSignup.password_hash, // This is actually the plain password, not a hash
+      password: temporaryPassword, // Secure random temporary password
       email_confirm: true,
       user_metadata: {
         full_name: coupleNames,
@@ -163,164 +164,89 @@ export const POST: APIRoute = async ({ request }) => {
 
     const userId = authResult.data.user.id;
 
-    // Set subscription to active for 2 years (paid account, not trial)
-    const subscriptionEndDate = new Date();
-    subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 2);
-
     // Get Stripe customer ID from session
     const customerId = session.customer as string;
 
-    // Create profile with active subscription status
-    const { error: profileError } = await adminClient
-      .from('profiles')
-      .upsert(
-        {
-          id: userId,
-          email: pendingSignup.email,
-          full_name: coupleNames,
-          subscription_status: 'active', // Paid account, not trial!
-          subscription_end_date: subscriptionEndDate.toISOString(),
-          stripe_customer_id: customerId || null,
-        },
-        { onConflict: 'id' }
-      );
+    // Step 2: Create profile + wedding in atomic transaction
+    // This stored procedure wraps all DB operations in a single transaction
+    // If any step fails, everything is automatically rolled back
+    let accountData: {
+      user_id: string;
+      wedding_id: string;
+      email: string;
+      slug: string;
+      couple_names: string;
+      guest_code: string;
+    };
 
-    if (profileError) {
-      console.error('[API] Profile creation failed:', profileError);
-      // Cleanup: delete the auth user
-      let cleanupSuccess = false;
-      for (let attempt = 0; attempt < 3 && !cleanupSuccess; attempt++) {
-        try {
-          await adminClient.auth.admin.deleteUser(userId);
-          cleanupSuccess = true;
-        } catch (cleanupError) {
-          console.error(`[CRITICAL] Cleanup attempt ${attempt + 1} failed for user ${userId}:`, cleanupError);
-          if (attempt < 2) await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
-        }
+    try {
+      const { data, error: rpcError } = await adminClient.rpc('create_account_from_payment', {
+        p_user_id: userId,
+        p_pending_signup_id: pendingSignup.id,
+        p_stripe_customer_id: customerId || null,
+      });
+
+      if (rpcError || !data) {
+        throw new Error(rpcError?.message || 'Transaction failed with no error message');
       }
+
+      accountData = data as typeof accountData;
+    } catch (transactionError) {
+      console.error('[API] Account creation transaction failed:', transactionError);
+
+      // CRITICAL: Transaction failed, must delete auth user to prevent orphaned record
+      // No need for retries - just one cleanup attempt since this is the exception path
+      try {
+        await adminClient.auth.admin.deleteUser(userId);
+        console.log(`[API] Successfully cleaned up auth user ${userId} after transaction failure`);
+      } catch (cleanupError) {
+        // This is a critical error - auth user exists but no profile/wedding
+        console.error(`[CRITICAL] Failed to cleanup auth user ${userId} after transaction failure:`, cleanupError);
+        console.error('[CRITICAL] Manual database cleanup required for orphaned auth user:', userId);
+      }
+
       return new Response(
         JSON.stringify({
-          error: 'Profile creation failed',
-          message: 'Account creation failed. Please try again or contact support.',
+          error: 'Account creation failed',
+          message: 'Failed to create your account. Please try again or contact support.',
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create wedding
-    const guestCode = generateShortCode();
-
-    const { data: wedding, error: weddingError } = await adminClient
-      .from('weddings')
-      .insert({
-        owner_id: userId,
-        slug: pendingSignup.slug,
-        pin_code: guestCode,
-        name: weddingName,
-        bride_name: pendingSignup.partner1_name,
-        groom_name: pendingSignup.partner2_name,
-        wedding_date: pendingSignup.wedding_date || null,
-        venue_name: null,
-        venue_address: null,
-        venue_lat: null,
-        venue_lng: null,
-        venue_map_url: null,
-        config: {
-          theme: {
-            name: pendingSignup.theme_id,
-            primaryColor: '#ae1725',
-            secondaryColor: '#c92a38',
-            fontFamily: 'playfair',
-          },
-          features: {
-            gallery: true,
-            guestbook: true,
-            rsvp: true,
-            liveWall: false,
-            geoFencing: false,
-          },
-          moderation: {
-            enabled: true,
-            autoApprove: true,
-          },
-          timeline: [],
-        },
-        hero_image_url: null,
-        is_published: true,
-      })
-      .select()
-      .single();
-
-    if (weddingError || !wedding) {
-      console.error('[API] Wedding creation failed:', weddingError);
-      // Cleanup: delete profile and auth user
-      let cleanupSuccess = false;
-      for (let attempt = 0; attempt < 3 && !cleanupSuccess; attempt++) {
-        try {
-          await adminClient.from('profiles').delete().eq('id', userId);
-          await adminClient.auth.admin.deleteUser(userId);
-          cleanupSuccess = true;
-        } catch (cleanupError) {
-          console.error(`[CRITICAL] Cleanup attempt ${attempt + 1} failed for user ${userId}:`, cleanupError);
-          if (attempt < 2) await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
-        }
-      }
-
-      return new Response(
-        JSON.stringify({
-          error: 'Wedding creation failed',
-          message: 'Account creation failed. Please try again or contact support.',
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Mark pending signup as completed
-    await adminClient
-      .from('pending_signups')
-      .update({
-        completed_at: new Date().toISOString(),
-        stripe_checkout_status: 'completed',
-      })
-      .eq('id', pendingSignup.id);
-
-    // Sign in the user to create a session
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: pendingSignup.email,
-      password: pendingSignup.password_hash, // Use the stored password
+    // Send password reset email so user can set their own password
+    // This is more secure than storing passwords or auto-logging in
+    const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+    const { error: resetError } = await adminClient.auth.admin.generateLink({
+      type: 'magiclink',
+      email: accountData.email,
+      options: {
+        redirectTo: `${siteUrl}/${accountData.slug}/admin`,
+      },
     });
 
-    if (signInError || !signInData.session) {
-      console.error('[API] Auto-login failed:', signInError);
-      // Account created successfully but auto-login failed
+    if (resetError) {
+      console.error('[API] Password reset email failed:', resetError);
+      // Account created but email failed - user can still request password reset manually
       return new Response(
         JSON.stringify({
           success: true,
-          slug: pendingSignup.slug,
-          redirect: `/${pendingSignup.slug}/admin`,
-          needsLogin: true,
-          message: 'Account created! Please sign in to continue.',
+          slug: accountData.slug,
+          redirect: `/connexion?email=${encodeURIComponent(accountData.email)}&message=account_created_email_failed`,
+          needsPasswordReset: true,
+          message: 'Account created! Please check your email to set your password, or use the password reset link on the login page.',
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Return success with session info
+    // Return success - user will receive email with magic link
     return new Response(
       JSON.stringify({
         success: true,
-        slug: pendingSignup.slug,
-        redirect: `/${pendingSignup.slug}/admin`,
-        session: {
-          access_token: signInData.session.access_token,
-          refresh_token: signInData.session.refresh_token,
-          expires_at: signInData.session.expires_at,
-        },
-        user: {
-          id: userId,
-          email: pendingSignup.email,
-          wedding_id: wedding.id,
-        },
+        slug: accountData.slug,
+        redirect: `/signup/check-email?email=${encodeURIComponent(accountData.email)}&slug=${accountData.slug}`,
+        message: 'Account created! Please check your email to access your wedding dashboard.',
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

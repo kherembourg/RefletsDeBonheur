@@ -83,6 +83,61 @@ Update the relevant documentation when:
 
 ---
 
+## Code Quality & Prevention Strategies
+
+**CRITICAL**: Review these before ANY code changes involving security, payments, or data integrity.
+
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Prevention Strategies Summary](docs/PREVENTION_STRATEGIES_SUMMARY.md) | Quick overview of prevention strategies from PR #36 findings | Before starting new features |
+| [Prevention Strategies (Full)](docs/PREVENTION_STRATEGIES.md) | Detailed strategies, patterns, and best practices | When implementing security/data features |
+| [Code Review Checklist](docs/CODE_REVIEW_CHECKLIST.md) | Quick checklist for PR reviews | Before submitting/reviewing PRs |
+| [Automated Checks Setup](docs/AUTOMATED_CHECKS_SETUP.md) | Step-by-step implementation guide for CI/CD | Setting up new checks |
+
+### Prevention Categories
+
+**Based on 7 issues resolved in PR #36:**
+
+1. **Security** (Issues #032)
+   - Never store plaintext passwords (even "temporarily")
+   - Use magic links for post-payment account setup
+   - GDPR Article 32 compliance required
+
+2. **Data Integrity** (Issues #033, #034)
+   - Database transactions for multi-step operations
+   - Unique constraints prevent race conditions
+   - No check-then-act patterns (TOCTOU vulnerabilities)
+
+3. **Code Quality** (Issues #037, #038)
+   - DRY: Extract utilities at 3+ repetitions
+   - API middleware for cross-cutting concerns
+   - Shared validation libraries
+
+4. **Documentation** (Issues #035, #036)
+   - All API endpoints documented in CLAUDE.md
+   - Scheduled jobs documented in DATABASE_MAINTENANCE.md
+   - Agent-native documentation required
+
+### Quick Prevention Rules
+
+**🔴 BLOCK MERGE if:**
+- Plaintext passwords stored anywhere
+- Payment before resource verification (financial risk)
+- Multi-step critical operations without transaction wrapper
+- Race conditions in financial flows
+
+**🟡 FIX BEFORE PRODUCTION if:**
+- Missing cleanup for temporary data
+- Undocumented API endpoints
+- No monitoring for scheduled jobs
+
+**🟢 ADDRESS IN FOLLOW-UP if:**
+- Code duplication (3-5 instances)
+- Missing test coverage (non-critical paths)
+- Suboptimal performance
+
+---
+
 ## Quick Reference
 
 ### Project Location
@@ -560,12 +615,343 @@ There is **no `clients` table**. User accounts are managed via Supabase Auth:
 - **Guest access**: `weddings.pin_code` (6 chars) or `weddings.magic_token` (admin) → creates `guest_sessions` entry
 - **God admin**: Separate `god_admins` table with password hash → creates `auth_sessions` entry
 
-### Key API Endpoints
-- `/api/admin/create-client` - Creates user in `auth.users`, profile, and wedding (uses service-role)
-- `/api/upload/presign` - Generates R2 presigned URLs
-- `/api/upload/confirm` - Creates `media` record after R2 upload (uses service-role)
-- `/api/customization/save` - Saves website customization (theme, colors, content, images)
-- `/api/customization/get` - Fetches website customization for a wedding
+### API Endpoints Reference
+
+#### Authentication APIs
+
+##### POST /api/signup
+**Description:** Legacy signup endpoint (deprecated - use payment flow instead)
+**Authentication:** None
+**Rate Limit:** 5 per IP per hour
+
+##### POST /api/god/create-token
+**Description:** Create god admin access token for impersonation
+**Authentication:** God admin credentials
+
+##### POST /api/god/verify-token
+**Description:** Verify god admin access token
+**Authentication:** Token
+
+##### POST /api/god/update-status
+**Description:** Update god admin status
+**Authentication:** God admin
+
+#### Payment Flow APIs
+
+##### POST /api/signup/create-checkout
+**Description:** Create Stripe checkout session for new wedding signup
+**Authentication:** None
+**Rate Limit:** 5 per IP per hour
+
+**Request Body:**
+```typescript
+{
+  email: string;              // Valid email format
+  password: string;           // Min 8 chars, 1 uppercase, 1 number, 1 special
+  partner1_name: string;      // Partner 1 name
+  partner2_name: string;      // Partner 2 name
+  wedding_date?: string;      // ISO date string (optional)
+  slug: string;               // 3-50 chars, lowercase, alphanumeric + hyphens
+  theme_id: ThemeId;          // "classic" | "luxe" | "jardin-moderne" | "cobalt" | "editorial" | "french-minimalist"
+}
+```
+
+**Success Response (200):**
+```typescript
+{
+  sessionId: string;          // Stripe session ID (cs_test_...)
+  url: string;                // Stripe checkout URL
+}
+```
+
+**Error Responses:**
+- `400 Missing required fields` - Required fields not provided
+- `400 Invalid email` - Email format invalid (field: "email")
+- `400 Weak password` - Password doesn't meet requirements (field: "password")
+- `400 Invalid slug format` - Slug format invalid (field: "slug")
+- `400 Slug reserved` - Slug is reserved and cannot be used (field: "slug")
+- `400 Slug taken` - Slug already in use (field: "slug")
+- `500 Failed to prepare checkout` - Database error
+- `503 Database not configured` - Supabase not configured
+- `503 Database admin not configured` - Service role key missing
+- `503 Payment system not configured` - Stripe not configured
+
+**Notes:**
+- Password stored temporarily in `pending_signups` (expires 24h)
+- Slug validated before payment to avoid post-payment conflicts
+- Creates `pending_signups` record with `stripe_checkout_status: "pending"`
+
+##### POST /api/signup/verify-payment
+**Description:** Verify payment and create account after Stripe checkout
+**Authentication:** None
+
+**Request Body:**
+```typescript
+{
+  session_id: string;         // Stripe session ID from checkout
+}
+```
+
+**Success Response (200):**
+```typescript
+{
+  success: true;
+  slug: string;               // Wedding slug
+  redirect: string;           // Redirect URL (/{slug}/admin)
+  session?: {                 // Auth session (if auto-login succeeded)
+    access_token: string;
+    refresh_token: string;
+    expires_at: number;
+  };
+  user?: {                    // User info (if auto-login succeeded)
+    id: string;
+    email: string;
+    wedding_id: string;
+  };
+  alreadyCompleted?: boolean; // True if account was already created (idempotency)
+  needsLogin?: boolean;       // True if auto-login failed
+  message?: string;           // Status message
+}
+```
+
+**Error Responses:**
+- `400 Missing session ID` - session_id not provided
+- `400 Payment not completed` - Stripe payment not paid
+- `404 Signup data not found` - No pending_signups record for session_id
+- `409 Slug taken after payment` - Race condition: slug taken after checkout (code: `SLUG_CONFLICT_POST_PAYMENT`)
+- `400 Account error` - Email already registered (code: `ACCOUNT_EXISTS_OR_ERROR`, field: "email")
+- `500 Failed to create account` - Auth user creation failed
+- `500 Profile creation failed` - Profile creation failed (user cleaned up)
+- `500 Wedding creation failed` - Wedding creation failed (user + profile cleaned up)
+- `503 Database not configured` - Supabase not configured
+- `503 Payment system not configured` - Stripe not configured
+
+**Notes:**
+- **Idempotent:** Safe to call multiple times with same session_id
+- Creates: auth.users → profiles → weddings
+- Sets subscription_status to "active" for 2 years
+- Generates 6-char PIN code for guest access
+- Attempts auto-login after account creation
+- Marks `pending_signups` as completed
+- Cleans up auth.users and profiles on failure
+
+##### POST /api/stripe/webhook
+**Description:** Stripe webhook handler for payment events
+**Authentication:** Stripe signature verification
+**Security:** Atomic idempotency via `stripe_events` table (prevents TOCTOU)
+
+**Handled Events:**
+- `checkout.session.completed` - Payment completed (marks pending_signups or upgrades profile)
+- `customer.subscription.updated` - Subscription status changed
+- `customer.subscription.deleted` - Subscription cancelled
+- `invoice.payment_succeeded` - Renewal payment succeeded (extends 1 year)
+- `invoice.payment_failed` - Payment failed (marks expired)
+
+**Response:**
+```typescript
+{
+  received: true;
+  duplicate?: boolean;        // True if event already processed
+}
+```
+
+**Error Responses:**
+- `400 Missing signature` - stripe-signature header missing
+- `400 Webhook Error: ...` - Signature verification failed
+- `503 Database not configured` - Supabase not configured
+- `503 Payment system not configured` - Stripe not configured
+- `500 Webhook handler failed` - Processing error (event marked as "failed")
+
+**Notes:**
+- Idempotent: Uses `stripe_events` table with unique constraint on `stripe_event_id`
+- If duplicate detected (23505 error), returns 200 immediately
+- New signups: updates `pending_signups.stripe_checkout_status`
+- Upgrades: extends `profiles.subscription_end_date` by 2 years (initial) or 1 year (renewal)
+
+##### POST /api/stripe/checkout
+**Description:** Create Stripe checkout for existing profile upgrade
+**Authentication:** Supabase Auth token
+
+##### POST /api/stripe/portal
+**Description:** Create Stripe customer portal session
+**Authentication:** Supabase Auth token
+
+#### Upload APIs
+
+##### POST /api/upload/presign
+**Description:** Generate presigned URL for R2 upload (with authorization + trial limits)
+**Authentication:** Supabase Auth token OR guest session token
+**Rate Limit:** 20 per IP per minute
+
+**Request Body:**
+```typescript
+{
+  weddingId: string;          // Wedding UUID
+  fileName: string;           // Original filename
+  contentType: string;        // MIME type (image/* or video/*)
+  guestIdentifier?: string;   // Guest session token (if not authenticated)
+}
+```
+
+**Success Response (200):**
+```typescript
+{
+  uploadUrl: string;          // R2 presigned upload URL
+  key: string;                // R2 object key (weddings/{id}/media/{timestamp}-{random}-{name})
+  publicUrl: string;          // Public URL for accessing uploaded file
+  expiresAt: string;          // ISO timestamp when presigned URL expires
+}
+```
+
+**Error Responses:**
+- `400 Missing required fields` - weddingId, fileName, or contentType missing
+- `400 Invalid content type` - contentType not in allowed list
+- `401 Unauthorized` - No valid auth token or guest identifier
+- `403 Trial limit reached` - Trial limits hit (code: `TRIAL_PHOTO_LIMIT` or `TRIAL_VIDEO_LIMIT`)
+- `403 Subscription required` - Subscription expired (code: `SUBSCRIPTION_EXPIRED`)
+- `404 Wedding not found` - Wedding ID doesn't exist
+- `404 Profile not found` - Wedding owner profile doesn't exist
+- `503 Storage not configured` - R2 not configured
+- `503 Database error` - Failed to verify limits
+- `500 Internal server error` - Unexpected error
+
+**Allowed Content Types:**
+- Images: `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/heic`, `image/heif`
+- Videos: `video/mp4`, `video/quicktime`, `video/webm`, `video/x-msvideo`
+
+**Trial Limits:**
+- Photos: 50
+- Videos: 1
+
+**Notes:**
+- Optimized: Single JOIN query (weddings + profiles) instead of 2 sequential queries
+- Authorization: Either wedding owner (via auth token) OR valid guest session
+- Trial enforcement: Only queries relevant media type count (photo or video)
+- Fail-safe: If count query fails, denies upload (secure by default)
+
+##### POST /api/upload/confirm
+**Description:** Confirm R2 upload and create database record
+**Authentication:** Service role
+**Rate Limit:** 20 per IP per minute
+
+**Request Body:**
+```typescript
+{
+  weddingId: string;          // Wedding UUID
+  key: string;                // R2 object key
+  publicUrl: string;          // Public URL
+  fileName: string;           // Original filename
+  contentType: string;        // MIME type
+  fileSize: number;           // File size in bytes
+  uploaderId: string;         // User ID or "guest:{session_id}"
+  guestName?: string;         // Guest name (if guest upload)
+  caption?: string;           // AI-generated caption
+}
+```
+
+**Success Response (200):**
+```typescript
+{
+  id: string;                 // Media UUID
+  wedding_id: string;
+  url: string;                // Public URL
+  type: "photo" | "video";
+  uploaded_by: string;
+  uploaded_by_name?: string;
+  caption?: string;
+  created_at: string;         // ISO timestamp
+}
+```
+
+##### POST /api/upload/website-image
+**Description:** Upload website customization images
+**Authentication:** Wedding owner auth token
+
+#### Customization APIs
+
+##### POST /api/customization/save
+**Description:** Save website customization (theme, colors, content, images)
+**Authentication:** Wedding owner auth token
+
+**Request Body:**
+```typescript
+{
+  weddingId: string;
+  customization: {
+    theme?: {
+      id: ThemeId;
+      name: string;
+      description?: string;
+    };
+    colors?: {
+      primary?: string;
+      primaryHover?: string;
+      secondary?: string;
+      // ... (40+ color properties)
+    };
+    content?: {
+      hero?: { title?: string; subtitle?: string; };
+      welcome?: { title?: string; text?: string; };
+      about?: { title?: string; text?: string; };
+      // ... (12+ content sections)
+    };
+    images?: {
+      hero?: { url?: string; alt?: string; };
+      background?: { url?: string; };
+      // ... (6 image properties)
+    };
+  }
+}
+```
+
+**Success Response (200):**
+```typescript
+{
+  success: true;
+  message: "Customization saved successfully";
+}
+```
+
+**Error Responses:**
+- `400 Wedding ID is required`
+- `400 Customization data is required`
+- `401 Authorization required` - No Bearer token
+- `401 Invalid or expired token` - Auth failed
+- `403 Not authorized to modify this wedding` - User is not owner
+- `404 Wedding not found`
+- `500 Failed to save customization`
+
+##### GET /api/customization/get
+**Description:** Fetch website customization
+**Query:** `?weddingId={uuid}`
+
+#### Wedding APIs
+
+##### GET /api/weddings/by-slug
+**Description:** Get wedding info by slug
+**Query:** `?slug={slug}`
+
+##### GET /api/weddings/check-slug
+**Description:** Check if slug is available
+**Query:** `?slug={slug}`
+
+#### Admin APIs
+
+##### POST /api/admin/create-client
+**Description:** Create client account (god admin only)
+**Authentication:** God admin token
+
+---
+
+### API Error Code Reference
+
+| Code | Description | Action |
+|------|-------------|--------|
+| `TRIAL_PHOTO_LIMIT` | Trial photo limit reached (50) | Upgrade subscription |
+| `TRIAL_VIDEO_LIMIT` | Trial video limit reached (1) | Upgrade subscription |
+| `SUBSCRIPTION_EXPIRED` | Subscription expired or cancelled | Renew subscription |
+| `SLUG_CONFLICT_POST_PAYMENT` | Slug taken after payment | Contact support for new slug |
+| `ACCOUNT_EXISTS_OR_ERROR` | Email already registered | Contact support or use different email |
 
 ### Supabase Database SQL
 Available at `supabase/database.sql` (reference schema for context, not for execution)

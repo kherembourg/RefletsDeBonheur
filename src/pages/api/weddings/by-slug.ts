@@ -1,22 +1,12 @@
 import type { APIRoute } from 'astro';
-import { isSupabaseConfigured } from '../../../lib/supabase/client';
 import { supabase } from '../../../lib/supabase/client';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ url }) => {
-  if (!isSupabaseConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database not configured',
-        message: 'Supabase is not configured. Please set environment variables.',
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const supabaseGuard = apiGuards.requireSupabase();
+  if (supabaseGuard) return supabaseGuard;
 
   const slug = url.searchParams.get('slug');
   if (!slug) {
@@ -52,13 +42,7 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    return new Response(
-      JSON.stringify({ wedding }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return apiResponse.success({ wedding });
   } catch (error) {
     console.error('[API] Wedding lookup error:', error);
     return new Response(

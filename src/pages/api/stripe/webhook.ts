@@ -1,20 +1,28 @@
 import type { APIRoute } from 'astro';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
-import { isSupabaseConfigured } from '../../../lib/supabase/client';
-import { getStripeClient, getStripeWebhookSecret, isStripeConfigured, PRODUCT_CONFIG } from '../../../lib/stripe/server';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import { getStripeClient, getStripeWebhookSecret, PRODUCT_CONFIG } from '../../../lib/stripe/server';
 import type Stripe from 'stripe';
+import { apiGuards } from '../../../lib/api/middleware';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
-  if (!isSupabaseConfigured() || !isSupabaseServiceRoleConfigured()) {
+  const supabaseGuard = apiGuards.requireSupabase();
+  if (supabaseGuard) {
     console.error('[Webhook] Database not configured');
-    return new Response('Database not configured', { status: 503 });
+    return supabaseGuard;
   }
 
-  if (!isStripeConfigured()) {
+  const serviceRoleGuard = apiGuards.requireServiceRole();
+  if (serviceRoleGuard) {
+    console.error('[Webhook] Service role not configured');
+    return serviceRoleGuard;
+  }
+
+  const stripeGuard = apiGuards.requireStripe();
+  if (stripeGuard) {
     console.error('[Webhook] Stripe not configured');
-    return new Response('Payment system not configured', { status: 503 });
+    return stripeGuard;
   }
 
   const stripe = getStripeClient();

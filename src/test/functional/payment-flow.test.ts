@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { isValidEmail } from '../../lib/validation/emailValidation';
 
 /**
  * Functional tests for complete payment flow
@@ -341,13 +342,11 @@ describe('Payment Flow - Functional Tests', () => {
       const invalidEmails = ['invalid', 'test@', '@example.com', 'test @example.com'];
 
       invalidEmails.forEach(email => {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        expect(emailPattern.test(email)).toBe(false);
+        expect(isValidEmail(email)).toBe(false);
       });
 
       const validEmail = 'test@example.com';
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      expect(emailPattern.test(validEmail)).toBe(true);
+      expect(isValidEmail(validEmail)).toBe(true);
     });
 
     it('should validate slug format at checkout creation', () => {

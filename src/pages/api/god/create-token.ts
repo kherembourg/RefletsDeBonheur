@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
-import { isSupabaseConfigured } from '../../../lib/supabase/client';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 
 export const prerender = false;
 
@@ -13,12 +13,11 @@ function generateToken(length: number = 32): string {
 }
 
 export const POST: APIRoute = async ({ request }) => {
-  if (!isSupabaseConfigured() || !isSupabaseServiceRoleConfigured()) {
-    return new Response(
-      JSON.stringify({ error: 'Database not configured' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+  const supabaseGuard = apiGuards.requireSupabase();
+  if (supabaseGuard) return supabaseGuard;
+
+  const serviceRoleGuard = apiGuards.requireServiceRole();
+  if (serviceRoleGuard) return serviceRoleGuard;
 
   try {
     const body = await request.json();
