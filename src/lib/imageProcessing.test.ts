@@ -163,7 +163,7 @@ describe('imageProcessing', () => {
     it('should handle empty buffer', async () => {
       await expect(
         generateThumbnail(Buffer.alloc(0))
-      ).rejects.toThrow('Invalid image: buffer too small');
+      ).rejects.toThrow('Invalid input: imageBuffer is empty');
     });
   });
 

@@ -69,9 +69,6 @@ export async function generateThumbnail(
   imageBuffer: Buffer,
   options: ThumbnailOptions = {}
 ): Promise<ProcessedImage> {
-  // Validate buffer BEFORE processing to prevent malicious file uploads
-  validateImageBuffer(imageBuffer);
-
   const {
     width = 400,
     quality = 85,
@@ -79,9 +76,27 @@ export async function generateThumbnail(
   } = options;
 
   try {
-    // Process image with Sharp
-    const sharpInstance = sharp(imageBuffer)
-      .resize({ width, withoutEnlargement: true }); // Don't upscale if image is smaller
+    // Validate buffer
+    if (!Buffer.isBuffer(imageBuffer)) {
+      throw new Error('Invalid input: imageBuffer must be a Buffer');
+    }
+
+    if (imageBuffer.length === 0) {
+      throw new Error('Invalid input: imageBuffer is empty');
+    }
+
+    // Validate buffer BEFORE processing to prevent malicious file uploads
+    validateImageBuffer(imageBuffer);
+
+    // Create Sharp instance with error handling and pixel limit
+    const sharpInstance = sharp(imageBuffer, {
+      failOnError: true,
+      limitInputPixels: 268402689, // 16384 x 16384 max (default Sharp limit)
+    })
+      .resize({
+        width,
+        withoutEnlargement: true, // Don't upscale if image is smaller
+      });
 
     // Apply format-specific options
     switch (format) {
@@ -94,10 +109,17 @@ export async function generateThumbnail(
       case 'png':
         sharpInstance.png({ quality, compressionLevel: 9 });
         break;
+      default:
+        throw new Error(`Unsupported format: ${format}. Supported: webp, jpeg, png`);
     }
 
     // Get processed buffer with metadata
     const { data, info } = await sharpInstance.toBuffer({ resolveWithObject: true });
+
+    // Validate output
+    if (!data || data.length === 0) {
+      throw new Error('Image processing produced empty buffer');
+    }
 
     return {
       buffer: data,
@@ -107,8 +129,55 @@ export async function generateThumbnail(
       size: info.size,
     };
   } catch (error) {
+    // Enhance error with context
+    if (error instanceof Error) {
+      // Re-throw validation errors directly
+      if (error.message.includes('Invalid input:') ||
+          error.message.includes('Invalid image:') ||
+          error.message.includes('Unsupported format:') ||
+          error.message.includes('Image processing produced empty buffer')) {
+        throw error;
+      }
+
+      // Check for specific Sharp errors
+      if (error.message.includes('Input buffer contains unsupported image format')) {
+        throw new Error(
+          `Unsupported image format. Buffer size: ${imageBuffer.length} bytes. ` +
+          `Ensure the image is a valid JPEG, PNG, GIF, or WEBP file. Original error: ${error.message}`
+        );
+      }
+
+      if (error.message.includes('Input file is missing')) {
+        throw new Error('Invalid image data: buffer is empty or corrupted');
+      }
+
+      if (error.message.includes('Input file exceeds pixel limit')) {
+        throw new Error(
+          `Image too large: exceeds maximum pixel limit. ` +
+          `Buffer size: ${imageBuffer.length} bytes. ` +
+          `Original error: ${error.message}`
+        );
+      }
+
+      if (error.message.includes('VipsJpeg') || error.message.includes('VipsPng')) {
+        throw new Error(
+          `Image decoding failed. The image may be corrupted or malformed. ` +
+          `Buffer size: ${imageBuffer.length} bytes. ` +
+          `Original error: ${error.message}`
+        );
+      }
+
+      // Generic Sharp error with context
+      throw new Error(
+        `Image processing failed: ${error.message}. ` +
+        `Buffer size: ${imageBuffer.length} bytes, Target format: ${format}, Width: ${width}`
+      );
+    }
+
+    // Unknown error type
     throw new Error(
-      `Failed to generate thumbnail: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Unknown error during image processing. Buffer size: ${imageBuffer.length} bytes. ` +
+      `Error: ${String(error)}`
     );
   }
 }
