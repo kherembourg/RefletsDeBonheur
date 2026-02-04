@@ -245,6 +245,7 @@ export function extractKeyFromUrl(url: string): string | null {
  * @param originalKey - Original media storage key (e.g., "weddings/123/media/file.jpg")
  * @param suffix - Optional suffix to append (e.g., "400w" for 400px wide)
  * @returns Thumbnail storage key (e.g., "weddings/123/thumbnails/file-400w.webp")
+ * @throws Error if originalKey is invalid or contains path traversal
  *
  * @example
  * ```ts
@@ -254,17 +255,47 @@ export function extractKeyFromUrl(url: string): string | null {
  * ```
  */
 export function generateThumbnailKey(originalKey: string, suffix: string = '400w'): string {
+  // Validate input first
+  validateStorageKey(originalKey);
+
+  // Validate suffix
+  if (!/^[a-zA-Z0-9-]+$/.test(suffix)) {
+    throw new Error('Invalid suffix: must contain only alphanumeric characters and hyphens');
+  }
+
+  if (suffix.length > 20) {
+    throw new Error('Invalid suffix: exceeds maximum length of 20 characters');
+  }
+
   // Extract wedding ID and filename from original key
   // Format: weddings/{weddingId}/media/{filename}
   const parts = originalKey.split('/');
+
+  // After validation, we know the format is correct
   const weddingId = parts[1];
   const filename = parts[parts.length - 1];
+
+  // Additional safety: validate extracted parts
+  if (!/^[a-zA-Z0-9-]+$/.test(weddingId)) {
+    throw new Error('Invalid wedding ID: must contain only alphanumeric characters and hyphens');
+  }
+
+  if (!/^[a-zA-Z0-9._-]+$/.test(filename)) {
+    throw new Error('Invalid filename: must contain only alphanumeric characters, dots, underscores, and hyphens');
+  }
 
   // Remove extension and add suffix
   const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
 
   // Return thumbnail key with .webp extension
-  return `weddings/${weddingId}/thumbnails/${nameWithoutExt}-${suffix}.webp`;
+  const thumbnailKey = `weddings/${weddingId}/thumbnails/${nameWithoutExt}-${suffix}.webp`;
+
+  // Final safety check: validate output
+  if (thumbnailKey.includes('..') || thumbnailKey.includes('//')) {
+    throw new Error('Generated thumbnail key contains invalid sequences');
+  }
+
+  return thumbnailKey;
 }
 
 /**
