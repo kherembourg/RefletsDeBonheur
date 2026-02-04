@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
-import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { verifyProfileOwnership, validateSameOrigin, errorResponse } from '../../../lib/stripe/apiAuth';
 
 export const prerender = false;
