@@ -83,6 +83,61 @@ Update the relevant documentation when:
 
 ---
 
+## Code Quality & Prevention Strategies
+
+**CRITICAL**: Review these before ANY code changes involving security, payments, or data integrity.
+
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Prevention Strategies Summary](docs/PREVENTION_STRATEGIES_SUMMARY.md) | Quick overview of prevention strategies from PR #36 findings | Before starting new features |
+| [Prevention Strategies (Full)](docs/PREVENTION_STRATEGIES.md) | Detailed strategies, patterns, and best practices | When implementing security/data features |
+| [Code Review Checklist](docs/CODE_REVIEW_CHECKLIST.md) | Quick checklist for PR reviews | Before submitting/reviewing PRs |
+| [Automated Checks Setup](docs/AUTOMATED_CHECKS_SETUP.md) | Step-by-step implementation guide for CI/CD | Setting up new checks |
+
+### Prevention Categories
+
+**Based on 7 issues resolved in PR #36:**
+
+1. **Security** (Issues #032)
+   - Never store plaintext passwords (even "temporarily")
+   - Use magic links for post-payment account setup
+   - GDPR Article 32 compliance required
+
+2. **Data Integrity** (Issues #033, #034)
+   - Database transactions for multi-step operations
+   - Unique constraints prevent race conditions
+   - No check-then-act patterns (TOCTOU vulnerabilities)
+
+3. **Code Quality** (Issues #037, #038)
+   - DRY: Extract utilities at 3+ repetitions
+   - API middleware for cross-cutting concerns
+   - Shared validation libraries
+
+4. **Documentation** (Issues #035, #036)
+   - All API endpoints documented in CLAUDE.md
+   - Scheduled jobs documented in DATABASE_MAINTENANCE.md
+   - Agent-native documentation required
+
+### Quick Prevention Rules
+
+**🔴 BLOCK MERGE if:**
+- Plaintext passwords stored anywhere
+- Payment before resource verification (financial risk)
+- Multi-step critical operations without transaction wrapper
+- Race conditions in financial flows
+
+**🟡 FIX BEFORE PRODUCTION if:**
+- Missing cleanup for temporary data
+- Undocumented API endpoints
+- No monitoring for scheduled jobs
+
+**🟢 ADDRESS IN FOLLOW-UP if:**
+- Code duplication (3-5 instances)
+- Missing test coverage (non-critical paths)
+- Suboptimal performance
+
+---
+
 ## Quick Reference
 
 ### Project Location
