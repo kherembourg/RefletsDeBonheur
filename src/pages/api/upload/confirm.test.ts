@@ -124,6 +124,14 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       select: mockSelect,
     });
 
+    // Mock update method for thumbnail URL updates
+    const mockUpdate = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      }),
+    });
+
     mockAdminClient = {
       from: vi.fn((table: string) => {
         if (table === 'weddings') {
@@ -161,6 +169,7 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
           return {
             select: selectForIdempotency,
             insert: mockInsert,
+            update: mockUpdate,
           };
         }
         return {};
@@ -228,19 +237,25 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       expect(uploadCall[1]).toBeInstanceOf(Buffer); // Thumbnail buffer
       expect(uploadCall[2]).toBe('image/webp');
 
-      // Verify database insert includes thumbnail_url
+      // Verify database insert initially has null thumbnail_url (reverse order pattern)
       const insertCall = mockAdminClient.from('media').insert;
       expect(insertCall).toHaveBeenCalledWith(
         expect.objectContaining({
           wedding_id: 'wedding-123',
           type: 'image',
           original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
-          thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+          thumbnail_url: null, // Initially null, updated after upload
           caption: 'Beautiful sunset',
           guest_name: 'John Doe',
           status: 'ready',
         })
       );
+
+      // Verify database update was called with thumbnail URL after upload
+      const updateCall = mockAdminClient.from('media').update;
+      expect(updateCall).toHaveBeenCalledWith({
+        thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+      });
     });
 
     it('should generate thumbnail with correct dimensions and format', async () => {
@@ -503,6 +518,12 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
                 }),
               }),
             }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
           };
         }
         return {};
@@ -595,6 +616,12 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
               }),
             }),
             insert: mockInsert,
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
           };
         }
         return {};
@@ -686,6 +713,12 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
               }),
             }),
             insert: mockInsert,
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
           };
         }
         return {};
@@ -716,6 +749,291 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
 
       // Should attempt database insert
       expect(mockInsert).toHaveBeenCalled();
+    });
+  });
+
+  describe('Data Integrity - Orphaned Thumbnails Prevention', () => {
+    it('should not leave orphaned thumbnails if database insert fails', async () => {
+      // Mock database insert to fail (e.g., trial limit reached, validation error)
+      const mockInsert = vi.fn();
+      const mockSelect = vi.fn();
+      const mockSingle = vi.fn();
+
+      mockSingle.mockResolvedValue({
+        data: null,
+        error: { message: 'TRIAL_PHOTO_LIMIT: Trial limit reached' },
+      });
+
+      mockSelect.mockReturnValue({
+        single: mockSingle,
+      });
+
+      mockInsert.mockReturnValue({
+        select: mockSelect,
+      });
+
+      mockAdminClient.from = vi.fn((table: string) => {
+        if (table === 'weddings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { owner_id: 'owner-123' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'media') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+            insert: mockInsert,
+          };
+        }
+        return {};
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+
+      // Should fail with trial limit error
+      expect(response.status).toBe(403);
+      const data = await response.json();
+      expect(data.code).toBe('TRIAL_PHOTO_LIMIT');
+
+      // Verify thumbnail was generated (fetchFile was called)
+      expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/photo.jpg');
+
+      // CRITICAL: Verify thumbnail was NOT uploaded to R2 (prevents orphaned file)
+      expect(mockUploadFile).not.toHaveBeenCalled();
+
+      // Verify database insert was attempted
+      expect(mockInsert).toHaveBeenCalled();
+    });
+
+    it('should upload thumbnail after successful database insert', async () => {
+      // Mock successful database insert followed by update
+      const mockUpdate = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          data: null,
+          error: null,
+        }),
+      });
+
+      const mockInsert = vi.fn();
+      const mockSelect = vi.fn();
+      const mockSingle = vi.fn();
+
+      mockSingle.mockResolvedValue({
+        data: {
+          id: 'media-123',
+          wedding_id: 'wedding-123',
+          type: 'image',
+          original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          thumbnail_url: null, // Initially null
+          status: 'ready',
+          created_at: new Date().toISOString(),
+        },
+        error: null,
+      });
+
+      mockSelect.mockReturnValue({
+        single: mockSingle,
+      });
+
+      mockInsert.mockReturnValue({
+        select: mockSelect,
+      });
+
+      mockAdminClient.from = vi.fn((table: string) => {
+        if (table === 'weddings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { owner_id: 'owner-123' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'media') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+            insert: mockInsert,
+            update: mockUpdate,
+          };
+        }
+        return {};
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+
+      // Should succeed
+      expect(response.status).toBe(200);
+
+      // Verify thumbnail was generated
+      expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/photo.jpg');
+
+      // Verify thumbnail was uploaded AFTER database insert
+      expect(mockUploadFile).toHaveBeenCalled();
+
+      // Verify database insert happened first
+      expect(mockInsert).toHaveBeenCalled();
+
+      // Verify database update with thumbnail URL happened after upload
+      expect(mockUpdate).toHaveBeenCalledWith({
+        thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+      });
+    });
+
+    it('should handle thumbnail upload failure gracefully after successful database insert', async () => {
+      // Mock uploadFile to fail
+      mockUploadFile.mockRejectedValueOnce(new Error('R2 upload failed'));
+
+      // Mock successful database insert
+      const mockUpdate = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          data: null,
+          error: null,
+        }),
+      });
+
+      const mockInsert = vi.fn();
+      const mockSelect = vi.fn();
+      const mockSingle = vi.fn();
+
+      mockSingle.mockResolvedValue({
+        data: {
+          id: 'media-123',
+          wedding_id: 'wedding-123',
+          type: 'image',
+          original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          thumbnail_url: null, // Initially null, stays null due to upload failure
+          status: 'ready',
+          created_at: new Date().toISOString(),
+        },
+        error: null,
+      });
+
+      mockSelect.mockReturnValue({
+        single: mockSingle,
+      });
+
+      mockInsert.mockReturnValue({
+        select: mockSelect,
+      });
+
+      mockAdminClient.from = vi.fn((table: string) => {
+        if (table === 'weddings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { owner_id: 'owner-123' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'media') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+            insert: mockInsert,
+            update: mockUpdate,
+          };
+        }
+        return {};
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+
+      // Should still succeed (graceful degradation)
+      expect(response.status).toBe(200);
+
+      // Verify database insert succeeded
+      expect(mockInsert).toHaveBeenCalled();
+
+      // Verify thumbnail upload was attempted but failed
+      expect(mockUploadFile).toHaveBeenCalled();
+
+      // Verify database update was NOT called (upload failed)
+      expect(mockUpdate).not.toHaveBeenCalled();
+
+      // Verify response shows no thumbnail URL (graceful degradation)
+      const data = await response.json();
+      expect(data.media.thumbnail_url).toBeNull();
     });
   });
 });

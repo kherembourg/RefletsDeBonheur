@@ -179,8 +179,10 @@ export const POST: APIRoute = async ({ request }) => {
       // Continue with upload - don't fail on idempotency check error
     }
 
-    // Generate thumbnail for images (but not videos)
-    let thumbnailUrl: string | null = null;
+    // Generate thumbnail buffer for images (but don't upload yet)
+    // This prevents orphaned thumbnails if database insert fails
+    let thumbnailBuffer: Buffer | null = null;
+    let thumbnailKey: string | null = null;
 
     if (type === 'image') {
       try {
@@ -200,9 +202,9 @@ export const POST: APIRoute = async ({ request }) => {
             `[API] Image too large for thumbnail generation: ${originalImageBuffer.length} bytes (max: ${MAX_IMAGE_SIZE})`
           );
           // Continue without thumbnail - graceful degradation
-          thumbnailUrl = null;
+          thumbnailBuffer = null;
         } else {
-          // Generate 400px WEBP thumbnail
+          // Generate 400px WEBP thumbnail (but don't upload yet)
           const thumbnail = await generateThumbnail(originalImageBuffer, {
             width: 400,
             quality: 85,
@@ -216,22 +218,9 @@ export const POST: APIRoute = async ({ request }) => {
             dimensions: `${thumbnail.width}x${thumbnail.height}`,
           });
 
-          // Upload thumbnail to R2
-          const thumbnailKey = generateThumbnailKey(key, '400w');
-          const uploadResult = await uploadFile(
-            thumbnailKey,
-            thumbnail.buffer,
-            'image/webp',
-            {
-              'wedding-id': weddingId,
-              'original-key': key,
-              'thumbnail-size': '400w',
-            }
-          );
-
-          thumbnailUrl = uploadResult.url;
-
-          console.log('[API] Thumbnail uploaded successfully:', thumbnailUrl);
+          // Store buffer and key for later upload (after DB insert succeeds)
+          thumbnailBuffer = thumbnail.buffer;
+          thumbnailKey = generateThumbnailKey(key, '400w');
         }
       } catch (thumbnailError) {
         // Enhanced error logging
@@ -244,7 +233,8 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    // Create media record in database
+    // Create media record in database FIRST (with null thumbnail)
+    // This prevents orphaned thumbnails in R2 if the database insert fails
     const { data: media, error } = await adminClient
       .from('media')
       .insert({
@@ -252,7 +242,7 @@ export const POST: APIRoute = async ({ request }) => {
         type,
         original_url: publicUrl,
         optimized_url: null, // Could be set in future for additional optimization
-        thumbnail_url: thumbnailUrl, // Generated above for images, null for videos
+        thumbnail_url: null, // Initially null, updated after upload succeeds
         caption: caption || null,
         guest_name: guestName || null,
         guest_identifier: guestIdentifier || null,
@@ -295,6 +285,46 @@ export const POST: APIRoute = async ({ request }) => {
       }
 
       throw new Error('Failed to create media record');
+    }
+
+    // Upload thumbnail and update database record (safe because DB record exists)
+    if (thumbnailBuffer && thumbnailKey) {
+      try {
+        console.log('[API] Uploading thumbnail to R2:', thumbnailKey);
+        const uploadResult = await uploadFile(
+          thumbnailKey,
+          thumbnailBuffer,
+          'image/webp',
+          {
+            'media-id': media.id,
+            'wedding-id': weddingId,
+            'original-key': key,
+            'thumbnail-size': '400w',
+          }
+        );
+
+        console.log('[API] Thumbnail uploaded successfully:', uploadResult.url);
+
+        // Update database with thumbnail URL
+        const { error: updateError } = await adminClient
+          .from('media')
+          .update({ thumbnail_url: uploadResult.url })
+          .eq('id', media.id);
+
+        if (updateError) {
+          console.error('[API] Failed to update thumbnail URL in database:', updateError);
+          // Don't fail the request - media record exists, just missing thumbnail URL
+        } else {
+          // Update response object with thumbnail URL
+          media.thumbnail_url = uploadResult.url;
+        }
+      } catch (uploadError) {
+        console.error('[API] Failed to upload thumbnail after DB insert:', {
+          error: uploadError instanceof Error ? uploadError.message : String(uploadError),
+          stack: uploadError instanceof Error ? uploadError.stack : undefined,
+        });
+        // Database record exists, thumbnail upload failed - acceptable degradation
+      }
     }
 
     return new Response(
