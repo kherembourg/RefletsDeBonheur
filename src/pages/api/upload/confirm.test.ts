@@ -146,7 +146,20 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
           };
         }
         if (table === 'media') {
+          // Support both idempotency check (select) and insert operations
+          const selectForIdempotency = vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: null, // No existing media by default
+                  error: null,
+                }),
+              }),
+            }),
+          });
+
           return {
+            select: selectForIdempotency,
             insert: mockInsert,
           };
         }
@@ -434,6 +447,275 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       // Should not attempt thumbnail generation
       expect(mockFetchFile).not.toHaveBeenCalled();
       expect(mockUploadFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Idempotency (Transaction Boundary Protection)', () => {
+    it('should be idempotent - duplicate confirms return existing record', async () => {
+      // Setup existing media record
+      const existingMediaRecord = {
+        id: 'media-existing-123',
+        wedding_id: 'wedding-123',
+        type: 'image',
+        original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+        thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+        caption: 'Already uploaded',
+        guest_name: 'Jane Doe',
+        guest_identifier: null,
+        status: 'ready',
+        moderation_status: 'approved',
+        created_at: new Date().toISOString(),
+      };
+
+      // Mock the idempotency check to return existing media
+      const mockMaybeSingle = vi.fn().mockResolvedValue({
+        data: existingMediaRecord,
+        error: null,
+      });
+
+      mockAdminClient.from = vi.fn((table: string) => {
+        if (table === 'weddings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { owner_id: 'owner-123' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'media') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  maybeSingle: mockMaybeSingle,
+                }),
+              }),
+            }),
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'Should not be called' },
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+          caption: 'Duplicate attempt',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+      const data = await response.json();
+
+      // Should return 200 OK with existing media
+      expect(response.status).toBe(200);
+      expect(data.media.id).toBe('media-existing-123');
+      expect(data.message).toContain('idempotent');
+
+      // Should NOT attempt thumbnail generation (already exists)
+      expect(mockFetchFile).not.toHaveBeenCalled();
+      expect(mockUploadFile).not.toHaveBeenCalled();
+
+      // Should NOT attempt database insert
+      expect(mockMaybeSingle).toHaveBeenCalled();
+    });
+
+    it('should proceed with upload if idempotency check finds no existing media', async () => {
+      // Mock the idempotency check to return no existing media
+      const mockMaybeSingle = vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      });
+
+      const mockInsert = vi.fn();
+      const mockSelect = vi.fn();
+      const mockSingle = vi.fn();
+
+      mockSingle.mockResolvedValue({
+        data: {
+          id: 'media-new-123',
+          wedding_id: 'wedding-123',
+          type: 'image',
+          original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+          caption: 'New upload',
+          status: 'ready',
+          created_at: new Date().toISOString(),
+        },
+        error: null,
+      });
+
+      mockSelect.mockReturnValue({
+        single: mockSingle,
+      });
+
+      mockInsert.mockReturnValue({
+        select: mockSelect,
+      });
+
+      mockAdminClient.from = vi.fn((table: string) => {
+        if (table === 'weddings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { owner_id: 'owner-123' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'media') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  maybeSingle: mockMaybeSingle,
+                }),
+              }),
+            }),
+            insert: mockInsert,
+          };
+        }
+        return {};
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+          caption: 'New upload',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+      const data = await response.json();
+
+      // Should return 200 OK with new media
+      expect(response.status).toBe(200);
+      expect(data.media.id).toBe('media-new-123');
+
+      // Should attempt thumbnail generation
+      expect(mockFetchFile).toHaveBeenCalled();
+      expect(mockUploadFile).toHaveBeenCalled();
+
+      // Should attempt database insert
+      expect(mockInsert).toHaveBeenCalled();
+    });
+
+    it('should continue upload if idempotency check encounters an error', async () => {
+      // Mock the idempotency check to return an error (network issue, etc.)
+      const mockMaybeSingle = vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'Connection timeout' },
+      });
+
+      const mockInsert = vi.fn();
+      const mockSelect = vi.fn();
+      const mockSingle = vi.fn();
+
+      mockSingle.mockResolvedValue({
+        data: {
+          id: 'media-123',
+          wedding_id: 'wedding-123',
+          type: 'image',
+          original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+          caption: null,
+          status: 'ready',
+          created_at: new Date().toISOString(),
+        },
+        error: null,
+      });
+
+      mockSelect.mockReturnValue({
+        single: mockSingle,
+      });
+
+      mockInsert.mockReturnValue({
+        select: mockSelect,
+      });
+
+      mockAdminClient.from = vi.fn((table: string) => {
+        if (table === 'weddings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { owner_id: 'owner-123' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'media') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  maybeSingle: mockMaybeSingle,
+                }),
+              }),
+            }),
+            insert: mockInsert,
+          };
+        }
+        return {};
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+
+      // Should still succeed despite idempotency check error
+      expect(response.status).toBe(200);
+
+      // Should attempt thumbnail generation
+      expect(mockFetchFile).toHaveBeenCalled();
+      expect(mockUploadFile).toHaveBeenCalled();
+
+      // Should attempt database insert
+      expect(mockInsert).toHaveBeenCalled();
     });
   });
 });

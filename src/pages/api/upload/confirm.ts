@@ -151,6 +151,34 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Idempotency check: Return existing media if already confirmed
+    // This prevents duplicate uploads and race conditions
+    const { data: existingMedia, error: existingError } = await adminClient
+      .from('media')
+      .select('id, type, original_url, optimized_url, thumbnail_url, caption, guest_name, guest_identifier, status, moderation_status, created_at')
+      .eq('wedding_id', weddingId)
+      .eq('original_url', publicUrl)
+      .maybeSingle();
+
+    if (existingMedia) {
+      console.log('[API] Upload already confirmed (idempotent):', existingMedia.id);
+      return new Response(
+        JSON.stringify({
+          media: existingMedia,
+          message: 'Upload already confirmed (idempotent)',
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (existingError) {
+      console.error('[API] Error checking for existing media:', existingError);
+      // Continue with upload - don't fail on idempotency check error
+    }
+
     // Generate thumbnail for images (but not videos)
     let thumbnailUrl: string | null = null;
 
