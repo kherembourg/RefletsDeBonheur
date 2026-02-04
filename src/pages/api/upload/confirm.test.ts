@@ -676,12 +676,15 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       expect(response.status).toBe(200);
       expect(data.media.id).toBe('media-new-123');
 
-      // Should attempt thumbnail generation
-      expect(mockFetchFile).toHaveBeenCalled();
-      expect(mockUploadFile).toHaveBeenCalled();
-
       // Should attempt database insert
       expect(mockInsert).toHaveBeenCalled();
+
+      // Wait for background thumbnail generation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Should attempt thumbnail generation in background
+      expect(mockFetchFile).toHaveBeenCalled();
+      expect(mockUploadFile).toHaveBeenCalled();
     });
 
     it('should continue upload if idempotency check encounters an error', async () => {
@@ -770,12 +773,15 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       // Should still succeed despite idempotency check error
       expect(response.status).toBe(200);
 
-      // Should attempt thumbnail generation
-      expect(mockFetchFile).toHaveBeenCalled();
-      expect(mockUploadFile).toHaveBeenCalled();
-
       // Should attempt database insert
       expect(mockInsert).toHaveBeenCalled();
+
+      // Wait for background thumbnail generation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Should attempt thumbnail generation in background
+      expect(mockFetchFile).toHaveBeenCalled();
+      expect(mockUploadFile).toHaveBeenCalled();
     });
   });
 
@@ -851,14 +857,16 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       const data = await response.json();
       expect(data.code).toBe('TRIAL_PHOTO_LIMIT');
 
-      // Verify thumbnail was generated (fetchFile was called)
-      expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/photo.jpg');
-
-      // CRITICAL: Verify thumbnail was NOT uploaded to R2 (prevents orphaned file)
-      expect(mockUploadFile).not.toHaveBeenCalled();
-
       // Verify database insert was attempted
       expect(mockInsert).toHaveBeenCalled();
+
+      // Wait to ensure background processing doesn't start
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // CRITICAL: Verify thumbnail was NOT generated because DB insert failed
+      // With async processing, thumbnails are only generated AFTER successful DB insert
+      expect(mockFetchFile).not.toHaveBeenCalled();
+      expect(mockUploadFile).not.toHaveBeenCalled();
     });
 
     it('should upload thumbnail after successful database insert', async () => {
@@ -874,17 +882,16 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       const mockSelect = vi.fn();
       const mockSingle = vi.fn();
 
-      mockSingle.mockResolvedValue({
-        data: {
-          id: 'media-123',
-          wedding_id: 'wedding-123',
-          type: 'image',
-          original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
-          thumbnail_url: null, // Initially null
-          status: 'ready',
-          created_at: new Date().toISOString(),
-        },
-        error: null,
+      mockSingle.mockImplementation(() => {
+        const insertedData = mockInsert.mock.calls[mockInsert.mock.calls.length - 1]?.[0];
+        return Promise.resolve({
+          data: {
+            id: 'media-123',
+            ...insertedData,
+            created_at: new Date().toISOString(),
+          },
+          error: null,
+        });
       });
 
       mockSelect.mockReturnValue({
@@ -946,19 +953,25 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       // Should succeed
       expect(response.status).toBe(200);
 
-      // Verify thumbnail was generated
+      // Verify database insert happened first
+      expect(mockInsert).toHaveBeenCalled();
+
+      // Wait for background thumbnail generation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify thumbnail was generated in background
       expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/photo.jpg');
 
       // Verify thumbnail was uploaded AFTER database insert
       expect(mockUploadFile).toHaveBeenCalled();
 
-      // Verify database insert happened first
-      expect(mockInsert).toHaveBeenCalled();
-
       // Verify database update with thumbnail URL happened after upload
-      expect(mockUpdate).toHaveBeenCalledWith({
-        thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
-      });
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+          status: 'ready',
+        })
+      );
     });
 
     it('should handle thumbnail upload failure gracefully after successful database insert', async () => {
@@ -977,17 +990,16 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       const mockSelect = vi.fn();
       const mockSingle = vi.fn();
 
-      mockSingle.mockResolvedValue({
-        data: {
-          id: 'media-123',
-          wedding_id: 'wedding-123',
-          type: 'image',
-          original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
-          thumbnail_url: null, // Initially null, stays null due to upload failure
-          status: 'ready',
-          created_at: new Date().toISOString(),
-        },
-        error: null,
+      mockSingle.mockImplementation(() => {
+        const insertedData = mockInsert.mock.calls[mockInsert.mock.calls.length - 1]?.[0];
+        return Promise.resolve({
+          data: {
+            id: 'media-123',
+            ...insertedData,
+            created_at: new Date().toISOString(),
+          },
+          error: null,
+        });
       });
 
       mockSelect.mockReturnValue({
@@ -1052,15 +1064,19 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       // Verify database insert succeeded
       expect(mockInsert).toHaveBeenCalled();
 
+      // Wait for background thumbnail generation to fail
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Verify thumbnail upload was attempted but failed
       expect(mockUploadFile).toHaveBeenCalled();
 
-      // Verify database update was NOT called (upload failed)
-      expect(mockUpdate).not.toHaveBeenCalled();
+      // Verify database update WAS called to set status to 'ready' despite upload failure
+      expect(mockUpdate).toHaveBeenCalledWith({ status: 'ready' });
 
-      // Verify response shows no thumbnail URL (graceful degradation)
+      // Verify response shows processing status and no thumbnail URL initially
       const data = await response.json();
       expect(data.media.thumbnail_url).toBeNull();
+      expect(data.media.status).toBe('processing');
     });
   });
 
