@@ -179,6 +179,16 @@ export const MediaCard = memo(function MediaCard({
               onLoad={handleImageLoad}
             />
 
+            {/* Processing indicator overlay for images being processed */}
+            {item.status === 'processing' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 shadow-sm">
+                  <div className="w-3 h-3 border-2 border-charcoal/20 border-t-charcoal/70 rounded-full animate-spin" />
+                  <span className="text-xs font-medium text-charcoal/70">Processing...</span>
+                </div>
+              </div>
+            )}
+
             {isPublicView && (
               <div className={`absolute inset-0 bg-black/5 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
             )}

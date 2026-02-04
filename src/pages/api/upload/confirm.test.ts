@@ -92,21 +92,17 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
     const mockEq = vi.fn();
     const mockMaybeSingle = vi.fn();
 
-    mockSingle.mockResolvedValue({
-      data: {
-        id: 'media-123',
-        wedding_id: 'wedding-123',
-        type: 'image',
-        original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
-        thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
-        caption: null,
-        guest_name: null,
-        guest_identifier: null,
-        status: 'ready',
-        moderation_status: 'approved',
-        created_at: new Date().toISOString(),
-      },
-      error: null,
+    // Mock insert to return the data that was inserted (with dynamic status)
+    mockSingle.mockImplementation(() => {
+      const insertedData = mockInsert.mock.calls[mockInsert.mock.calls.length - 1]?.[0];
+      return Promise.resolve({
+        data: {
+          id: 'media-123',
+          ...insertedData,
+          created_at: new Date().toISOString(),
+        },
+        error: null,
+      });
     });
 
     mockSelect.mockReturnValue({
@@ -202,8 +198,8 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
     });
   });
 
-  describe('Image Upload with Thumbnail Generation', () => {
-    it('should generate thumbnail for image uploads', async () => {
+  describe('Image Upload with Async Thumbnail Generation', () => {
+    it('should return immediately with processing status (async behavior)', async () => {
       const request = new Request('http://localhost:4321/api/upload/confirm', {
         method: 'POST',
         headers: {
@@ -220,49 +216,41 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
         }),
       });
 
+      const start = Date.now();
       const response = await POST({ request } as any);
+      const duration = Date.now() - start;
       const data = await response.json();
+
+      // Verify response returns quickly (should be fast without waiting for thumbnail)
+      expect(duration).toBeLessThan(500); // Should be much faster than 500-1800ms
 
       // Verify response success
       expect(response.status).toBe(200);
       expect(data.media).toBeDefined();
-      expect(data.media.thumbnail_url).toBe(
-        'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp'
-      );
 
-      // Verify fetchFile was called to get original image
-      expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/photo.jpg');
+      // Verify media record has processing status and null thumbnail initially
+      expect(data.media.status).toBe('processing');
+      expect(data.media.thumbnail_url).toBeNull();
 
-      // Verify uploadFile was called to upload thumbnail
-      expect(mockUploadFile).toHaveBeenCalled();
-      const uploadCall = mockUploadFile.mock.calls[0];
-      expect(uploadCall[0]).toContain('thumbnails');
-      expect(uploadCall[0]).toContain('400w.webp');
-      expect(uploadCall[1]).toBeInstanceOf(Buffer); // Thumbnail buffer
-      expect(uploadCall[2]).toBe('image/webp');
-
-      // Verify database insert initially has null thumbnail_url (reverse order pattern)
+      // Verify database insert has correct initial state
       const insertCall = mockAdminClient.from('media').insert;
       expect(insertCall).toHaveBeenCalledWith(
         expect.objectContaining({
           wedding_id: 'wedding-123',
           type: 'image',
           original_url: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
-          thumbnail_url: null, // Initially null, updated after upload
+          thumbnail_url: null, // Initially null
           caption: 'Beautiful sunset',
           guest_name: 'John Doe',
-          status: 'ready',
+          status: 'processing', // Initially processing
         })
       );
 
-      // Verify database update was called with thumbnail URL after upload
-      const updateCall = mockAdminClient.from('media').update;
-      expect(updateCall).toHaveBeenCalledWith({
-        thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
-      });
+      // Background processing should NOT have been awaited
+      // (fetchFile and uploadFile will be called asynchronously after response)
     });
 
-    it('should generate thumbnail with correct dimensions and format', async () => {
+    it('should eventually generate thumbnail in background', async () => {
       const request = new Request('http://localhost:4321/api/upload/confirm', {
         method: 'POST',
         headers: {
@@ -277,13 +265,22 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
         }),
       });
 
-      await POST({ request } as any);
+      const response = await POST({ request } as any);
+      const data = await response.json();
 
-      // Verify thumbnail was uploaded
+      // Initial response should be processing
+      expect(data.media.status).toBe('processing');
+      expect(data.media.thumbnail_url).toBeNull();
+
+      // Wait for background processing to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify background processing was triggered
+      expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/photo.jpg');
       expect(mockUploadFile).toHaveBeenCalled();
-      const uploadedBuffer = mockUploadFile.mock.calls[0][1];
 
-      // Verify buffer is a valid image
+      // Verify thumbnail was uploaded with correct format
+      const uploadedBuffer = mockUploadFile.mock.calls[0][1];
       expect(uploadedBuffer).toBeInstanceOf(Buffer);
       expect(uploadedBuffer.length).toBeGreaterThan(0);
 
@@ -292,6 +289,15 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       expect(metadata.format).toBe('webp');
       expect(metadata.width).toBeLessThanOrEqual(400);
       expect(metadata.height).toBeLessThanOrEqual(300); // Aspect ratio maintained (800x600 -> 400x300)
+
+      // Verify database update was called with thumbnail URL and ready status
+      const updateCall = mockAdminClient.from('media').update;
+      expect(updateCall).toHaveBeenCalledWith(
+        expect.objectContaining({
+          thumbnail_url: 'https://r2.example.com/weddings/wedding-123/thumbnails/photo-400w.webp',
+          status: 'ready',
+        })
+      );
     });
 
     it('should not generate thumbnail for video uploads', async () => {
@@ -309,7 +315,8 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
         }),
       });
 
-      await POST({ request } as any);
+      const response = await POST({ request } as any);
+      const data = await response.json();
 
       // Verify fetchFile was NOT called (no thumbnail generation for videos)
       expect(mockFetchFile).not.toHaveBeenCalled();
@@ -317,14 +324,18 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       // Verify uploadFile was NOT called
       expect(mockUploadFile).not.toHaveBeenCalled();
 
-      // Verify database insert has null thumbnail_url
+      // Verify database insert has null thumbnail_url and ready status (videos don't need processing)
       const insertCall = mockAdminClient.from('media').insert;
       expect(insertCall).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'video',
           thumbnail_url: null,
+          status: 'ready', // Videos are immediately ready
         })
       );
+
+      // Verify response has ready status for videos
+      expect(data.media.status).toBe('ready');
     });
 
     it('should handle thumbnail generation errors gracefully', async () => {
@@ -346,21 +357,31 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       });
 
       const response = await POST({ request } as any);
+      const data = await response.json();
 
-      // Upload should still succeed even though thumbnail generation failed
+      // Upload should still succeed even though thumbnail will fail
       expect(response.status).toBe(200);
 
-      // Database insert should have null thumbnail_url
+      // Response should have processing status (background job will handle the error)
+      expect(data.media.status).toBe('processing');
+      expect(data.media.thumbnail_url).toBeNull();
+
+      // Database insert should have processing status and null thumbnail_url
       const insertCall = mockAdminClient.from('media').insert;
       expect(insertCall).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'image',
-          thumbnail_url: null, // Failed to generate, so it's null
+          thumbnail_url: null,
+          status: 'processing',
         })
       );
 
-      // Verify error was logged (console.error was called)
-      // Note: We can't easily test console.error without mocking it, but we verified the upload succeeded
+      // Wait for background processing to fail gracefully
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify database update was called to set status to ready even after error
+      const updateCall = mockAdminClient.from('media').update;
+      expect(updateCall).toHaveBeenCalledWith({ status: 'ready' });
     });
 
     it('should use correct storage path for thumbnails', async () => {
@@ -379,6 +400,9 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       });
 
       await POST({ request } as any);
+
+      // Wait for background processing
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Verify thumbnail key follows the correct pattern
       expect(mockUploadFile).toHaveBeenCalledWith(
@@ -415,9 +439,13 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       const response = await POST({ request } as any);
       const data = await response.json();
 
-      // Upload should still succeed
+      // Upload should still succeed with processing status
       expect(response.status).toBe(200);
       expect(data.media).toBeDefined();
+      expect(data.media.status).toBe('processing');
+
+      // Wait for background processing to detect size and update status
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Verify fetchFile was called to check size
       expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/large-photo.jpg');
@@ -425,14 +453,9 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       // Verify uploadFile was NOT called (no thumbnail generated for oversized images)
       expect(mockUploadFile).not.toHaveBeenCalled();
 
-      // Database insert should have null thumbnail_url (graceful degradation)
-      const insertCall = mockAdminClient.from('media').insert;
-      expect(insertCall).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'image',
-          thumbnail_url: null, // No thumbnail due to size limit
-        })
-      );
+      // Verify database update was called to set status to ready (without thumbnail)
+      const updateCall = mockAdminClient.from('media').update;
+      expect(updateCall).toHaveBeenCalledWith({ status: 'ready' });
     });
   });
 
