@@ -133,6 +133,14 @@ if (!serviceRef.current) {
 1. Request presigned URL (`/api/upload/presign`)
 2. Upload directly to R2
 3. Confirm upload (`/api/upload/confirm`)
+4. Automatic thumbnail generation (async, 400px WEBP)
+
+**Thumbnails:**
+- Automatically generated for all images
+- 400px WEBP format for optimal performance
+- Async processing (non-blocking uploads)
+- Graceful degradation if generation fails
+- See `docs/architecture/THUMBNAIL_GENERATION.md`
 
 **Authentication:**
 - Client: Supabase Auth → `auth_sessions`
