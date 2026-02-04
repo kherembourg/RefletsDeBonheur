@@ -25,9 +25,13 @@ vi.mock('../../../lib/supabase/server', () => ({
 
 vi.mock('../../../lib/rateLimit', () => ({
   checkRateLimit: vi.fn().mockReturnValue({ allowed: true }),
+  checkWeddingRateLimit: vi.fn().mockReturnValue({ allowed: true }),
   getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
   createRateLimitResponse: vi.fn(),
-  RATE_LIMITS: { upload: {} },
+  RATE_LIMITS: {
+    upload: { limit: 20, windowSeconds: 60, prefix: 'upload' },
+    uploadPerWedding: { limit: 50, windowSeconds: 60, prefix: 'upload-wedding' },
+  },
 }));
 
 vi.mock('../../../lib/api/middleware', () => ({
@@ -1034,6 +1038,218 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
       // Verify response shows no thumbnail URL (graceful degradation)
       const data = await response.json();
       expect(data.media.thumbnail_url).toBeNull();
+    });
+  });
+
+  describe('Rate Limiting - Per-Wedding Protection', () => {
+    it('should enforce per-wedding rate limit', async () => {
+      // Mock checkWeddingRateLimit to return rate limited
+      const { checkWeddingRateLimit } = await import('../../../lib/rateLimit');
+      vi.mocked(checkWeddingRateLimit).mockReturnValueOnce({
+        allowed: false,
+        remaining: 0,
+        resetAt: new Date(Date.now() + 60000),
+        retryAfterSeconds: 60,
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+      const data = await response.json();
+
+      // Should return 429 Too Many Requests
+      expect(response.status).toBe(429);
+      expect(data.error).toContain('Rate limit exceeded');
+      expect(data.retryAfter).toBe(60);
+
+      // Should not attempt upload or thumbnail generation
+      expect(mockFetchFile).not.toHaveBeenCalled();
+      expect(mockUploadFile).not.toHaveBeenCalled();
+
+      // Should include rate limit headers
+      expect(response.headers.get('Retry-After')).toBe('60');
+      expect(response.headers.get('X-RateLimit-Limit')).toBe('50');
+      expect(response.headers.get('X-RateLimit-Remaining')).toBe('0');
+    });
+
+    it('should allow uploads when within per-wedding rate limit', async () => {
+      // Mock checkWeddingRateLimit to allow request
+      const { checkWeddingRateLimit } = await import('../../../lib/rateLimit');
+      vi.mocked(checkWeddingRateLimit).mockReturnValueOnce({
+        allowed: true,
+        remaining: 25,
+        resetAt: new Date(Date.now() + 60000),
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+
+      // Should succeed
+      expect(response.status).toBe(200);
+      expect(checkWeddingRateLimit).toHaveBeenCalledWith('wedding-123', expect.objectContaining({
+        limit: 50,
+        windowSeconds: 60,
+      }));
+    });
+
+    it('should check per-wedding rate limit AFTER IP rate limit', async () => {
+      const { checkRateLimit, checkWeddingRateLimit } = await import('../../../lib/rateLimit');
+
+      // Reset mocks to track call order
+      vi.mocked(checkRateLimit).mockClear();
+      vi.mocked(checkWeddingRateLimit).mockClear();
+
+      vi.mocked(checkRateLimit).mockReturnValueOnce({
+        allowed: true,
+        remaining: 10,
+        resetAt: new Date(Date.now() + 60000),
+      });
+
+      vi.mocked(checkWeddingRateLimit).mockReturnValueOnce({
+        allowed: true,
+        remaining: 30,
+        resetAt: new Date(Date.now() + 60000),
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      await POST({ request } as any);
+
+      // Both rate limits should be checked
+      expect(checkRateLimit).toHaveBeenCalledWith('127.0.0.1', expect.any(Object));
+      expect(checkWeddingRateLimit).toHaveBeenCalledWith('wedding-123', expect.any(Object));
+
+      // IP check should happen before wedding check (call order matters)
+      const checkRateLimitCallOrder = vi.mocked(checkRateLimit).mock.invocationCallOrder[0];
+      const checkWeddingRateLimitCallOrder = vi.mocked(checkWeddingRateLimit).mock.invocationCallOrder[0];
+      expect(checkRateLimitCallOrder).toBeLessThan(checkWeddingRateLimitCallOrder);
+    });
+
+    it('should not affect other weddings when one wedding is rate limited', async () => {
+      const { checkWeddingRateLimit } = await import('../../../lib/rateLimit');
+
+      // First request to wedding-123: rate limited
+      vi.mocked(checkWeddingRateLimit).mockReturnValueOnce({
+        allowed: false,
+        remaining: 0,
+        resetAt: new Date(Date.now() + 60000),
+        retryAfterSeconds: 60,
+      });
+
+      const request1 = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response1 = await POST({ request: request1 } as any);
+      expect(response1.status).toBe(429);
+
+      // Second request to wedding-456: should succeed
+      vi.mocked(checkWeddingRateLimit).mockReturnValueOnce({
+        allowed: true,
+        remaining: 49,
+        resetAt: new Date(Date.now() + 60000),
+      });
+
+      const request2 = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-456',
+          key: 'weddings/wedding-456/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-456/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response2 = await POST({ request: request2 } as any);
+      expect(response2.status).toBe(200);
+
+      // Verify both weddings were checked independently
+      expect(checkWeddingRateLimit).toHaveBeenCalledWith('wedding-123', expect.any(Object));
+      expect(checkWeddingRateLimit).toHaveBeenCalledWith('wedding-456', expect.any(Object));
+    });
+
+    it('should include detailed error message when wedding rate limit is exceeded', async () => {
+      const { checkWeddingRateLimit } = await import('../../../lib/rateLimit');
+      vi.mocked(checkWeddingRateLimit).mockReturnValueOnce({
+        allowed: false,
+        remaining: 0,
+        resetAt: new Date(Date.now() + 45000),
+        retryAfterSeconds: 45,
+      });
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(429);
+      expect(data.error).toBe('Rate limit exceeded for this wedding');
+      expect(data.message).toContain('Maximum 50 uploads per minute per wedding');
+      expect(data.message).toContain('45 seconds');
+      expect(data.retryAfter).toBe(45);
     });
   });
 });
