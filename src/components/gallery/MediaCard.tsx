@@ -167,8 +167,8 @@ export const MediaCard = memo(function MediaCard({
               )
             )}
             <img
-              src={item.url}
-              srcSet={generateSrcSet(item.url)}
+              src={item.thumbnailUrl || item.url}
+              srcSet={generateSrcSet(item.thumbnailUrl || item.url)}
               sizes="(max-width: 640px) 320px, (max-width: 1024px) 480px, 400px"
               alt={item.caption || `Photo par ${item.author}`}
               className={`w-full object-cover transition-opacity duration-300 ${isAdminView ? 'aspect-[4/3]' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -178,6 +178,16 @@ export const MediaCard = memo(function MediaCard({
               height={300}
               onLoad={handleImageLoad}
             />
+
+            {/* Processing indicator overlay for images being processed */}
+            {item.status === 'processing' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 shadow-sm">
+                  <div className="w-3 h-3 border-2 border-charcoal/20 border-t-charcoal/70 rounded-full animate-spin" />
+                  <span className="text-xs font-medium text-charcoal/70">Processing...</span>
+                </div>
+              </div>
+            )}
 
             {isPublicView && (
               <div className={`absolute inset-0 bg-black/5 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`} />

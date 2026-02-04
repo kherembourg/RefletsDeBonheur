@@ -132,6 +132,18 @@ export function createRateLimitResponse(result: RateLimitResult): Response {
   );
 }
 
+/**
+ * Check rate limit for a specific wedding
+ * Used to prevent distributed abuse across multiple IPs
+ */
+export function checkWeddingRateLimit(
+  weddingId: string,
+  config: RateLimitConfig
+): RateLimitResult {
+  const key = `wedding:${weddingId}`;
+  return checkRateLimit(key, config);
+}
+
 // Predefined rate limit configs for common endpoints
 export const RATE_LIMITS = {
   /** Signup: 5 attempts per IP per hour */
@@ -157,5 +169,11 @@ export const RATE_LIMITS = {
     limit: 20,
     windowSeconds: 60,
     prefix: 'upload',
+  },
+  /** Upload per wedding: 50 uploads per wedding per minute */
+  uploadPerWedding: {
+    limit: 50,
+    windowSeconds: 60,
+    prefix: 'upload-wedding',
   },
 } as const;

@@ -42,9 +42,33 @@ All wedding pages use dynamic routing with `[slug]` parameter.
 | `/api/admin/create-client` | `pages/api/admin/create-client.ts` | POST | Create new client |
 | `/api/weddings/by-slug` | `pages/api/weddings/by-slug.ts` | GET | Get wedding by slug |
 | `/api/upload/presign` | `pages/api/upload/presign.ts` | POST | Get presigned URL |
-| `/api/upload/confirm` | `pages/api/upload/confirm.ts` | POST | Confirm upload |
+| `/api/upload/confirm` | `pages/api/upload/confirm.ts` | POST | Confirm upload + generate thumbnail |
 | `/api/customization/save` | `pages/api/customization/save.ts` | POST | Save customization |
 | `/api/customization/get` | `pages/api/customization/get.ts` | GET | Get customization |
+
+## Upload Flow with Thumbnails
+
+The platform automatically generates optimized thumbnails for all uploaded images:
+
+1. **Request presigned URL** - Client calls `/api/upload/presign` with file metadata
+2. **Upload to R2** - Client uploads directly to Cloudflare R2 using presigned URL
+3. **Confirm upload** - Client calls `/api/upload/confirm` with upload details
+4. **Create media record** - Server creates database entry with `status: 'processing'`
+5. **Return immediately** - API responds instantly (50-150ms)
+6. **Generate thumbnail** - Server asynchronously:
+   - Fetches original from R2
+   - Generates 400px WEBP thumbnail using Sharp
+   - Uploads thumbnail to R2 (`weddings/{id}/thumbnails/`)
+   - Updates database with `thumbnail_url` and `status: 'ready'`
+7. **Graceful degradation** - If thumbnail fails, upload still succeeds
+8. **Display** - Gallery shows thumbnail if available, falls back to original
+
+**Performance:**
+- Upload response: ~100ms (non-blocking)
+- Background processing: ~1000ms average
+- Supports 100+ concurrent uploads
+
+**See:** `docs/architecture/THUMBNAIL_GENERATION.md` for complete documentation
 
 ## Page Hierarchy
 
