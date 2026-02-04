@@ -33,6 +33,10 @@ import { extractKeyFromUrl, fetchFile, uploadFile, generateThumbnailKey } from '
 
 export const prerender = false;
 
+// Maximum image size for thumbnail generation (10MB)
+// Larger images will skip thumbnail generation to prevent memory exhaustion
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
 /**
  * Validate upload authorization for confirm endpoint
  */
@@ -157,29 +161,38 @@ export const POST: APIRoute = async ({ request }) => {
         // Fetch original image from R2
         const originalImageBuffer = await fetchFile(key);
 
-        // Generate 400px WEBP thumbnail
-        const thumbnail = await generateThumbnail(originalImageBuffer, {
-          width: 400,
-          quality: 85,
-          format: 'webp',
-        });
+        // Check buffer size to prevent memory exhaustion DoS
+        if (originalImageBuffer.length > MAX_IMAGE_SIZE) {
+          console.warn(
+            `[API] Image too large for thumbnail generation: ${originalImageBuffer.length} bytes (max: ${MAX_IMAGE_SIZE})`
+          );
+          // Continue without thumbnail - graceful degradation
+          thumbnailUrl = null;
+        } else {
+          // Generate 400px WEBP thumbnail
+          const thumbnail = await generateThumbnail(originalImageBuffer, {
+            width: 400,
+            quality: 85,
+            format: 'webp',
+          });
 
-        // Upload thumbnail to R2
-        const thumbnailKey = generateThumbnailKey(key, '400w');
-        const uploadResult = await uploadFile(
-          thumbnailKey,
-          thumbnail.buffer,
-          'image/webp',
-          {
-            'wedding-id': weddingId,
-            'original-key': key,
-            'thumbnail-size': '400w',
-          }
-        );
+          // Upload thumbnail to R2
+          const thumbnailKey = generateThumbnailKey(key, '400w');
+          const uploadResult = await uploadFile(
+            thumbnailKey,
+            thumbnail.buffer,
+            'image/webp',
+            {
+              'wedding-id': weddingId,
+              'original-key': key,
+              'thumbnail-size': '400w',
+            }
+          );
 
-        thumbnailUrl = uploadResult.url;
+          thumbnailUrl = uploadResult.url;
 
-        console.log('[API] Thumbnail generated successfully:', thumbnailUrl);
+          console.log('[API] Thumbnail generated successfully:', thumbnailUrl);
+        }
       } catch (thumbnailError) {
         // Log error but don't fail the upload
         console.error('[API] Failed to generate thumbnail:', thumbnailError);

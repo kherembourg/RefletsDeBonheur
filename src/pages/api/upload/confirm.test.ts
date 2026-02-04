@@ -360,6 +360,48 @@ describe('Upload Confirm API - Thumbnail Generation Integration', () => {
         })
       );
     });
+
+    it('should skip thumbnail generation for oversized images to prevent memory exhaustion', async () => {
+      // Mock a 15MB buffer (exceeds 10MB limit)
+      const largeBuffer = Buffer.alloc(15 * 1024 * 1024);
+      mockFetchFile.mockResolvedValueOnce(largeBuffer);
+
+      const request = new Request('http://localhost:4321/api/upload/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer valid-token',
+        },
+        body: JSON.stringify({
+          weddingId: 'wedding-123',
+          key: 'weddings/wedding-123/media/large-photo.jpg',
+          publicUrl: 'https://r2.example.com/weddings/wedding-123/media/large-photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+      });
+
+      const response = await POST({ request } as any);
+      const data = await response.json();
+
+      // Upload should still succeed
+      expect(response.status).toBe(200);
+      expect(data.media).toBeDefined();
+
+      // Verify fetchFile was called to check size
+      expect(mockFetchFile).toHaveBeenCalledWith('weddings/wedding-123/media/large-photo.jpg');
+
+      // Verify uploadFile was NOT called (no thumbnail generated for oversized images)
+      expect(mockUploadFile).not.toHaveBeenCalled();
+
+      // Database insert should have null thumbnail_url (graceful degradation)
+      const insertCall = mockAdminClient.from('media').insert;
+      expect(insertCall).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'image',
+          thumbnail_url: null, // No thumbnail due to size limit
+        })
+      );
+    });
   });
 
   describe('Authorization', () => {
