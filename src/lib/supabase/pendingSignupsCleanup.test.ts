@@ -20,7 +20,8 @@ const isSupabaseConfigured = supabaseUrl && supabaseKey;
 const describeIf = isSupabaseConfigured ? describe : describe.skip;
 
 describeIf('Pending Signups Cleanup', () => {
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  // Only create client inside the conditional block
+  const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null as any;
   const testEmail = `test-cleanup-${Date.now()}@example.com`;
 
   // Cleanup test data after each test
