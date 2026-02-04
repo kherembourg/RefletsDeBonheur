@@ -160,6 +160,11 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Fetch original image from R2
         const originalImageBuffer = await fetchFile(key);
+        console.log('[API] Fetched image buffer:', {
+          key,
+          size: originalImageBuffer.length,
+          sizeKB: Math.round(originalImageBuffer.length / 1024),
+        });
 
         // Check buffer size to prevent memory exhaustion DoS
         if (originalImageBuffer.length > MAX_IMAGE_SIZE) {
@@ -174,6 +179,13 @@ export const POST: APIRoute = async ({ request }) => {
             width: 400,
             quality: 85,
             format: 'webp',
+          });
+
+          console.log('[API] Thumbnail generated:', {
+            originalSize: originalImageBuffer.length,
+            thumbnailSize: thumbnail.size,
+            compressionRatio: (thumbnail.size / originalImageBuffer.length * 100).toFixed(1) + '%',
+            dimensions: `${thumbnail.width}x${thumbnail.height}`,
           });
 
           // Upload thumbnail to R2
@@ -191,11 +203,15 @@ export const POST: APIRoute = async ({ request }) => {
 
           thumbnailUrl = uploadResult.url;
 
-          console.log('[API] Thumbnail generated successfully:', thumbnailUrl);
+          console.log('[API] Thumbnail uploaded successfully:', thumbnailUrl);
         }
       } catch (thumbnailError) {
-        // Log error but don't fail the upload
-        console.error('[API] Failed to generate thumbnail:', thumbnailError);
+        // Enhanced error logging
+        console.error('[API] Failed to generate thumbnail:', {
+          key,
+          error: thumbnailError instanceof Error ? thumbnailError.message : String(thumbnailError),
+          stack: thumbnailError instanceof Error ? thumbnailError.stack : undefined,
+        });
         // Continue without thumbnail - the upload should still succeed
       }
     }

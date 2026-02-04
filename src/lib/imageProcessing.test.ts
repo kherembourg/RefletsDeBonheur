@@ -238,4 +238,117 @@ describe('imageProcessing', () => {
     });
   });
 
+  describe('Sharp Error Handling', () => {
+    it('should provide detailed error for non-Buffer input', async () => {
+      await expect(
+        // @ts-expect-error - Testing invalid input
+        generateThumbnail('not a buffer')
+      ).rejects.toThrow('Invalid input: imageBuffer must be a Buffer');
+    });
+
+    it('should provide detailed error for invalid buffer', async () => {
+      const invalidBuffer = Buffer.from('not an image file at all');
+
+      await expect(generateThumbnail(invalidBuffer)).rejects.toThrow(
+        /Invalid image: unrecognized format/
+      );
+    });
+
+    it('should provide detailed error for corrupted image', async () => {
+      // Create buffer that starts like a JPEG but is corrupted
+      const corruptedBuffer = Buffer.alloc(1000);
+      corruptedBuffer[0] = 0xFF; // JPEG magic number start
+      corruptedBuffer[1] = 0xD8;
+      corruptedBuffer[2] = 0xFF;
+
+      await expect(generateThumbnail(corruptedBuffer)).rejects.toThrow(
+        /Image processing failed|Image decoding failed/
+      );
+    });
+
+    it('should provide detailed error for empty buffer', async () => {
+      await expect(generateThumbnail(Buffer.alloc(0))).rejects.toThrow(
+        'Invalid input: imageBuffer is empty'
+      );
+    });
+
+    it('should provide detailed error for unsupported output format', async () => {
+      await expect(
+        generateThumbnail(testImageBuffer, {
+          // @ts-expect-error - Testing invalid format
+          format: 'bmp',
+        })
+      ).rejects.toThrow(/Unsupported format: bmp/);
+    });
+
+    it('should validate buffer before processing', async () => {
+      // Create buffer with invalid magic numbers
+      const invalidMagicBuffer = Buffer.alloc(100);
+      invalidMagicBuffer[0] = 0x00;
+      invalidMagicBuffer[1] = 0x00;
+      invalidMagicBuffer[2] = 0x00;
+
+      await expect(generateThumbnail(invalidMagicBuffer)).rejects.toThrow(
+        /Invalid image: unrecognized format/
+      );
+    });
+
+    it('should include buffer size in error messages', async () => {
+      const invalidBuffer = Buffer.from('not an image file');
+
+      try {
+        await generateThumbnail(invalidBuffer);
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error instanceof Error).toBe(true);
+        if (error instanceof Error) {
+          // Should mention it's an invalid image (caught by magic number validation)
+          expect(error.message).toMatch(/Invalid image/);
+        }
+      }
+    });
+
+    it('should include context in Sharp processing errors', async () => {
+      // Create a buffer that passes magic number check but fails processing
+      const partialJpeg = Buffer.alloc(100);
+      partialJpeg[0] = 0xFF; // JPEG magic
+      partialJpeg[1] = 0xD8;
+      partialJpeg[2] = 0xFF;
+
+      try {
+        await generateThumbnail(partialJpeg, { width: 200, format: 'webp' });
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error instanceof Error).toBe(true);
+        if (error instanceof Error) {
+          // Error should include context about buffer size
+          expect(error.message).toMatch(/Buffer size: 100 bytes/);
+          // Should mention it's a decoding or processing error
+          expect(error.message).toMatch(/Image decoding failed|Image processing failed/);
+        }
+      }
+    });
+
+    it('should handle corrupted PNG files with detailed error', async () => {
+      // Create a buffer that starts like PNG but is corrupted
+      const corruptedPng = Buffer.alloc(500);
+      corruptedPng[0] = 0x89; // PNG magic
+      corruptedPng[1] = 0x50;
+      corruptedPng[2] = 0x4E;
+      corruptedPng[3] = 0x47;
+
+      try {
+        await generateThumbnail(corruptedPng);
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error instanceof Error).toBe(true);
+        if (error instanceof Error) {
+          // Should provide useful error information with buffer size
+          expect(error.message).toMatch(/Buffer size: 500 bytes/);
+          expect(error.message).toMatch(/Unsupported image format|Image processing failed|Image decoding failed/);
+        }
+      }
+    });
+  });
+
 });
