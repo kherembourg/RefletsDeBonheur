@@ -1,10 +1,12 @@
-# 🟡 Add Per-Wedding Rate Limiting for Upload Confirmation
+# ✅ Add Per-Wedding Rate Limiting for Upload Confirmation
 
-**Status:** pending
+**Status:** completed
 **Priority:** P2 (IMPORTANT)
 **Category:** Security / Performance
 **Created:** 2026-02-04
+**Completed:** 2026-02-04
 **Source:** Code review PR #37 - security-sentinel agent
+**Commit:** ad1caf6
 
 ## Problem
 
