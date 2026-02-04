@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
-import { isSupabaseConfigured } from '../../../lib/supabase/client';
-import { getStripeClient, isStripeConfigured, PRODUCT_CONFIG } from '../../../lib/stripe/server';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import { getStripeClient, PRODUCT_CONFIG } from '../../../lib/stripe/server';
 import type { ThemeId } from '../../../lib/themes';
 import { RESERVED_SLUGS, isValidSlugFormat } from '../../../lib/slugValidation';
 import { validatePassword, getPasswordRequirementsMessage } from '../../../lib/passwordValidation';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+import { isValidEmail } from '../../../lib/validation/emailValidation';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 
 export const prerender = false;
 
@@ -28,35 +29,14 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   // Check configuration
-  if (!isSupabaseConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database not configured',
-        message: 'Supabase is not configured. Please set environment variables.',
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+  const supabaseGuard = apiGuards.requireSupabase();
+  if (supabaseGuard) return supabaseGuard;
 
-  if (!isSupabaseServiceRoleConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database admin not configured',
-        message: 'Service role key is required for signup.',
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+  const serviceRoleGuard = apiGuards.requireServiceRole();
+  if (serviceRoleGuard) return serviceRoleGuard;
 
-  if (!isStripeConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Payment system not configured',
-        message: 'Stripe is not configured.',
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+  const stripeGuard = apiGuards.requireStripe();
+  if (stripeGuard) return stripeGuard;
 
   try {
     const body: CreateCheckoutRequest = await request.json();
@@ -74,8 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Validate email format
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
+    if (!isValidEmail(email)) {
       return new Response(
         JSON.stringify({
           error: 'Invalid email',
@@ -143,9 +122,9 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Note: We store the password temporarily (it will be used to create auth user after payment)
-    // The pending_signups table expires after 24h and is only accessible via service role
-    // This is more secure than emailing a temporary password or forcing password reset
+    // Note: Password is validated but NOT stored in pending_signups for security
+    // After payment succeeds, we generate a random temporary password and send password reset email
+    // This ensures passwords are never stored in plaintext anywhere in the system
 
     // Create Stripe checkout session first
     const stripe = getStripeClient();
@@ -179,13 +158,13 @@ export const POST: APIRoute = async ({ request }) => {
       billing_address_collection: 'auto',
     });
 
-    // Store wizard data in pending_signups
+    // Store wizard data in pending_signups (password is NOT stored for security)
+    // This INSERT acts as a slug reservation - the unique constraint prevents duplicates
     const { data: pendingSignup, error: insertError } = await adminClient
       .from('pending_signups')
       .insert({
         stripe_session_id: session.id,
         email,
-        password_hash: password, // Store temporarily for account creation (expires in 24h)
         partner1_name: partner1_name.trim(),
         partner2_name: partner2_name.trim(),
         wedding_date: wedding_date || null,
@@ -198,6 +177,20 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (insertError || !pendingSignup) {
       console.error('[API] Failed to create pending signup:', insertError);
+
+      // Check for unique constraint violation (slug already reserved by another pending signup)
+      // PostgreSQL error code 23505 = unique_violation
+      if (insertError?.code === '23505' && insertError?.message?.includes('idx_pending_signups_slug_active')) {
+        return new Response(
+          JSON.stringify({
+            error: 'Slug reserved',
+            field: 'slug',
+            message: 'This URL is currently being used by another signup in progress. Please choose a different URL or try again in a few minutes.',
+          }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           error: 'Failed to prepare checkout',
@@ -208,13 +201,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Return Stripe session URL
-    return new Response(
-      JSON.stringify({
-        sessionId: session.id,
-        url: session.url,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return apiResponse.success({
+      sessionId: session.id,
+      url: session.url,
+    });
   } catch (error) {
     console.error('[API] Create checkout error:', error);
     return new Response(

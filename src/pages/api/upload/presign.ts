@@ -21,10 +21,11 @@
  */
 
 import type { APIRoute } from 'astro';
-import { generatePresignedUploadUrl, isR2Configured } from '../../../lib/r2';
+import { generatePresignedUploadUrl } from '../../../lib/r2';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 
 export const prerender = false;
 
@@ -86,18 +87,8 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   // Check if R2 is configured
-  if (!isR2Configured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Storage not configured',
-        message: 'R2 storage is not configured. Please set environment variables.',
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const r2Guard = apiGuards.requireR2();
+  if (r2Guard) return r2Guard;
 
   try {
     const body = await request.json();
@@ -323,18 +314,12 @@ export const POST: APIRoute = async ({ request }) => {
       guestIdentifier,
     });
 
-    return new Response(
-      JSON.stringify({
-        uploadUrl: result.uploadUrl,
-        key: result.key,
-        publicUrl: result.publicUrl,
-        expiresAt: result.expiresAt.toISOString(),
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return apiResponse.success({
+      uploadUrl: result.uploadUrl,
+      key: result.key,
+      publicUrl: result.publicUrl,
+      expiresAt: result.expiresAt.toISOString(),
+    });
   } catch (error) {
     console.error('[API] Upload presign error:', error);
 

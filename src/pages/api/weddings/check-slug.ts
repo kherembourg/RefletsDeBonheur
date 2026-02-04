@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
-import { supabase, isSupabaseConfigured } from '../../../lib/supabase/client';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { RESERVED_SLUGS, isValidSlugFormat, generateSlugSuggestions } from '../../../lib/slugValidation';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+import { supabase, isSupabaseConfigured } from '../../../lib/supabase/client';
 
 export const prerender = false;
 

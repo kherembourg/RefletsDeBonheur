@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
-import { isSupabaseConfigured } from '../../../lib/supabase/client';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 
 export const prerender = false;
 
@@ -14,31 +14,11 @@ function generateShortCode(length: number = 6): string {
 }
 
 export const POST: APIRoute = async ({ request }) => {
-  if (!isSupabaseConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database not configured',
-        message: 'Supabase is not configured. Please set environment variables.',
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const supabaseGuard = apiGuards.requireSupabase();
+  if (supabaseGuard) return supabaseGuard;
 
-  if (!isSupabaseServiceRoleConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error: 'Database admin not configured',
-        message: 'SUPABASE_SERVICE_ROLE_KEY is required for client creation.',
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const serviceRoleGuard = apiGuards.requireServiceRole();
+  if (serviceRoleGuard) return serviceRoleGuard;
 
   try {
     const body = await request.json();
@@ -199,13 +179,7 @@ export const POST: APIRoute = async ({ request }) => {
       storage_used_mb: 0,
     };
 
-    return new Response(
-      JSON.stringify({ client }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return apiResponse.success({ client });
   } catch (error) {
     console.error('[API] Create client error:', error);
     return new Response(

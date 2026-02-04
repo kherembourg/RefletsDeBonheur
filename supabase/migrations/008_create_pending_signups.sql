@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS public.pending_signups (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   stripe_session_id text UNIQUE NOT NULL,
   email text NOT NULL,
-  password_hash text NOT NULL,
   partner1_name text NOT NULL,
   partner2_name text NOT NULL,
   wedding_date text,
@@ -40,8 +39,7 @@ GRANT SELECT, INSERT, UPDATE ON public.pending_signups TO service_role;
 GRANT EXECUTE ON FUNCTION public.cleanup_expired_pending_signups() TO service_role;
 
 -- Comment on table
-COMMENT ON TABLE public.pending_signups IS 'Stores signup wizard data temporarily during Stripe checkout. Expires after 24 hours.';
+COMMENT ON TABLE public.pending_signups IS 'Stores signup wizard data temporarily during Stripe checkout. Expires after 24 hours. NOTE: Passwords are NOT stored for security - temporary password is generated after payment and password reset email is sent.';
 COMMENT ON COLUMN public.pending_signups.stripe_session_id IS 'Stripe checkout session ID for payment verification';
-COMMENT ON COLUMN public.pending_signups.password_hash IS 'bcrypt hashed password';
 COMMENT ON COLUMN public.pending_signups.expires_at IS 'Auto-expires 24 hours after creation';
 COMMENT ON COLUMN public.pending_signups.completed_at IS 'Timestamp when account was created after successful payment';

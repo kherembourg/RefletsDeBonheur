@@ -31,8 +31,8 @@
 import type { APIRoute } from 'astro';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
-import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { getR2Config, getS3Client } from '../../../lib/r2';
 
