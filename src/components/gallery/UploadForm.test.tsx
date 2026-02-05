@@ -60,7 +60,7 @@ describe('UploadForm Component', () => {
         />
       );
 
-      expect(screen.getByLabelText(/votre prénom/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/ex: sophie/i)).toBeInTheDocument();
     });
 
     it('should render file upload zone', () => {
@@ -84,7 +84,7 @@ describe('UploadForm Component', () => {
         />
       );
 
-      const input = screen.getByLabelText(/votre prénom/i) as HTMLInputElement;
+      const input = screen.getByPlaceholderText(/ex: sophie/i) as HTMLInputElement;
       expect(input.value).toBe('Sophie');
     });
 
@@ -375,7 +375,7 @@ describe('UploadForm Component', () => {
       );
 
       // Clear author name
-      const nameInput = screen.getByLabelText(/votre prénom/i);
+      const nameInput = screen.getByPlaceholderText(/ex: sophie/i);
       await user.clear(nameInput);
 
       const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
