@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage/lcov-report
+          path: coverage
           retention-days: 30
 
       - name: Deploy coverage to GitHub Pages
@@ -86,7 +86,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./coverage/lcov-report
+          publish_dir: ./coverage
           destination_dir: coverage
           keep_files: false
 
