@@ -19,14 +19,13 @@ describe('Webhook Processing Flow Integration', () => {
 
     // Create proper mock chain for Supabase query builder
     const createMockChain = () => {
-      const chain: any = {
-        select: vi.fn().mockReturnValue(chain),
-        insert: vi.fn().mockReturnValue(chain),
-        update: vi.fn().mockReturnValue(chain),
-        eq: vi.fn().mockReturnValue(chain),
-        single: vi.fn().mockResolvedValue({ data: null, error: null }),
-        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      };
+      const chain: any = {};
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.insert = vi.fn().mockReturnValue(chain);
+      chain.update = vi.fn().mockReturnValue(chain);
+      chain.eq = vi.fn().mockReturnValue(chain);
+      chain.single = vi.fn().mockResolvedValue({ data: null, error: null });
+      chain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
       return chain;
     };
 
@@ -97,21 +96,19 @@ describe('Webhook Processing Flow Integration', () => {
         'not-json',
         '{"invalid": json}',
         {},
-        { type: 'unknown', data: {} },
       ];
 
       malformedPayloads.forEach(payload => {
         let isValid = false;
         try {
           const parsed = typeof payload === 'string' ? JSON.parse(payload) : payload;
-          isValid = parsed && typeof parsed === 'object' && 'type' in parsed && 'data' in parsed;
+          isValid = !!(parsed && typeof parsed === 'object' && 'type' in parsed && 'data' in parsed);
         } catch {
           isValid = false;
         }
 
-        if (payload === null || payload === undefined || payload === '' || payload === 'not-json' || payload === '{"invalid": json}') {
-          expect(isValid).toBe(false);
-        }
+        // All malformed payloads should be invalid
+        expect(isValid).toBe(false);
       });
     });
 
@@ -144,7 +141,7 @@ describe('Webhook Processing Flow Integration', () => {
 
       mockSupabase.from = vi.fn(() => ({
         select: vi.fn().mockReturnThis(),
-        eq: mockMaybeSingle,
+        eq: vi.fn().mockReturnThis(),
         maybeSingle: mockMaybeSingle,
       }));
 
@@ -218,19 +215,17 @@ describe('Webhook Processing Flow Integration', () => {
         created_at: new Date().toISOString(),
       };
 
-      const mockInsert = vi.fn().mockResolvedValue({
+      const mockInsert = vi.fn();
+
+      const chain: any = {};
+      chain.insert = vi.fn().mockReturnValue(chain);
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.single = vi.fn().mockResolvedValue({
         data: { id: 1, ...event },
         error: null,
       });
 
-      mockSupabase.from = vi.fn(() => ({
-        insert: mockInsert,
-        select: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { id: 1, ...event },
-          error: null,
-        }),
-      }));
+      mockSupabase.from = vi.fn(() => chain);
 
       const { data, error } = await mockSupabase
         .from('webhook_events')
@@ -400,20 +395,18 @@ describe('Webhook Processing Flow Integration', () => {
     it('should mark event as processed after successful handling', async () => {
       const eventId = 'evt_123';
 
-      const mockUpdate = vi.fn().mockResolvedValue({
-        data: { id: 1, event_id: eventId, processed: true },
+      const mockUpdate = vi.fn();
+
+      const chain: any = {};
+      chain.update = vi.fn().mockReturnValue(chain);
+      chain.eq = vi.fn().mockReturnValue(chain);
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.single = vi.fn().mockResolvedValue({
+        data: { processed: true },
         error: null,
       });
 
-      mockSupabase.from = vi.fn(() => ({
-        update: mockUpdate,
-        eq: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { processed: true },
-          error: null,
-        }),
-      }));
+      mockSupabase.from = vi.fn(() => chain);
 
       const { data, error } = await mockSupabase
         .from('webhook_events')
@@ -450,7 +443,11 @@ describe('Webhook Processing Flow Integration', () => {
         stack: 'Error stack trace...',
       };
 
-      const mockUpdate = vi.fn().mockResolvedValue({
+      const mockUpdate = vi.fn();
+
+      const chain: any = {};
+      chain.update = mockUpdate.mockReturnValue(chain);
+      chain.eq = vi.fn().mockResolvedValue({
         data: {
           event_id: eventId,
           processed: false,
@@ -459,10 +456,7 @@ describe('Webhook Processing Flow Integration', () => {
         error: null,
       });
 
-      mockSupabase.from = vi.fn(() => ({
-        update: mockUpdate,
-        eq: vi.fn().mockReturnThis(),
-      }));
+      mockSupabase.from = vi.fn(() => chain);
 
       await mockSupabase
         .from('webhook_events')
@@ -568,24 +562,18 @@ describe('Webhook Processing Flow Integration', () => {
     it('should verify subscription status updated', async () => {
       const subscriptionId = 'sub_123';
 
-      const mockUpdate = vi.fn().mockResolvedValue({
-        data: {
-          id: subscriptionId,
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        },
+      const mockUpdate = vi.fn();
+
+      const chain: any = {};
+      chain.update = vi.fn().mockReturnValue(chain);
+      chain.eq = vi.fn().mockReturnValue(chain);
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.single = vi.fn().mockResolvedValue({
+        data: { status: 'active' },
         error: null,
       });
 
-      mockSupabase.from = vi.fn(() => ({
-        update: mockUpdate,
-        eq: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { status: 'active' },
-          error: null,
-        }),
-      }));
+      mockSupabase.from = vi.fn(() => chain);
 
       const { data } = await mockSupabase
         .from('subscriptions')
@@ -623,8 +611,10 @@ describe('Webhook Processing Flow Integration', () => {
       const userId = 'user-123';
 
       // Check foreign key relationships maintained
-      const mockSelect = vi.fn().mockReturnThis();
-      const mockEq = vi.fn().mockResolvedValue({
+      const chain: any = {};
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.eq = vi.fn().mockReturnValue(chain);
+      chain.single = vi.fn().mockResolvedValue({
         data: {
           id: weddingId,
           owner_id: userId,
@@ -632,17 +622,7 @@ describe('Webhook Processing Flow Integration', () => {
         error: null,
       });
 
-      mockSupabase.from = vi.fn(() => ({
-        select: mockSelect,
-        eq: mockEq,
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: weddingId,
-            owner_id: userId,
-          },
-          error: null,
-        }),
-      }));
+      mockSupabase.from = vi.fn(() => chain);
 
       const { data: wedding } = await mockSupabase
         .from('weddings')
@@ -695,7 +675,9 @@ describe('Webhook Processing Flow Integration', () => {
       const eventId = 'evt_123';
       const failures: string[] = [];
 
-      const mockUpdate = vi.fn().mockImplementation(() => {
+      const mockUpdate = vi.fn();
+
+      const mockEq = vi.fn().mockImplementation(() => {
         failures.push(eventId);
         if (failures.length >= 5) {
           // Alert threshold reached
@@ -707,10 +689,11 @@ describe('Webhook Processing Flow Integration', () => {
         return Promise.resolve({ data: null, error: { message: 'Failed' } });
       });
 
-      mockSupabase.from = vi.fn(() => ({
-        update: mockUpdate,
-        eq: vi.fn().mockReturnThis(),
-      }));
+      const chain: any = {};
+      chain.update = vi.fn().mockReturnValue(chain);
+      chain.eq = mockEq;
+
+      mockSupabase.from = vi.fn(() => chain);
 
       // Simulate 5 failures
       for (let i = 0; i < 5; i++) {
@@ -727,7 +710,11 @@ describe('Webhook Processing Flow Integration', () => {
       const eventId = 'evt_123';
       const maxAttempts = 5;
 
-      const mockUpdate = vi.fn().mockResolvedValue({
+      const mockUpdate = vi.fn();
+
+      const chain: any = {};
+      chain.update = mockUpdate.mockReturnValue(chain);
+      chain.eq = vi.fn().mockResolvedValue({
         data: {
           event_id: eventId,
           status: 'quarantined',
@@ -736,10 +723,7 @@ describe('Webhook Processing Flow Integration', () => {
         error: null,
       });
 
-      mockSupabase.from = vi.fn(() => ({
-        update: mockUpdate,
-        eq: vi.fn().mockReturnThis(),
-      }));
+      mockSupabase.from = vi.fn(() => chain);
 
       await mockSupabase
         .from('webhook_events')
