@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { getStripeClient, getStripeWebhookSecret, PRODUCT_CONFIG } from '../../../lib/stripe/server';
 import type Stripe from 'stripe';
 import { apiGuards } from '../../../lib/api/middleware';
+import { sendPaymentConfirmationEmail } from '../../../lib/email';
 
 export const prerender = false;
 
@@ -116,6 +117,24 @@ export const POST: APIRoute = async ({ request }) => {
               console.error('[Webhook] Failed to update profile:', error);
             } else {
               console.log(`[Webhook] Profile ${profileId} upgraded to active`);
+
+              // Send payment confirmation email (non-blocking)
+              const { data: profileData } = await adminClient
+                .from('profiles')
+                .select('email, full_name')
+                .eq('id', profileId)
+                .single();
+
+              if (profileData?.email) {
+                const amountPaid = `€${(session.amount_total ? session.amount_total / 100 : 199).toFixed(2)}`;
+                sendPaymentConfirmationEmail({
+                  coupleNames: profileData.full_name || 'Customer',
+                  email: profileData.email,
+                  slug: '',
+                  amount: amountPaid,
+                  lang: 'fr',
+                }).catch((err) => console.error('[Webhook] Payment email error:', err));
+              }
             }
           }
         }
