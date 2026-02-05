@@ -75,12 +75,15 @@ describe('Media Upload Flow Integration', () => {
         });
       }
       if (url.includes('/api/upload/confirm')) {
+        // Extract mediaId from request body
+        const body = options?.body ? JSON.parse(options.body as string) : {};
+        const mediaId = body.mediaId || 'media-123';
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({
             success: true,
             media: {
-              id: 'media-123',
+              id: mediaId,
               url: 'https://r2.example.com/test-image.jpg',
               thumbnail_url: null, // Generated async
             },
@@ -292,22 +295,17 @@ describe('Media Upload Flow Integration', () => {
         duration: null, // For images
       };
 
-      // Mock metadata extraction
-      const mockInsert = vi.fn().mockResolvedValue({
-        data: {
-          id: 'media-123',
-          ...metadata,
-        },
+      // Mock metadata extraction - create proper chain
+      const chain: any = {};
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.single = vi.fn().mockResolvedValue({
+        data: { id: 'media-123', ...metadata },
         error: null,
       });
+      const mockInsert = vi.fn().mockReturnValue(chain);
 
       mockSupabase.from = vi.fn(() => ({
         insert: mockInsert,
-        select: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { id: 'media-123', ...metadata },
-          error: null,
-        }),
       }));
 
       const result = await mockSupabase
@@ -344,27 +342,21 @@ describe('Media Upload Flow Integration', () => {
       const mediaId = 'media-123';
       const thumbnailUrl = 'https://r2.example.com/thumbnails/test-image-400.webp';
 
-      const mockUpdate = vi.fn().mockResolvedValue({
+      // Create proper chain for update
+      const chain: any = {};
+      chain.eq = vi.fn().mockReturnValue(chain);
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.single = vi.fn().mockResolvedValue({
         data: {
           id: mediaId,
           thumbnail_url: thumbnailUrl,
-          thumbnail_width: 400,
-          thumbnail_height: 300,
         },
         error: null,
       });
+      const mockUpdate = vi.fn().mockReturnValue(chain);
 
       mockSupabase.from = vi.fn(() => ({
         update: mockUpdate,
-        eq: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: mediaId,
-            thumbnail_url: thumbnailUrl,
-          },
-          error: null,
-        }),
       }));
 
       const result = await mockSupabase
@@ -601,14 +593,15 @@ describe('Media Upload Flow Integration', () => {
       // Step 4: Thumbnail generation (async - simulated)
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Step 5: Media appears in gallery
-      mockSupabase.from = vi.fn(() => ({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
-          data: [media],
-          error: null,
-        }),
-      }));
+      // Step 5: Media appears in gallery - create proper chain
+      const galleryChain: any = {};
+      galleryChain.select = vi.fn().mockReturnValue(galleryChain);
+      galleryChain.eq = vi.fn().mockResolvedValue({
+        data: [media],
+        error: null,
+      });
+
+      mockSupabase.from = vi.fn(() => galleryChain);
 
       const { data: galleryMedia } = await mockSupabase
         .from('media')

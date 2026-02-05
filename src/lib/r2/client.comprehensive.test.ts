@@ -126,15 +126,20 @@ describe('R2 Client - Configuration & Client', () => {
       });
     });
 
-    it('should throw error when R2 not configured', () => {
+    it('should throw error when R2 not configured', async () => {
       // Clear all mocks and env vars to test actual error
       vi.clearAllMocks();
       vi.unstubAllEnvs();
+      // Reset modules to clear cached s3Client
+      vi.resetModules();
+
+      // Re-import after reset to get fresh module state
+      const { getS3Client: freshGetS3Client } = await import('./client');
 
       // Test with no env vars - should throw before creating client
       let didThrow = false;
       try {
-        getS3Client();
+        freshGetS3Client();
       } catch (error: any) {
         didThrow = true;
         expect(error.message).toContain('R2 is not configured');
@@ -397,16 +402,26 @@ describe('R2 Client - File Operations', () => {
     });
 
     it('should send PutObjectCommand with correct params', async () => {
+      // Reset modules to clear cached client
+      vi.resetModules();
+
+      // Re-import after reset
+      const { uploadFile: freshUploadFile } = await import('./client');
+
       const mockSend = vi.fn()
         .mockResolvedValueOnce({ ETag: '"abc123"' }) // PutObjectCommand
         .mockResolvedValueOnce({ ContentLength: 1024 }); // HeadObjectCommand
-      vi.mocked(S3Client).mockImplementation(() => ({
-        send: mockSend,
-      } as any));
+      vi.mocked(S3Client).mockImplementation(function (this: any, config: any) {
+        this.config = config;
+        return {
+          send: mockSend,
+          config: this.config,
+        };
+      } as any);
 
       const buffer = Buffer.from('test image data');
 
-      await uploadFile(
+      await freshUploadFile(
         'weddings/test-123/media/photo.jpg',
         buffer,
         'image/jpeg',
@@ -431,30 +446,44 @@ describe('R2 Client - File Operations', () => {
     });
 
     it('should handle upload success', async () => {
+      vi.resetModules();
+      const { uploadFile: freshUploadFile } = await import('./client');
+
       const mockSend = vi.fn()
         .mockResolvedValueOnce({ ETag: '"abc123"' }) // PutObjectCommand
         .mockResolvedValueOnce({ ContentLength: 1024 }); // HeadObjectCommand
-      vi.mocked(S3Client).mockImplementation(() => ({
-        send: mockSend,
-      } as any));
+      vi.mocked(S3Client).mockImplementation(function (this: any, config: any) {
+        this.config = config;
+        return {
+          send: mockSend,
+          config: this.config,
+        };
+      } as any);
 
       const buffer = Buffer.from('test');
 
       await expect(
-        uploadFile('weddings/test/media/file.jpg', buffer, 'image/jpeg')
+        freshUploadFile('weddings/test/media/file.jpg', buffer, 'image/jpeg')
       ).resolves.not.toThrow();
     });
 
     it('should handle S3 errors', async () => {
+      vi.resetModules();
+      const { uploadFile: freshUploadFile } = await import('./client');
+
       const mockSend = vi.fn().mockRejectedValue(new Error('S3 upload failed'));
-      vi.mocked(S3Client).mockImplementation(() => ({
-        send: mockSend,
-      } as any));
-      
+      vi.mocked(S3Client).mockImplementation(function (this: any, config: any) {
+        this.config = config;
+        return {
+          send: mockSend,
+          config: this.config,
+        };
+      } as any);
+
       const buffer = Buffer.from('test');
 
       await expect(
-        uploadFile('weddings/test/media/file.jpg', buffer, 'image/jpeg')
+        freshUploadFile('weddings/test/media/file.jpg', buffer, 'image/jpeg')
       ).rejects.toThrow('S3 upload failed');
     });
   });
@@ -474,27 +503,41 @@ describe('R2 Client - File Operations', () => {
     });
 
     it('should convert stream to Buffer', async () => {
+      vi.resetModules();
+      const { fetchFile: freshFetchFile } = await import('./client');
+
       const mockStream = Readable.from([Buffer.from('test'), Buffer.from('data')]);
       const mockSend = vi.fn().mockResolvedValue({ Body: mockStream });
-      vi.mocked(S3Client).mockImplementation(() => ({
-        send: mockSend,
-      } as any));
+      vi.mocked(S3Client).mockImplementation(function (this: any, config: any) {
+        this.config = config;
+        return {
+          send: mockSend,
+          config: this.config,
+        };
+      } as any);
 
-      const result = await fetchFile('weddings/test/media/photo.jpg');
+      const result = await freshFetchFile('weddings/test/media/photo.jpg');
 
       expect(result).toBeInstanceOf(Buffer);
       expect(result.toString()).toBe('testdata');
     });
 
     it('should send GetObjectCommand with correct params', async () => {
+      vi.resetModules();
+      const { fetchFile: freshFetchFile } = await import('./client');
+
       const mockStream = Readable.from([Buffer.from('data')]);
       const mockSend = vi.fn().mockResolvedValue({ Body: mockStream });
-      vi.mocked(S3Client).mockImplementation(() => ({
-        send: mockSend,
-      } as any));
+      vi.mocked(S3Client).mockImplementation(function (this: any, config: any) {
+        this.config = config;
+        return {
+          send: mockSend,
+          config: this.config,
+        };
+      } as any);
 
-      await fetchFile('weddings/test-123/thumbnails/photo-400w.webp');
-      
+      await freshFetchFile('weddings/test-123/thumbnails/photo-400w.webp');
+
       expect(GetObjectCommand).toHaveBeenCalledWith({
         Bucket: 'test-bucket',
         Key: 'weddings/test-123/thumbnails/photo-400w.webp',
@@ -504,13 +547,20 @@ describe('R2 Client - File Operations', () => {
     });
 
     it('should handle S3 errors', async () => {
+      vi.resetModules();
+      const { fetchFile: freshFetchFile } = await import('./client');
+
       const mockSend = vi.fn().mockRejectedValue(new Error('File not found'));
-      vi.mocked(S3Client).mockImplementation(() => ({
-        send: mockSend,
-      } as any));
+      vi.mocked(S3Client).mockImplementation(function (this: any, config: any) {
+        this.config = config;
+        return {
+          send: mockSend,
+          config: this.config,
+        };
+      } as any);
 
       await expect(
-        fetchFile('weddings/test/media/missing.jpg')
+        freshFetchFile('weddings/test/media/missing.jpg')
       ).rejects.toThrow('File not found');
     });
 
