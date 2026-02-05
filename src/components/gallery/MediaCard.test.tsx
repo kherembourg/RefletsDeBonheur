@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import MediaCard from './MediaCard';
+import { MediaCard } from './MediaCard';
 
 describe('MediaCard Component', () => {
   const mockMedia = {
@@ -31,13 +31,13 @@ describe('MediaCard Component', () => {
 
   describe('Rendering', () => {
     it('should render with media data', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       expect(screen.getByRole('img')).toBeInTheDocument();
     });
 
     it('should display thumbnail when available', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       expect(image).toHaveAttribute('src', mockMedia.thumbnail_url);
@@ -45,7 +45,7 @@ describe('MediaCard Component', () => {
 
     it('should fallback to full URL when thumbnail not available', () => {
       const mediaWithoutThumb = { ...mockMedia, thumbnail_url: null };
-      render(<MediaCard media={mediaWithoutThumb} onClick={mockOnClick} />);
+      render(<MediaCard item={mediaWithoutThumb} isAdmin={false} onDelete={vi.fn()} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       expect(image).toHaveAttribute('src', mockMedia.url);
@@ -53,19 +53,19 @@ describe('MediaCard Component', () => {
 
     it('should display video icon for video media', () => {
       const videoMedia = { ...mockMedia, type: 'video' };
-      render(<MediaCard media={videoMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={videoMedia} isAdmin={false} onDelete={vi.fn()} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       expect(screen.getByLabelText(/video/i)).toBeInTheDocument();
     });
 
     it('should display uploader name', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} showUploader={true} />);
+      render(<MediaCard item={mockMedia} onClick={mockOnClick} showUploader={true} />);
 
       expect(screen.getByText(mockMedia.uploaded_by)).toBeInTheDocument();
     });
 
     it('should display upload date', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} showDate={true} />);
+      render(<MediaCard item={mockMedia} onClick={mockOnClick} showDate={true} />);
 
       expect(screen.getByText(/feb/i)).toBeInTheDocument();
     });
@@ -73,7 +73,7 @@ describe('MediaCard Component', () => {
 
   describe('User Interactions', () => {
     it('should call onClick when card is clicked', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const card = screen.getByRole('button');
       fireEvent.click(card);
@@ -82,7 +82,7 @@ describe('MediaCard Component', () => {
     });
 
     it('should support keyboard navigation', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const card = screen.getByRole('button');
       fireEvent.keyDown(card, { key: 'Enter' });
@@ -132,7 +132,7 @@ describe('MediaCard Component', () => {
         ],
       };
 
-      render(<MediaCard media={mediaWithReactions} onClick={mockOnClick} />);
+      render(<MediaCard item={mediaWithReactions} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       expect(screen.getByText('❤️ 5')).toBeInTheDocument();
       expect(screen.getByText('👍 3')).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe('MediaCard Component', () => {
     });
 
     it('should show reaction picker on hover', async () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const card = screen.getByRole('button');
       fireEvent.mouseEnter(card);
@@ -176,7 +176,7 @@ describe('MediaCard Component', () => {
         ],
       };
 
-      render(<MediaCard media={mediaWithManyReactions} onClick={mockOnClick} />);
+      render(<MediaCard item={mediaWithManyReactions} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const reactionElements = screen.getAllByText(/[❤️👍😍]/);
       expect(reactionElements.length).toBeLessThanOrEqual(3);
@@ -185,13 +185,13 @@ describe('MediaCard Component', () => {
 
   describe('Loading States', () => {
     it('should show loading placeholder before image loads', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       expect(screen.getByRole('status')).toBeInTheDocument();
     });
 
     it('should remove loading placeholder after image loads', async () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       fireEvent.load(image);
@@ -202,7 +202,7 @@ describe('MediaCard Component', () => {
     });
 
     it('should show error state if image fails to load', async () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       fireEvent.error(image);
@@ -215,7 +215,7 @@ describe('MediaCard Component', () => {
 
   describe('Context Menu', () => {
     it('should open context menu on right click', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const card = screen.getByRole('button');
       fireEvent.contextMenu(card);
@@ -224,7 +224,7 @@ describe('MediaCard Component', () => {
     });
 
     it('should have download option in context menu', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const card = screen.getByRole('button');
       fireEvent.contextMenu(card);
@@ -265,7 +265,7 @@ describe('MediaCard Component', () => {
 
   describe('Lazy Loading', () => {
     it('should use loading="lazy" for images', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       expect(image).toHaveAttribute('loading', 'lazy');
@@ -273,7 +273,7 @@ describe('MediaCard Component', () => {
 
     it('should load immediately when in viewport', () => {
       const { container } = render(
-        <MediaCard media={mockMedia} onClick={mockOnClick} inViewport={true} />
+        <MediaCard item={mockMedia} onClick={mockOnClick} inViewport={true} />
       );
 
       const image = container.querySelector('img');
@@ -283,14 +283,14 @@ describe('MediaCard Component', () => {
 
   describe('Accessibility', () => {
     it('should have alt text for images', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       expect(image).toHaveAttribute('alt', mockMedia.title);
     });
 
     it('should be keyboard accessible', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const card = screen.getByRole('button');
       expect(card).toHaveAttribute('tabindex', '0');
@@ -314,7 +314,7 @@ describe('MediaCard Component', () => {
   describe('Edge Cases', () => {
     it('should handle missing thumbnail gracefully', () => {
       const mediaWithoutThumb = { ...mockMedia, thumbnail_url: null };
-      render(<MediaCard media={mediaWithoutThumb} onClick={mockOnClick} />);
+      render(<MediaCard item={mediaWithoutThumb} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       expect(image).toHaveAttribute('src', mockMedia.url);
@@ -322,7 +322,7 @@ describe('MediaCard Component', () => {
 
     it('should handle missing title', () => {
       const mediaWithoutTitle = { ...mockMedia, title: null };
-      render(<MediaCard media={mediaWithoutTitle} onClick={mockOnClick} />);
+      render(<MediaCard item={mediaWithoutTitle} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const image = screen.getByRole('img');
       expect(image).toHaveAttribute('alt', 'Untitled');
@@ -334,14 +334,14 @@ describe('MediaCard Component', () => {
         title: 'This is a very long title that should be truncated with ellipsis',
       };
 
-      render(<MediaCard media={mediaWithLongTitle} onClick={mockOnClick} />);
+      render(<MediaCard item={mediaWithLongTitle} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const titleElement = screen.getByText(/This is a very long/);
       expect(titleElement).toHaveStyle({ textOverflow: 'ellipsis' });
     });
 
     it('should maintain aspect ratio', () => {
-      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      render(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       const card = screen.getByRole('button');
       expect(card).toHaveStyle({ aspectRatio: '1 / 1' });
@@ -351,14 +351,14 @@ describe('MediaCard Component', () => {
   describe('Performance', () => {
     it('should not re-render unnecessarily', () => {
       const { rerender } = render(
-        <MediaCard media={mockMedia} onClick={mockOnClick} />
+        <MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />
       );
 
       const image = screen.getByRole('img');
       const initialSrc = image.getAttribute('src');
 
       // Rerender with same props
-      rerender(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+      rerender(<MediaCard item={mockMedia} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />);
 
       expect(image.getAttribute('src')).toBe(initialSrc);
     });
@@ -372,7 +372,7 @@ describe('MediaCard Component', () => {
       const { rerender } = render(
         <div>
           {largeMediaList.map(media => (
-            <MediaCard key={media.id} media={media} onClick={mockOnClick} />
+            <MediaCard key={media.id} media={media} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />
           ))}
         </div>
       );
@@ -381,7 +381,7 @@ describe('MediaCard Component', () => {
       rerender(
         <div>
           {largeMediaList.map(media => (
-            <MediaCard key={media.id} media={media} onClick={mockOnClick} />
+            <MediaCard key={media.id} media={media} isAdmin={false} onDelete={vi.fn()} onClick={mockOnClick} />
           ))}
         </div>
       );

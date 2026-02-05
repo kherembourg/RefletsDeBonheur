@@ -12,11 +12,15 @@ import BulkActions from './BulkActions';
 
 // Mock JSZip
 vi.mock('jszip', () => {
+  // Create a proper constructor function
+  const MockJSZip = vi.fn(function(this: any) {
+    this.file = vi.fn().mockReturnThis();
+    this.generateAsync = vi.fn().mockResolvedValue(new Blob(['zip content']));
+    return this;
+  });
+
   return {
-    default: vi.fn().mockImplementation(() => ({
-      file: vi.fn(),
-      generateAsync: vi.fn().mockResolvedValue(new Blob(['zip content'])),
-    })),
+    default: MockJSZip,
   };
 });
 

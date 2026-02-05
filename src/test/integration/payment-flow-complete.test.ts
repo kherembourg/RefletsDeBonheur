@@ -40,16 +40,22 @@ describe('Payment Flow Integration', () => {
     // Reset all mocks
     vi.clearAllMocks();
 
-    // Setup mock Supabase client
-    mockSupabase = {
-      from: vi.fn(() => ({
-        select: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockReturnThis(),
-        update: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+    // Create proper mock chain for Supabase query builder
+    const createMockChain = () => {
+      const chain: any = {
+        select: vi.fn().mockReturnValue(chain),
+        insert: vi.fn().mockReturnValue(chain),
+        update: vi.fn().mockReturnValue(chain),
+        eq: vi.fn().mockReturnValue(chain),
         single: vi.fn().mockResolvedValue({ data: null, error: null }),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      })),
+      };
+      return chain;
+    };
+
+    // Setup mock Supabase client
+    mockSupabase = {
+      from: vi.fn(() => createMockChain()),
       auth: {
         admin: {
           createUser: vi.fn().mockResolvedValue({
@@ -57,10 +63,10 @@ describe('Payment Flow Integration', () => {
             error: null,
           }),
           generateLink: vi.fn().mockResolvedValue({
-            data: { 
-              properties: { 
-                action_link: 'https://example.com/magic-link' 
-              } 
+            data: {
+              properties: {
+                action_link: 'https://example.com/magic-link'
+              }
             },
             error: null,
           }),

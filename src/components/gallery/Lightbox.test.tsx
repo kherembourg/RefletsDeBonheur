@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Lightbox from './Lightbox';
+import { Lightbox } from './Lightbox';
 
 describe('Lightbox Component', () => {
   const mockMedia = {

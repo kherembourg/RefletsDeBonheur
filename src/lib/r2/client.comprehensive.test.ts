@@ -127,9 +127,10 @@ describe('R2 Client - Configuration & Client', () => {
     });
 
     it('should throw error when R2 not configured', () => {
-      // Clear all mocks to test actual error
+      // Clear all mocks and env vars to test actual error
       vi.clearAllMocks();
-      
+      vi.unstubAllEnvs();
+
       // Test with no env vars - should throw before creating client
       let didThrow = false;
       try {
@@ -380,6 +381,13 @@ describe('R2 Client - File Operations', () => {
   });
 
   describe('uploadFile', () => {
+    beforeEach(() => {
+      vi.stubEnv('R2_ACCOUNT_ID', 'test-account-123');
+      vi.stubEnv('R2_ACCESS_KEY_ID', 'test-access-key');
+      vi.stubEnv('R2_SECRET_ACCESS_KEY', 'test-secret-key');
+      vi.stubEnv('R2_BUCKET_NAME', 'test-bucket');
+    });
+
     it('should validate key before uploading', async () => {
       const buffer = Buffer.from('test data');
 
@@ -389,11 +397,13 @@ describe('R2 Client - File Operations', () => {
     });
 
     it('should send PutObjectCommand with correct params', async () => {
-      const mockSend = vi.fn().mockResolvedValue({ ETag: '"abc123"' });
+      const mockSend = vi.fn()
+        .mockResolvedValueOnce({ ETag: '"abc123"' }) // PutObjectCommand
+        .mockResolvedValueOnce({ ContentLength: 1024 }); // HeadObjectCommand
       vi.mocked(S3Client).mockImplementation(() => ({
         send: mockSend,
       } as any));
-      
+
       const buffer = Buffer.from('test image data');
 
       await uploadFile(
@@ -405,7 +415,7 @@ describe('R2 Client - File Operations', () => {
           'guest-identifier': 'guest-456',
         }
       );
-      
+
       expect(PutObjectCommand).toHaveBeenCalledWith({
         Bucket: 'test-bucket',
         Key: 'weddings/test-123/media/photo.jpg',
@@ -417,15 +427,17 @@ describe('R2 Client - File Operations', () => {
         },
       });
 
-      expect(mockSend).toHaveBeenCalled();
+      expect(mockSend).toHaveBeenCalledTimes(2);
     });
 
     it('should handle upload success', async () => {
-      const mockSend = vi.fn().mockResolvedValue({ ETag: '"abc123"' });
+      const mockSend = vi.fn()
+        .mockResolvedValueOnce({ ETag: '"abc123"' }) // PutObjectCommand
+        .mockResolvedValueOnce({ ContentLength: 1024 }); // HeadObjectCommand
       vi.mocked(S3Client).mockImplementation(() => ({
         send: mockSend,
       } as any));
-      
+
       const buffer = Buffer.from('test');
 
       await expect(
@@ -448,6 +460,13 @@ describe('R2 Client - File Operations', () => {
   });
 
   describe('fetchFile', () => {
+    beforeEach(() => {
+      vi.stubEnv('R2_ACCOUNT_ID', 'test-account-123');
+      vi.stubEnv('R2_ACCESS_KEY_ID', 'test-access-key');
+      vi.stubEnv('R2_SECRET_ACCESS_KEY', 'test-secret-key');
+      vi.stubEnv('R2_BUCKET_NAME', 'test-bucket');
+    });
+
     it('should validate key before fetching', async () => {
       await expect(
         fetchFile('invalid/path/file.jpg')

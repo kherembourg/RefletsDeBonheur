@@ -17,15 +17,21 @@ describe('Webhook Processing Flow Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockSupabase = {
-      from: vi.fn(() => ({
-        select: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockReturnThis(),
-        update: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+    // Create proper mock chain for Supabase query builder
+    const createMockChain = () => {
+      const chain: any = {
+        select: vi.fn().mockReturnValue(chain),
+        insert: vi.fn().mockReturnValue(chain),
+        update: vi.fn().mockReturnValue(chain),
+        eq: vi.fn().mockReturnValue(chain),
         single: vi.fn().mockResolvedValue({ data: null, error: null }),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      })),
+      };
+      return chain;
+    };
+
+    mockSupabase = {
+      from: vi.fn(() => createMockChain()),
       rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     };
   });
@@ -380,9 +386,9 @@ describe('Webhook Processing Flow Integration', () => {
       };
 
       // Validation checks
-      const emailValid = invalidData.email && invalidData.email.includes('@');
-      const nameValid = invalidData.wedding_name && invalidData.wedding_name.length > 0;
-      const slugValid = invalidData.slug && /^[a-z0-9-]+$/.test(invalidData.slug);
+      const emailValid = Boolean(invalidData.email && invalidData.email.includes('@'));
+      const nameValid = Boolean(invalidData.wedding_name && (invalidData.wedding_name as any).length > 0);
+      const slugValid = Boolean(invalidData.slug && /^[a-z0-9-]+$/.test(invalidData.slug));
 
       expect(emailValid).toBe(false);
       expect(nameValid).toBe(false);

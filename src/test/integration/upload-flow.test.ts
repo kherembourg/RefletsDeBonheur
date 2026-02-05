@@ -22,16 +22,22 @@ describe('Media Upload Flow Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Setup mock Supabase client
-    mockSupabase = {
-      from: vi.fn(() => ({
-        select: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockReturnThis(),
-        update: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+    // Create proper mock chain for Supabase query builder
+    const createMockChain = () => {
+      const chain: any = {
+        select: vi.fn().mockReturnValue(chain),
+        insert: vi.fn().mockReturnValue(chain),
+        update: vi.fn().mockReturnValue(chain),
+        eq: vi.fn().mockReturnValue(chain),
         single: vi.fn().mockResolvedValue({ data: null, error: null }),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      })),
+      };
+      return chain;
+    };
+
+    // Setup mock Supabase client
+    mockSupabase = {
+      from: vi.fn(() => createMockChain()),
       storage: {
         from: vi.fn(() => ({
           upload: vi.fn().mockResolvedValue({
@@ -56,12 +62,15 @@ describe('Media Upload Flow Integration', () => {
     // Mock fetch
     (global.fetch as any).mockImplementation((url: string, options?: any) => {
       if (url.includes('/api/upload/presign')) {
+        // Generate unique IDs for each call
+        const uniqueId = Math.random().toString(36).substring(2, 15);
+        const timestamp = Date.now();
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({
-            presignedUrl: 'https://r2.example.com/presigned/upload-url',
-            key: 'weddings/wedding-123/media/test-image.jpg',
-            mediaId: 'media-123',
+            presignedUrl: `https://r2.example.com/presigned/upload-url-${uniqueId}`,
+            key: `weddings/wedding-123/media/${timestamp}-${uniqueId}-test-image.jpg`,
+            mediaId: `media-${uniqueId}`,
           }),
         });
       }
