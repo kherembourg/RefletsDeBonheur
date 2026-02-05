@@ -1,5 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient } from '../../lib/supabase/server';
+import { supabase } from '../../lib/supabase/client';
+
 import { apiGuards, apiResponse } from '../../lib/api/middleware';
 import type { ThemeId } from '../../lib/themes';
 import { RESERVED_SLUGS, isValidSlugFormat, normalizeSlug } from '../../lib/slugValidation';

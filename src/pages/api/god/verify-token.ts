@@ -1,4 +1,7 @@
 import type { APIRoute } from 'astro';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import { isSupabaseConfigured } from '../../../lib/supabase/client';
+import { isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 
 export const prerender = false;
