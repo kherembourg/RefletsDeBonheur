@@ -51,15 +51,16 @@ jobs:
         env:
           NODE_ENV: test
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        if: always()
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/coverage-final.json
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+      # TODO: Configure CODECOV_TOKEN secret to enable coverage uploads
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v5
+      #   if: always()
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: ./coverage/coverage-final.json
+      #     flags: unittests
+      #     name: codecov-umbrella
+      #     fail_ci_if_error: false
 
       - name: Generate coverage summary
         if: always()
@@ -71,6 +72,23 @@ jobs:
             cat coverage/coverage-summary.json >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Upload coverage report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/lcov-report
+          retention-days: 30
+
+      - name: Deploy coverage to GitHub Pages
+        if: github.ref == 'refs/heads/main' && always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./coverage/lcov-report
+          destination_dir: coverage
+          keep_files: false
 
   # Job 3: Build Verification
   build:
