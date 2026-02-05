@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
-import { getStripeClient } from '../../../lib/stripe/server';
+import { getStripeClient, PRODUCT_CONFIG } from '../../../lib/stripe/server';
 import { apiGuards } from '../../../lib/api/middleware';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { sendWelcomeEmail, sendPaymentConfirmationEmail } from '../../../lib/email';
@@ -265,7 +265,7 @@ export const POST: APIRoute = async ({ request }) => {
     }).catch((err) => console.error('[Email] Welcome email fire-and-forget error:', err));
 
     // Send payment confirmation email (non-blocking)
-    const amountPaid = `€${(session.amount_total ? session.amount_total / 100 : 199).toFixed(2)}`;
+    const amountPaid = `€${(session.amount_total ? session.amount_total / 100 : PRODUCT_CONFIG.initialPrice / 100).toFixed(2)}`;
     sendPaymentConfirmationEmail({
       coupleNames: accountData.couple_names,
       email: accountData.email,

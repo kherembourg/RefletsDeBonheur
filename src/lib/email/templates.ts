@@ -1,5 +1,18 @@
 import type { Language } from '../../i18n/translations';
 
+/**
+ * Escape HTML special characters to prevent XSS in email templates.
+ * All user-supplied data MUST be passed through this before HTML interpolation.
+ */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export interface WelcomeEmailData {
   coupleNames: string;
   email: string;
@@ -147,7 +160,13 @@ const translations = {
 export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string; html: string } {
   const t = translations.welcome[data.lang] || translations.welcome.en;
   const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
-  const weddingUrl = `${siteUrl}/${data.slug}`;
+
+  // Escape all user-supplied data to prevent XSS
+  const safeCoupleNames = escapeHtml(data.coupleNames);
+  const safeGuestCode = escapeHtml(data.guestCode);
+  const safeSlug = escapeHtml(data.slug);
+  const safeMagicLink = escapeHtml(data.magicLink);
+  const weddingUrl = `${siteUrl}/${safeSlug}`;
 
   const html = `<!DOCTYPE html>
 <html lang="${data.lang}">
@@ -157,7 +176,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
   <title>${t.subject}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f8f5f0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-  <table role="presentation" style="width:100%;border:0;cellpadding:0;cellspacing:0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border:0;border-collapse:collapse;">
     <tr>
       <td style="padding:20px 0;text-align:center;">
         <table role="presentation" style="width:600px;max-width:100%;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.07);">
@@ -170,7 +189,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
           <!-- Body -->
           <tr>
             <td style="padding:40px 30px;">
-              <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 10px;">${t.greeting(data.coupleNames)}</p>
+              <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 10px;">${t.greeting(safeCoupleNames)}</p>
               <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 25px;">${t.intro}</p>
 
               <!-- Access Button -->
@@ -179,7 +198,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
               <table role="presentation" style="margin:0 auto 25px;">
                 <tr>
                   <td style="background-color:#ae1725;border-radius:8px;">
-                    <a href="${data.magicLink}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">${t.accessButton}</a>
+                    <a href="${safeMagicLink}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">${t.accessButton}</a>
                   </td>
                 </tr>
               </table>
@@ -191,7 +210,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
                 <tr>
                   <td style="padding:20px;">
                     <p style="color:#555;font-size:14px;margin:0 0 8px;"><strong>${t.websiteLabel}</strong> <a href="${weddingUrl}" style="color:#ae1725;text-decoration:none;">${weddingUrl}</a></p>
-                    <p style="color:#555;font-size:14px;margin:0;"><strong>${t.guestCodeLabel}</strong> <code style="background:#e8e0d8;padding:2px 8px;border-radius:4px;font-size:16px;letter-spacing:2px;">${data.guestCode}</code></p>
+                    <p style="color:#555;font-size:14px;margin:0;"><strong>${t.guestCodeLabel}</strong> <code style="background:#e8e0d8;padding:2px 8px;border-radius:4px;font-size:16px;letter-spacing:2px;">${safeGuestCode}</code></p>
                     <p style="color:#888;font-size:12px;margin:8px 0 0;">${t.guestCodeHelp}</p>
                   </td>
                 </tr>
@@ -229,6 +248,11 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
  */
 export function generatePaymentConfirmationEmail(data: PaymentConfirmationData): { subject: string; html: string } {
   const t = translations.paymentConfirmation[data.lang] || translations.paymentConfirmation.en;
+
+  // Escape all user-supplied data to prevent XSS
+  const safeCoupleNames = escapeHtml(data.coupleNames);
+  const safeAmount = escapeHtml(data.amount);
+
   const today = new Date().toLocaleDateString(data.lang === 'fr' ? 'fr-FR' : data.lang === 'es' ? 'es-ES' : 'en-US', {
     year: 'numeric',
     month: 'long',
@@ -243,7 +267,7 @@ export function generatePaymentConfirmationEmail(data: PaymentConfirmationData):
   <title>${t.subject}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f8f5f0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-  <table role="presentation" style="width:100%;border:0;cellpadding:0;cellspacing:0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border:0;border-collapse:collapse;">
     <tr>
       <td style="padding:20px 0;text-align:center;">
         <table role="presentation" style="width:600px;max-width:100%;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.07);">
@@ -256,7 +280,7 @@ export function generatePaymentConfirmationEmail(data: PaymentConfirmationData):
           <!-- Body -->
           <tr>
             <td style="padding:40px 30px;">
-              <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 10px;">${t.greeting(data.coupleNames)}</p>
+              <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 10px;">${t.greeting(safeCoupleNames)}</p>
               <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 25px;">${t.intro}</p>
 
               <!-- Payment Details -->
@@ -271,7 +295,7 @@ export function generatePaymentConfirmationEmail(data: PaymentConfirmationData):
                       </tr>
                       <tr>
                         <td style="color:#555;font-size:14px;padding:5px 0;"><strong>${t.amountLabel}</strong></td>
-                        <td style="color:#333;font-size:14px;padding:5px 0;text-align:right;font-weight:600;">${data.amount}</td>
+                        <td style="color:#333;font-size:14px;padding:5px 0;text-align:right;font-weight:600;">${safeAmount}</td>
                       </tr>
                       <tr>
                         <td style="color:#555;font-size:14px;padding:5px 0;"><strong>${t.dateLabel}</strong></td>

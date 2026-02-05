@@ -1,4 +1,37 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { escapeHtml } from '../templates';
+
+describe('escapeHtml', () => {
+  it('escapes HTML special characters', () => {
+    expect(escapeHtml('<script>alert("xss")</script>')).toBe(
+      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
+    );
+  });
+
+  it('escapes ampersands', () => {
+    expect(escapeHtml('Alice & Bob')).toBe('Alice &amp; Bob');
+  });
+
+  it('escapes single quotes', () => {
+    expect(escapeHtml("it's")).toBe('it&#39;s');
+  });
+
+  it('handles empty string', () => {
+    expect(escapeHtml('')).toBe('');
+  });
+
+  it('does not double-escape', () => {
+    expect(escapeHtml('&amp;')).toBe('&amp;amp;');
+  });
+
+  it('escapes img onerror XSS payload', () => {
+    const payload = '<img src=x onerror="document.location=\'evil.com\'">';
+    const result = escapeHtml(payload);
+    expect(result).not.toContain('<img');
+    expect(result).toContain('&lt;img');
+    expect(result).not.toContain('="document');
+  });
+});
 
 describe('Email Templates', () => {
   afterEach(() => {
@@ -21,7 +54,7 @@ describe('Email Templates', () => {
       });
 
       expect(result.subject).toBe('Bienvenue sur Reflets de Bonheur ! 🎉');
-      expect(result.html).toContain('Alice & Bob');
+      expect(result.html).toContain('Alice &amp; Bob');
       expect(result.html).toContain('https://example.com/magic-link');
       expect(result.html).toContain('ABC123');
       expect(result.html).toContain('https://refletsdebonheur.com/alice-bob');
@@ -42,7 +75,7 @@ describe('Email Templates', () => {
       });
 
       expect(result.subject).toBe('Welcome to Reflets de Bonheur! 🎉');
-      expect(result.html).toContain('Dear John & Jane');
+      expect(result.html).toContain('Dear John &amp; Jane');
       expect(result.html).toContain('https://example.com/magic');
       expect(result.html).toContain('XYZ789');
       expect(result.html).toContain('lang="en"');
@@ -62,7 +95,7 @@ describe('Email Templates', () => {
       });
 
       expect(result.subject).toBe('¡Bienvenido/a a Reflets de Bonheur! 🎉');
-      expect(result.html).toContain('Queridos Carlos & Maria');
+      expect(result.html).toContain('Queridos Carlos &amp; Maria');
       expect(result.html).toContain('lang="es"');
     });
 
@@ -168,7 +201,7 @@ describe('Email Templates', () => {
       });
 
       expect(result.subject).toBe('Confirmation de paiement - Reflets de Bonheur');
-      expect(result.html).toContain('Alice & Bob');
+      expect(result.html).toContain('Alice &amp; Bob');
       expect(result.html).toContain('€199.00');
       expect(result.html).toContain('Payé');
       expect(result.html).toContain('lang="fr"');
@@ -186,7 +219,7 @@ describe('Email Templates', () => {
       });
 
       expect(result.subject).toBe('Payment Confirmation - Reflets de Bonheur');
-      expect(result.html).toContain('Dear John & Jane');
+      expect(result.html).toContain('Dear John &amp; Jane');
       expect(result.html).toContain('€199.00');
       expect(result.html).toContain('Paid');
     });
@@ -250,6 +283,72 @@ describe('Email Templates', () => {
       expect(result.html).toContain('<!DOCTYPE html>');
       expect(result.html).toContain('<meta charset="utf-8">');
       expect(result.html).toContain('</html>');
+    });
+  });
+
+  describe('XSS Protection', () => {
+    it('escapes HTML in coupleNames for welcome email', async () => {
+      vi.stubEnv('PUBLIC_SITE_URL', 'https://refletsdebonheur.com');
+      const { generateWelcomeEmail } = await import('../templates');
+
+      const result = generateWelcomeEmail({
+        coupleNames: '<script>alert("xss")</script>',
+        email: 'test@example.com',
+        slug: 'test-user',
+        magicLink: 'https://example.com/magic',
+        guestCode: 'TST000',
+        lang: 'en',
+      });
+
+      expect(result.html).not.toContain('<script>');
+      expect(result.html).toContain('&lt;script&gt;');
+    });
+
+    it('escapes HTML in coupleNames for payment email', async () => {
+      const { generatePaymentConfirmationEmail } = await import('../templates');
+
+      const result = generatePaymentConfirmationEmail({
+        coupleNames: '<img src=x onerror="alert(1)">',
+        email: 'test@example.com',
+        slug: 'test-user',
+        amount: '€199.00',
+        lang: 'en',
+      });
+
+      expect(result.html).not.toContain('<img');
+      expect(result.html).toContain('&lt;img');
+    });
+
+    it('escapes HTML in guestCode', async () => {
+      vi.stubEnv('PUBLIC_SITE_URL', 'https://refletsdebonheur.com');
+      const { generateWelcomeEmail } = await import('../templates');
+
+      const result = generateWelcomeEmail({
+        coupleNames: 'Alice & Bob',
+        email: 'test@example.com',
+        slug: 'test-user',
+        magicLink: 'https://example.com/magic',
+        guestCode: '<b>BOLD</b>',
+        lang: 'en',
+      });
+
+      expect(result.html).not.toContain('<b>BOLD</b>');
+      expect(result.html).toContain('&lt;b&gt;BOLD&lt;/b&gt;');
+    });
+
+    it('escapes HTML in amount for payment email', async () => {
+      const { generatePaymentConfirmationEmail } = await import('../templates');
+
+      const result = generatePaymentConfirmationEmail({
+        coupleNames: 'Test & User',
+        email: 'test@example.com',
+        slug: 'test-user',
+        amount: '<script>steal()</script>€199',
+        lang: 'en',
+      });
+
+      expect(result.html).not.toContain('<script>steal()');
+      expect(result.html).toContain('&lt;script&gt;');
     });
   });
 });
