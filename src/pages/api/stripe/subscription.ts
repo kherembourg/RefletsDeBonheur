@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import type { SubscriptionInfo } from '../../../lib/stripe/types';
 import { verifyProfileOwnership, errorResponse } from '../../../lib/stripe/apiAuth';
+import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
+import { isSupabaseConfigured } from '../../../lib/supabase/client';
 
 export const prerender = false;
 

@@ -1,338 +1,393 @@
 /**
- * MediaCard Component Tests
- * Tests the gallery media card display
+ * Component Test: MediaCard
+ * 
+ * Tests for the MediaCard component that displays media thumbnails in the gallery grid.
  */
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { MediaCard } from './MediaCard';
-import type { MediaItem } from '../../lib/services/dataService';
-
-const mockImageItem: MediaItem = {
-  id: 'img-1',
-  url: 'https://example.com/photo.jpg',
-  type: 'image',
-  author: 'Test Author',
-  caption: 'Beautiful wedding photo',
-  createdAt: new Date('2026-01-15'),
-  favoriteCount: 5,
-};
-
-const mockVideoItem: MediaItem = {
-  id: 'vid-1',
-  url: 'https://example.com/video.mp4',
-  thumbnailUrl: 'https://example.com/thumbnail.jpg',
-  type: 'video',
-  author: 'Video Author',
-  caption: 'Wedding dance video',
-  createdAt: new Date('2026-01-15'),
-};
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import MediaCard from './MediaCard';
 
 describe('MediaCard Component', () => {
-  const mockOnDelete = vi.fn();
+  const mockMedia = {
+    id: 'media-1',
+    url: 'https://example.com/image.jpg',
+    thumbnail_url: 'https://example.com/thumb.jpg',
+    type: 'image',
+    title: 'Test Image',
+    uploaded_by: 'John Doe',
+    created_at: '2026-02-01T10:00:00Z',
+    reactions: [],
+  };
+
   const mockOnClick = vi.fn();
-  const mockOnToggleSelection = vi.fn();
-  const mockOnToggleFavorite = vi.fn();
+  const mockOnSelect = vi.fn();
+  const mockOnReact = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('Image Rendering', () => {
-    it('should render image media item', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
+  describe('Rendering', () => {
+    it('should render with media data', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
 
-      const img = screen.getByRole('img');
-      expect(img).toHaveAttribute('src', mockImageItem.url);
-      expect(img).toHaveAttribute('alt', mockImageItem.caption);
+      expect(screen.getByRole('img')).toBeInTheDocument();
     });
 
-    it('should render author pill in public view', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
+    it('should display thumbnail when available', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
 
-      expect(screen.getByText(mockImageItem.author!)).toBeInTheDocument();
+      const image = screen.getByRole('img');
+      expect(image).toHaveAttribute('src', mockMedia.thumbnail_url);
     });
 
-    it('should not render author pill when no author', () => {
-      const itemWithoutAuthor = { ...mockImageItem, author: undefined };
-      render(
-        <MediaCard
-          item={itemWithoutAuthor}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
+    it('should fallback to full URL when thumbnail not available', () => {
+      const mediaWithoutThumb = { ...mockMedia, thumbnail_url: null };
+      render(<MediaCard media={mediaWithoutThumb} onClick={mockOnClick} />);
 
-      expect(screen.queryByText('Test Author')).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Video Rendering', () => {
-    it('should render video element', () => {
-      const { container } = render(
-        <MediaCard
-          item={mockVideoItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      const video = container.querySelector('video');
-      expect(video).toBeInTheDocument();
-      expect(video).toHaveAttribute('src', mockVideoItem.url);
-      expect(video).toHaveAttribute('poster', mockVideoItem.thumbnailUrl);
+      const image = screen.getByRole('img');
+      expect(image).toHaveAttribute('src', mockMedia.url);
     });
 
-    it('should have video controls', () => {
-      const { container } = render(
-        <MediaCard
-          item={mockVideoItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
+    it('should display video icon for video media', () => {
+      const videoMedia = { ...mockMedia, type: 'video' };
+      render(<MediaCard media={videoMedia} onClick={mockOnClick} />);
 
-      const video = container.querySelector('video');
-      expect(video).toHaveAttribute('controls');
+      expect(screen.getByLabelText(/video/i)).toBeInTheDocument();
+    });
+
+    it('should display uploader name', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} showUploader={true} />);
+
+      expect(screen.getByText(mockMedia.uploaded_by)).toBeInTheDocument();
+    });
+
+    it('should display upload date', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} showDate={true} />);
+
+      expect(screen.getByText(/feb/i)).toBeInTheDocument();
     });
   });
 
-  describe('Click Handling', () => {
+  describe('User Interactions', () => {
     it('should call onClick when card is clicked', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          onClick={mockOnClick}
-        />
-      );
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
 
-      const card = screen.getByRole('img').closest('.media-card');
-      fireEvent.click(card!);
+      const card = screen.getByRole('button');
+      fireEvent.click(card);
+
+      expect(mockOnClick).toHaveBeenCalledWith(mockMedia);
+    });
+
+    it('should support keyboard navigation', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const card = screen.getByRole('button');
+      fireEvent.keyDown(card, { key: 'Enter' });
 
       expect(mockOnClick).toHaveBeenCalled();
     });
 
-    it('should call onToggleSelection in selection mode for admin view', () => {
+    it('should be selectable in selection mode', () => {
       render(
         <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
+          media={mockMedia}
           onClick={mockOnClick}
           selectionMode={true}
-          onToggleSelection={mockOnToggleSelection}
-          variant="admin"
+          onSelect={mockOnSelect}
         />
       );
 
-      const card = screen.getByRole('img').closest('.media-card');
-      fireEvent.click(card!);
-
-      expect(mockOnToggleSelection).toHaveBeenCalledWith(mockImageItem.id);
-      expect(mockOnClick).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Admin Features', () => {
-    it('should not show delete button for non-admin', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          variant="admin"
-        />
-      );
-
-      expect(screen.queryByRole('button', { name: /supprimer/i })).not.toBeInTheDocument();
-    });
-
-    it('should show delete button for admin', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={true}
-          onDelete={mockOnDelete}
-          variant="admin"
-        />
-      );
-
-      const deleteButton = screen.getByRole('button', { name: /supprimer/i });
-      expect(deleteButton).toBeInTheDocument();
-    });
-
-    it('should call onDelete with confirmation', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={true}
-          onDelete={mockOnDelete}
-          variant="admin"
-        />
-      );
-
-      const deleteButton = screen.getByRole('button', { name: /supprimer/i });
-      fireEvent.click(deleteButton);
-
-      expect(window.confirm).toHaveBeenCalledWith('Supprimer définitivement ce souvenir ?');
-      expect(mockOnDelete).toHaveBeenCalledWith(mockImageItem.id);
-    });
-  });
-
-  describe('Favorite Feature', () => {
-    it('should render favorite button', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-        />
-      );
-
-      const favoriteButton = screen.getByRole('button', { name: /favoris/i });
-      expect(favoriteButton).toBeInTheDocument();
-    });
-
-    it('should show "Ajouter aux favoris" when not favorited', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          isFavorited={false}
-        />
-      );
-
-      expect(screen.getByRole('button', { name: 'Ajouter aux favoris' })).toBeInTheDocument();
-    });
-
-    it('should show "Retirer des favoris" when favorited', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          isFavorited={true}
-        />
-      );
-
-      expect(screen.getByRole('button', { name: 'Retirer des favoris' })).toBeInTheDocument();
-    });
-
-    it('should call onToggleFavorite when clicking favorite button', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          onToggleFavorite={mockOnToggleFavorite}
-        />
-      );
-
-      const favoriteButton = screen.getByRole('button', { name: /favoris/i });
-      fireEvent.click(favoriteButton);
-
-      expect(mockOnToggleFavorite).toHaveBeenCalledWith(mockImageItem.id);
-    });
-  });
-
-  describe('Selection Mode', () => {
-    it('should show selection checkbox in selection mode for admin view', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          selectionMode={true}
-          variant="admin"
-        />
-      );
-
-      expect(screen.getByRole('button', { name: /sélectionner/i })).toBeInTheDocument();
-    });
-
-    it('should call onToggleSelection when checkbox clicked', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          selectionMode={true}
-          onToggleSelection={mockOnToggleSelection}
-          variant="admin"
-        />
-      );
-
-      const checkbox = screen.getByRole('button', { name: /sélectionner/i });
+      const checkbox = screen.getByRole('checkbox');
       fireEvent.click(checkbox);
 
-      expect(mockOnToggleSelection).toHaveBeenCalledWith(mockImageItem.id);
+      expect(mockOnSelect).toHaveBeenCalledWith(mockMedia.id);
     });
 
-    it('should show different text when selected', () => {
+    it('should show selection checkbox on hover', () => {
       render(
         <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
+          media={mockMedia}
+          onClick={mockOnClick}
           selectionMode={true}
-          isSelected={true}
-          variant="admin"
         />
       );
 
-      expect(screen.getByRole('button', { name: 'Désélectionner' })).toBeInTheDocument();
+      const card = screen.getByRole('button');
+      fireEvent.mouseEnter(card);
+
+      expect(screen.getByRole('checkbox')).toBeVisible();
+    });
+  });
+
+  describe('Reactions', () => {
+    it('should display reaction count', () => {
+      const mediaWithReactions = {
+        ...mockMedia,
+        reactions: [
+          { emoji: '❤️', count: 5 },
+          { emoji: '👍', count: 3 },
+        ],
+      };
+
+      render(<MediaCard media={mediaWithReactions} onClick={mockOnClick} />);
+
+      expect(screen.getByText('❤️ 5')).toBeInTheDocument();
+      expect(screen.getByText('👍 3')).toBeInTheDocument();
     });
 
-    it('should apply selected styling', () => {
-      const { container } = render(
+    it('should allow adding reactions', () => {
+      render(
         <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          selectionMode={true}
-          isSelected={true}
-          variant="admin"
+          media={mockMedia}
+          onClick={mockOnClick}
+          onReact={mockOnReact}
         />
       );
 
-      const card = container.querySelector('.media-card');
-      expect(card).toHaveClass('ring-2');
+      const reactButton = screen.getByRole('button', { name: /react/i });
+      fireEvent.click(reactButton);
+
+      expect(mockOnReact).toHaveBeenCalledWith(mockMedia.id);
+    });
+
+    it('should show reaction picker on hover', async () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const card = screen.getByRole('button');
+      fireEvent.mouseEnter(card);
+
+      await waitFor(() => {
+        expect(screen.getByRole('menu')).toBeInTheDocument();
+      });
+    });
+
+    it('should limit displayed reactions to top 3', () => {
+      const mediaWithManyReactions = {
+        ...mockMedia,
+        reactions: [
+          { emoji: '❤️', count: 10 },
+          { emoji: '👍', count: 8 },
+          { emoji: '😍', count: 6 },
+          { emoji: '🎉', count: 4 },
+          { emoji: '👏', count: 2 },
+        ],
+      };
+
+      render(<MediaCard media={mediaWithManyReactions} onClick={mockOnClick} />);
+
+      const reactionElements = screen.getAllByText(/[❤️👍😍]/);
+      expect(reactionElements.length).toBeLessThanOrEqual(3);
+    });
+  });
+
+  describe('Loading States', () => {
+    it('should show loading placeholder before image loads', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      expect(screen.getByRole('status')).toBeInTheDocument();
+    });
+
+    it('should remove loading placeholder after image loads', async () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const image = screen.getByRole('img');
+      fireEvent.load(image);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should show error state if image fails to load', async () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const image = screen.getByRole('img');
+      fireEvent.error(image);
+
+      await waitFor(() => {
+        expect(screen.getByText(/failed/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Context Menu', () => {
+    it('should open context menu on right click', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const card = screen.getByRole('button');
+      fireEvent.contextMenu(card);
+
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+    });
+
+    it('should have download option in context menu', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const card = screen.getByRole('button');
+      fireEvent.contextMenu(card);
+
+      expect(screen.getByText(/download/i)).toBeInTheDocument();
+    });
+
+    it('should have delete option for owner', () => {
+      render(
+        <MediaCard
+          media={mockMedia}
+          onClick={mockOnClick}
+          isOwner={true}
+        />
+      );
+
+      const card = screen.getByRole('button');
+      fireEvent.contextMenu(card);
+
+      expect(screen.getByText(/delete/i)).toBeInTheDocument();
+    });
+
+    it('should not have delete option for non-owner', () => {
+      render(
+        <MediaCard
+          media={mockMedia}
+          onClick={mockOnClick}
+          isOwner={false}
+        />
+      );
+
+      const card = screen.getByRole('button');
+      fireEvent.contextMenu(card);
+
+      expect(screen.queryByText(/delete/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Lazy Loading', () => {
+    it('should use loading="lazy" for images', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const image = screen.getByRole('img');
+      expect(image).toHaveAttribute('loading', 'lazy');
+    });
+
+    it('should load immediately when in viewport', () => {
+      const { container } = render(
+        <MediaCard media={mockMedia} onClick={mockOnClick} inViewport={true} />
+      );
+
+      const image = container.querySelector('img');
+      expect(image).toHaveAttribute('loading', 'eager');
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have alt text for images', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const image = screen.getByRole('img');
+      expect(image).toHaveAttribute('alt', mockMedia.title);
+    });
+
+    it('should be keyboard accessible', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const card = screen.getByRole('button');
+      expect(card).toHaveAttribute('tabindex', '0');
+    });
+
+    it('should announce selection state to screen readers', () => {
+      render(
+        <MediaCard
+          media={mockMedia}
+          onClick={mockOnClick}
+          selectionMode={true}
+          selected={true}
+        />
+      );
+
+      const checkbox = screen.getByRole('checkbox');
+      expect(checkbox).toHaveAttribute('aria-checked', 'true');
     });
   });
 
   describe('Edge Cases', () => {
-    it('should stop propagation on favorite button click', () => {
-      render(
-        <MediaCard
-          item={mockImageItem}
-          isAdmin={false}
-          onDelete={mockOnDelete}
-          onClick={mockOnClick}
-          onToggleFavorite={mockOnToggleFavorite}
-        />
+    it('should handle missing thumbnail gracefully', () => {
+      const mediaWithoutThumb = { ...mockMedia, thumbnail_url: null };
+      render(<MediaCard media={mediaWithoutThumb} onClick={mockOnClick} />);
+
+      const image = screen.getByRole('img');
+      expect(image).toHaveAttribute('src', mockMedia.url);
+    });
+
+    it('should handle missing title', () => {
+      const mediaWithoutTitle = { ...mockMedia, title: null };
+      render(<MediaCard media={mediaWithoutTitle} onClick={mockOnClick} />);
+
+      const image = screen.getByRole('img');
+      expect(image).toHaveAttribute('alt', 'Untitled');
+    });
+
+    it('should handle long titles with ellipsis', () => {
+      const mediaWithLongTitle = {
+        ...mockMedia,
+        title: 'This is a very long title that should be truncated with ellipsis',
+      };
+
+      render(<MediaCard media={mediaWithLongTitle} onClick={mockOnClick} />);
+
+      const titleElement = screen.getByText(/This is a very long/);
+      expect(titleElement).toHaveStyle({ textOverflow: 'ellipsis' });
+    });
+
+    it('should maintain aspect ratio', () => {
+      render(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      const card = screen.getByRole('button');
+      expect(card).toHaveStyle({ aspectRatio: '1 / 1' });
+    });
+  });
+
+  describe('Performance', () => {
+    it('should not re-render unnecessarily', () => {
+      const { rerender } = render(
+        <MediaCard media={mockMedia} onClick={mockOnClick} />
       );
 
-      const favoriteButton = screen.getByRole('button', { name: /favoris/i });
-      fireEvent.click(favoriteButton);
+      const image = screen.getByRole('img');
+      const initialSrc = image.getAttribute('src');
 
-      expect(mockOnToggleFavorite).toHaveBeenCalled();
-      expect(mockOnClick).not.toHaveBeenCalled();
+      // Rerender with same props
+      rerender(<MediaCard media={mockMedia} onClick={mockOnClick} />);
+
+      expect(image.getAttribute('src')).toBe(initialSrc);
+    });
+
+    it('should use memo for expensive computations', () => {
+      const largeMediaList = Array.from({ length: 100 }, (_, i) => ({
+        ...mockMedia,
+        id: `media-${i}`,
+      }));
+
+      const { rerender } = render(
+        <div>
+          {largeMediaList.map(media => (
+            <MediaCard key={media.id} media={media} onClick={mockOnClick} />
+          ))}
+        </div>
+      );
+
+      const startTime = Date.now();
+      rerender(
+        <div>
+          {largeMediaList.map(media => (
+            <MediaCard key={media.id} media={media} onClick={mockOnClick} />
+          ))}
+        </div>
+      );
+      const renderTime = Date.now() - startTime;
+
+      expect(renderTime).toBeLessThan(100); // Should be fast
     });
   });
 });

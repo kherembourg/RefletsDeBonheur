@@ -4,6 +4,7 @@
  * POST /api/upload/website-image
  *
  * This is a simplified upload endpoint for website customization images.
+
  * Unlike /api/upload/presign, it:
  * - Only accepts image types (no video)
  * - Uses a different R2 path (weddings/{id}/website/)
@@ -34,6 +35,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { getR2Config, getS3Client } from '../../../lib/r2';
+import { supabase, isSupabaseConfigured } from '../../../lib/supabase/client';
+import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 
 export const prerender = false;
 
