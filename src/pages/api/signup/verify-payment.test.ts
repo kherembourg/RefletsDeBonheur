@@ -13,6 +13,11 @@ vi.mock('../../../lib/supabase/client', () => ({
 vi.mock('../../../lib/stripe/server', () => ({
   getStripeClient: vi.fn(),
   isStripeConfigured: vi.fn().mockReturnValue(true),
+  PRODUCT_CONFIG: {
+    initialPrice: 19900,
+    renewalPrice: 1999,
+    initialPeriodYears: 2,
+  },
 }));
 
 vi.mock('../../../lib/api/middleware', () => ({
@@ -21,6 +26,15 @@ vi.mock('../../../lib/api/middleware', () => ({
     requireServiceRole: vi.fn().mockReturnValue(null),
     requireStripe: vi.fn().mockReturnValue(null),
   },
+}));
+
+vi.mock('../../../lib/email', () => ({
+  sendWelcomeEmail: vi.fn().mockResolvedValue({ success: true, id: 'mock-email-id' }),
+  sendPaymentConfirmationEmail: vi.fn().mockResolvedValue({ success: true, id: 'mock-email-id' }),
+}));
+
+vi.mock('../../../lib/email/lang', () => ({
+  detectLanguageFromRequest: vi.fn().mockReturnValue('fr'),
 }));
 
 describe('Verify Payment - Security: Password Handling', () => {
