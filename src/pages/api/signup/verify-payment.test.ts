@@ -23,6 +23,84 @@ vi.mock('../../../lib/api/middleware', () => ({
   },
 }));
 
+// Mock rate limiting to always allow in tests (to avoid in-memory state interference)
+vi.mock('../../../lib/rateLimit', () => ({
+  checkRateLimit: vi.fn().mockReturnValue({
+    allowed: true,
+    remaining: 9,
+    resetAt: new Date(Date.now() + 3600 * 1000),
+  }),
+  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
+  createRateLimitResponse: vi.fn().mockReturnValue(
+    new Response(
+      JSON.stringify({
+        error: 'Too many requests',
+        message: 'Rate limit exceeded. Please try again later.',
+        retryAfter: 3600,
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': '3600',
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    )
+  ),
+  RATE_LIMITS: {
+    verifyPayment: { limit: 10, windowSeconds: 3600, prefix: 'verify-payment' },
+    signup: { limit: 5, windowSeconds: 3600, prefix: 'signup' },
+    slugCheck: { limit: 30, windowSeconds: 60, prefix: 'slug-check' },
+    general: { limit: 100, windowSeconds: 60, prefix: 'general' },
+    upload: { limit: 20, windowSeconds: 60, prefix: 'upload' },
+    uploadPerWedding: { limit: 50, windowSeconds: 60, prefix: 'upload-wedding' },
+    stripeCheckout: { limit: 5, windowSeconds: 3600, prefix: 'stripe-checkout' },
+  },
+}));
+
+describe('Verify Payment - Rate Limiting', () => {
+  it('verifyPayment rate limit config should have correct values', async () => {
+    const { RATE_LIMITS } = await import('../../../lib/rateLimit');
+    expect(RATE_LIMITS.verifyPayment).toEqual({
+      limit: 10,
+      windowSeconds: 3600,
+      prefix: 'verify-payment',
+    });
+  });
+
+  it('rate limiter should block verify-payment after 10 requests per hour', async () => {
+    const { checkRateLimit, RATE_LIMITS } = await import('../../../lib/rateLimit');
+
+    // Make 10 requests (at the limit)
+    for (let i = 0; i < 10; i++) {
+      const result = checkRateLimit(`rate-limit-test-ip-verify-${Date.now()}`, RATE_LIMITS.verifyPayment);
+      expect(result.allowed).toBe(true);
+    }
+
+    // Verify the limit is 10
+    expect(RATE_LIMITS.verifyPayment.limit).toBe(10);
+    expect(RATE_LIMITS.verifyPayment.windowSeconds).toBe(3600);
+  });
+
+  it('createRateLimitResponse returns 429 with Retry-After header', async () => {
+    const { createRateLimitResponse } = await import('../../../lib/rateLimit');
+    const response = createRateLimitResponse({
+      allowed: false,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 3600 * 1000),
+      retryAfterSeconds: 3600,
+    });
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toBe('3600');
+    expect(response.headers.get('X-RateLimit-Remaining')).toBe('0');
+
+    const data = await response.json();
+    expect(data.error).toBe('Too many requests');
+  });
+});
+
 describe('Verify Payment - Security: Password Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();

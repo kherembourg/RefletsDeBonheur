@@ -176,4 +176,16 @@ export const RATE_LIMITS = {
     windowSeconds: 60,
     prefix: 'upload-wedding',
   },
+  /** Verify payment: 10 attempts per IP per hour (prevents brute-forcing session IDs) */
+  verifyPayment: {
+    limit: 10,
+    windowSeconds: 3600,
+    prefix: 'verify-payment',
+  },
+  /** Stripe checkout: 5 attempts per IP per hour (prevents checkout spam) */
+  stripeCheckout: {
+    limit: 5,
+    windowSeconds: 3600,
+    prefix: 'stripe-checkout',
+  },
 } as const;

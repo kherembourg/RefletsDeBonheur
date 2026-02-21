@@ -1,10 +1,21 @@
 import type { APIRoute } from 'astro';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { verifyProfileOwnership, validateSameOrigin, errorResponse } from '../../../lib/stripe/apiAuth';
+import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
+import { isSupabaseConfigured } from '../../../lib/supabase/client';
+import { getStripeClient, isStripeConfigured, PRODUCT_CONFIG } from '../../../lib/stripe/server';
+import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limit check - 5 attempts per IP per hour
+  const clientIP = getClientIP(request);
+  const rateLimitResult = checkRateLimit(clientIP, RATE_LIMITS.stripeCheckout);
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   if (!isSupabaseConfigured() || !isSupabaseServiceRoleConfigured()) {
     return errorResponse('Database not configured', 503);
   }

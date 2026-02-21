@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { getStripeClient } from '../../../lib/stripe/server';
 import { apiGuards } from '../../../lib/api/middleware';
+import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import crypto from 'crypto';
 
 export const prerender = false;
@@ -27,6 +28,13 @@ interface VerifyPaymentRequest {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limit check - 10 attempts per IP per hour
+  const clientIP = getClientIP(request);
+  const rateLimitResult = checkRateLimit(clientIP, RATE_LIMITS.verifyPayment);
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   // Check configuration
   const supabaseGuard = apiGuards.requireSupabase();
   if (supabaseGuard) return supabaseGuard;

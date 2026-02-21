@@ -21,6 +21,19 @@ vi.mock('../../../lib/stripe/server', () => ({
   },
 }));
 
+vi.mock('../../../lib/rateLimit', () => ({
+  checkRateLimit: vi.fn().mockReturnValue({
+    allowed: true,
+    remaining: 4,
+    resetAt: new Date(Date.now() + 3600 * 1000),
+  }),
+  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
+  createRateLimitResponse: vi.fn(),
+  RATE_LIMITS: {
+    stripeCheckout: { limit: 5, windowSeconds: 3600, prefix: 'stripe-checkout' },
+  },
+}));
+
 // Test the security functions directly since we can't easily test the full endpoint
 describe('Checkout Endpoint Security', () => {
   describe('Authorization (IDOR Prevention)', () => {
@@ -141,5 +154,75 @@ describe('Duplicate Payment Prevention', () => {
     expect(activeProfile.subscription_status).toBe('active');
     // The actual endpoint checks this and returns:
     // { error: 'You already have an active subscription', code: 'ALREADY_ACTIVE' }
+  });
+});
+
+describe('Stripe Checkout - Rate Limiting', () => {
+  it('should return 429 when rate limit is exceeded', async () => {
+    const { checkRateLimit, createRateLimitResponse } = await import('../../../lib/rateLimit');
+    (checkRateLimit as any).mockReturnValue({
+      allowed: false,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 3600 * 1000),
+      retryAfterSeconds: 3600,
+    });
+    (createRateLimitResponse as any).mockReturnValue(
+      new Response(
+        JSON.stringify({
+          error: 'Too many requests',
+          message: 'Rate limit exceeded. Please try again later.',
+          retryAfter: 3600,
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': '3600',
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      )
+    );
+
+    const { POST } = await import('./checkout');
+    const request = new Request('http://localhost:4321/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profileId: 'test-profile-id',
+        successUrl: 'http://localhost:4321/success',
+        cancelUrl: 'http://localhost:4321/cancel',
+      }),
+    });
+
+    const response = await POST({ request } as any);
+    expect(response.status).toBe(429);
+
+    const data = await response.json();
+    expect(data.error).toBe('Too many requests');
+  });
+
+  it('should allow request when rate limit is not exceeded', async () => {
+    const { checkRateLimit } = await import('../../../lib/rateLimit');
+    (checkRateLimit as any).mockReturnValue({
+      allowed: true,
+      remaining: 4,
+      resetAt: new Date(Date.now() + 3600 * 1000),
+    });
+
+    const { POST } = await import('./checkout');
+    const request = new Request('http://localhost:4321/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profileId: 'test-profile-id',
+        successUrl: 'http://localhost:4321/success',
+        cancelUrl: 'http://localhost:4321/cancel',
+      }),
+    });
+
+    const response = await POST({ request } as any);
+    // Should not be 429, may be another error (like auth failure)
+    expect(response.status).not.toBe(429);
   });
 });

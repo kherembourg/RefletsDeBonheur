@@ -554,6 +554,22 @@ describe('rateLimit', () => {
         prefix: 'upload-wedding',
       });
     });
+
+    it('should have verifyPayment config with correct values', () => {
+      expect(RATE_LIMITS.verifyPayment).toEqual({
+        limit: 10,
+        windowSeconds: 3600,
+        prefix: 'verify-payment',
+      });
+    });
+
+    it('should have stripeCheckout config with correct values', () => {
+      expect(RATE_LIMITS.stripeCheckout).toEqual({
+        limit: 5,
+        windowSeconds: 3600,
+        prefix: 'stripe-checkout',
+      });
+    });
   });
 
   describe('Edge Cases', () => {
