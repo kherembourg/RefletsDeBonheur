@@ -18,8 +18,8 @@ export function getResendClient(): Resend {
 
   const apiKey = import.meta.env.RESEND_API_KEY || '';
 
-  if (!apiKey) {
-    throw new Error('Resend API key not configured. Set RESEND_API_KEY in your environment.');
+  if (!apiKey || !apiKey.startsWith('re_')) {
+    throw new Error('Resend API key not configured or invalid. Set RESEND_API_KEY (must start with re_) in your environment.');
   }
 
   resendClient = new Resend(apiKey);

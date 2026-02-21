@@ -25,7 +25,6 @@ export interface WelcomeEmailData {
 export interface PaymentConfirmationData {
   coupleNames: string;
   email: string;
-  slug: string;
   amount: string;
   lang: Language;
 }
@@ -161,12 +160,15 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
   const t = translations.welcome[data.lang] || translations.welcome.en;
   const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 
-  // Escape all user-supplied data to prevent XSS
+  // Escape user-supplied data for HTML display contexts
   const safeCoupleNames = escapeHtml(data.coupleNames);
   const safeGuestCode = escapeHtml(data.guestCode);
-  const safeSlug = escapeHtml(data.slug);
-  const safeMagicLink = escapeHtml(data.magicLink);
-  const weddingUrl = `${siteUrl}/${safeSlug}`;
+
+  // URLs: use raw values for href attributes, escape only for display text
+  // Validate URL scheme to prevent javascript: XSS in href
+  const magicLinkHref = /^https?:\/\//.test(data.magicLink) ? data.magicLink : '#';
+  const weddingUrl = `${siteUrl}/${data.slug}`;
+  const safeWeddingUrl = escapeHtml(weddingUrl);
 
   const html = `<!DOCTYPE html>
 <html lang="${data.lang}">
@@ -198,7 +200,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
               <table role="presentation" style="margin:0 auto 25px;">
                 <tr>
                   <td style="background-color:#ae1725;border-radius:8px;">
-                    <a href="${safeMagicLink}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">${t.accessButton}</a>
+                    <a href="${magicLinkHref}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">${t.accessButton}</a>
                   </td>
                 </tr>
               </table>
@@ -209,7 +211,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
               <table role="presentation" style="width:100%;background-color:#faf7f4;border-radius:8px;margin:0 0 25px;">
                 <tr>
                   <td style="padding:20px;">
-                    <p style="color:#555;font-size:14px;margin:0 0 8px;"><strong>${t.websiteLabel}</strong> <a href="${weddingUrl}" style="color:#ae1725;text-decoration:none;">${weddingUrl}</a></p>
+                    <p style="color:#555;font-size:14px;margin:0 0 8px;"><strong>${t.websiteLabel}</strong> <a href="${weddingUrl}" style="color:#ae1725;text-decoration:none;">${safeWeddingUrl}</a></p>
                     <p style="color:#555;font-size:14px;margin:0;"><strong>${t.guestCodeLabel}</strong> <code style="background:#e8e0d8;padding:2px 8px;border-radius:4px;font-size:16px;letter-spacing:2px;">${safeGuestCode}</code></p>
                     <p style="color:#888;font-size:12px;margin:8px 0 0;">${t.guestCodeHelp}</p>
                   </td>

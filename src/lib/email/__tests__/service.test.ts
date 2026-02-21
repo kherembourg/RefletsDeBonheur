@@ -147,7 +147,6 @@ describe('Email Service', () => {
     const defaultData = {
       coupleNames: 'Alice & Bob',
       email: 'alice@example.com',
-      slug: 'alice-bob',
       amount: '€199.00',
       lang: 'fr' as const,
     };

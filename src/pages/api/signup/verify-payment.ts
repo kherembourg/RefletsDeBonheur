@@ -269,7 +269,6 @@ export const POST: APIRoute = async ({ request }) => {
     sendPaymentConfirmationEmail({
       coupleNames: accountData.couple_names,
       email: accountData.email,
-      slug: accountData.slug,
       amount: amountPaid,
       lang,
     }).catch((err) => console.error('[Email] Payment confirmation fire-and-forget error:', err));

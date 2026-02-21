@@ -65,6 +65,13 @@ describe('Email Client', () => {
       expect(() => getResendClient()).toThrow('Resend API key not configured');
     });
 
+    it('throws when API key does not start with re_', async () => {
+      vi.stubEnv('RESEND_API_KEY', 'invalid_key_without_prefix');
+      const { getResendClient } = await import('../client');
+
+      expect(() => getResendClient()).toThrow('Resend API key not configured or invalid');
+    });
+
     it('returns singleton instance on subsequent calls', async () => {
       vi.stubEnv('RESEND_API_KEY', 're_test_singleton_key');
       const { getResendClient } = await import('../client');
