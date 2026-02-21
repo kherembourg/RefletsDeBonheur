@@ -99,7 +99,14 @@
     const currentLang = getCurrentLang();
     const browserLang = getBrowserLang();
 
-    // If browser language is different from current page, redirect
+    // If user explicitly navigated to a language-specific URL (/fr/ or /es/),
+    // respect their choice and don't redirect
+    if (currentLang !== 'en') {
+      localStorage.setItem(LANG_PREF_KEY, currentLang);
+      return;
+    }
+
+    // Only auto-redirect from the default language (English) pages
     if (browserLang !== currentLang) {
       const newUrl = getUrlForLang(browserLang);
       if (newUrl !== window.location.pathname) {

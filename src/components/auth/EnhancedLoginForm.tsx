@@ -375,6 +375,20 @@ export function EnhancedLoginForm() {
               )}
             </button>
 
+            {/* Forgot password */}
+            <div className="text-center">
+              <a
+                href="#"
+                className="text-sm text-burgundy-old hover:text-burgundy-old/80 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('La fonctionnalité de récupération de mot de passe sera bientôt disponible.');
+                }}
+              >
+                Mot de passe oublié ?
+              </a>
+            </div>
+
             {/* Info */}
             <div className="pt-4 border-t border-silver-mist/30">
               <div className="flex items-start gap-2 text-xs text-warm-taupe">
@@ -384,6 +398,17 @@ export function EnhancedLoginForm() {
                   utilisez le code d'accès fourni par les mariés.
                 </p>
               </div>
+            </div>
+
+            {/* Signup link */}
+            <div className="text-center text-sm text-warm-taupe">
+              Pas encore de compte ?{' '}
+              <a
+                href="/pricing"
+                className="text-burgundy-old hover:text-burgundy-old/80 font-medium transition-colors"
+              >
+                Créer mon espace
+              </a>
             </div>
           </form>
         )}
