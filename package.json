@@ -20,21 +20,21 @@
     "coverage:report": "vitest run --coverage --reporter=json --reporter=html"
   },
   "dependencies": {
-    "@astrojs/node": "^9.5.2",
+    "@astrojs/node": "^9.5.4",
     "@astrojs/react": "^4.4.2",
-    "@aws-sdk/client-s3": "^3.980.0",
-    "@aws-sdk/s3-request-presigner": "^3.980.0",
-    "@supabase/supabase-js": "^2.93.3",
-    "@tailwindcss/vite": "^4.1.18",
+    "@aws-sdk/client-s3": "^3.995.0",
+    "@aws-sdk/s3-request-presigner": "^3.995.0",
+    "@supabase/supabase-js": "^2.97.0",
+    "@tailwindcss/vite": "^4.2.0",
     "@types/bcryptjs": "^3.0.0",
     "astro": "^5.17.1",
     "bcryptjs": "^3.0.3",
     "jszip": "^3.10.1",
-    "lucide-react": "^0.563.0",
+    "lucide-react": "^0.575.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "sharp": "^0.34.5",
-    "stripe": "^20.3.0",
+    "stripe": "^20.3.1",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
