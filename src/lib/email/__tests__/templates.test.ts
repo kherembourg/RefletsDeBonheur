@@ -134,11 +134,11 @@ describe('Email Templates', () => {
       expect(result.html).toContain('Reflets de Bonheur');
     });
 
-    it('includes magic link as a clickable button', async () => {
+    it('includes magic link as a clickable button with raw URL', async () => {
       vi.stubEnv('PUBLIC_SITE_URL', 'https://refletsdebonheur.com');
       const { generateWelcomeEmail } = await import('../templates');
 
-      const magicLink = 'https://example.com/special-magic-link';
+      const magicLink = 'https://example.com/magic?token=abc&type=magiclink&redirect_to=https://test.com';
       const result = generateWelcomeEmail({
         coupleNames: 'Test & User',
         email: 'test@example.com',
@@ -148,7 +148,27 @@ describe('Email Templates', () => {
         lang: 'en',
       });
 
+      // URL should NOT be HTML-escaped in href (& must stay as &, not &amp;)
       expect(result.html).toContain(`href="${magicLink}"`);
+      expect(result.html).not.toContain('href="https://example.com/magic?token=abc&amp;type=magiclink');
+    });
+
+    it('rejects non-http magic links to prevent XSS', async () => {
+      vi.stubEnv('PUBLIC_SITE_URL', 'https://refletsdebonheur.com');
+      const { generateWelcomeEmail } = await import('../templates');
+
+      const result = generateWelcomeEmail({
+        coupleNames: 'Test & User',
+        email: 'test@example.com',
+        slug: 'test-user',
+        magicLink: 'javascript:alert(1)',
+        guestCode: 'TST000',
+        lang: 'en',
+      });
+
+      // Should not contain the javascript: URL
+      expect(result.html).not.toContain('javascript:');
+      expect(result.html).toContain('href="#"');
     });
 
     it('uses localhost fallback when PUBLIC_SITE_URL is not set', async () => {
@@ -195,7 +215,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: 'Alice & Bob',
         email: 'alice@example.com',
-        slug: 'alice-bob',
         amount: '€199.00',
         lang: 'fr',
       });
@@ -213,7 +232,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: 'John & Jane',
         email: 'john@example.com',
-        slug: 'john-jane',
         amount: '€199.00',
         lang: 'en',
       });
@@ -230,7 +248,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: 'Carlos & Maria',
         email: 'carlos@example.com',
-        slug: 'carlos-maria',
         amount: '€199.00',
         lang: 'es',
       });
@@ -245,7 +262,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: 'Test & User',
         email: 'test@example.com',
-        slug: 'test-user',
         amount: '€199.00',
         lang: 'en',
       });
@@ -260,7 +276,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: 'Test & User',
         email: 'test@example.com',
-        slug: 'test-user',
         amount: '€199.00',
         lang: 'en',
       });
@@ -275,7 +290,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: 'Test & User',
         email: 'test@example.com',
-        slug: 'test-user',
         amount: '€199.00',
         lang: 'en',
       });
@@ -310,7 +324,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: '<img src=x onerror="alert(1)">',
         email: 'test@example.com',
-        slug: 'test-user',
         amount: '€199.00',
         lang: 'en',
       });
@@ -342,7 +355,6 @@ describe('Email Templates', () => {
       const result = generatePaymentConfirmationEmail({
         coupleNames: 'Test & User',
         email: 'test@example.com',
-        slug: 'test-user',
         amount: '<script>steal()</script>€199',
         lang: 'en',
       });

@@ -121,19 +121,17 @@ export const POST: APIRoute = async ({ request }) => {
               // Send payment confirmation email (non-blocking)
               const { data: profileData } = await adminClient
                 .from('profiles')
-                .select('email, full_name, preferred_language')
+                .select('email, full_name')
                 .eq('id', profileId)
                 .single();
 
               if (profileData?.email) {
                 const amountPaid = `€${(session.amount_total ? session.amount_total / 100 : PRODUCT_CONFIG.initialPrice / 100).toFixed(2)}`;
-                const emailLang = (['fr', 'en', 'es'].includes(profileData.preferred_language) ? profileData.preferred_language : 'fr') as 'fr' | 'en' | 'es';
                 sendPaymentConfirmationEmail({
                   coupleNames: profileData.full_name || 'Customer',
                   email: profileData.email,
-                  slug: '',
                   amount: amountPaid,
-                  lang: emailLang,
+                  lang: 'fr',
                 }).catch((err) => console.error('[Webhook] Payment email error:', err));
               }
             }

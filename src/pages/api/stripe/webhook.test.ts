@@ -603,7 +603,6 @@ describe('Stripe Webhook Handler - Phase 1.1: Comprehensive Integration Tests', 
                     data: {
                       email: 'couple@example.com',
                       full_name: 'Alice & Bob',
-                      preferred_language: 'fr',
                     },
                   }),
                 }),
