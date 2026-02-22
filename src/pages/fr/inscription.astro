@@ -3,6 +3,7 @@ import MainLayout from '../../layouts/MainLayout.astro';
 import Header from '../../components/layout/Header.astro';
 import Footer from '../../components/layout/Footer.astro';
 import { SignupWizard } from '../../components/signup/SignupWizard';
+import { t } from '../../i18n/utils';
 
 const lang = 'fr';
 ---
@@ -18,14 +19,14 @@ const lang = 'fr';
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
         <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
-          Commencer
+          {t(lang, 'signup.tagline')}
         </span>
         <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-charcoal dark:text-cream mt-4 mb-4">
-          Créez Votre Espace Mariage
+          {t(lang, 'signup.title')}
         </h1>
         <div class="w-16 h-px mx-auto mb-4" style="background-color: #ae1725;"></div>
         <p class="text-charcoal-light dark:text-cream/70 font-light">
-          Votre galerie privée, livre d'or et site de mariage—tout en un seul endroit magnifique.
+          {t(lang, 'signup.subtitle')}
         </p>
       </div>
 
