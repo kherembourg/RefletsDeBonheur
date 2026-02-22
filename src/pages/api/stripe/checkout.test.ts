@@ -21,18 +21,10 @@ vi.mock('../../../lib/stripe/server', () => ({
   },
 }));
 
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({
-    allowed: true,
-    remaining: 4,
-    resetAt: new Date(Date.now() + 3600 * 1000),
-  }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn(),
-  RATE_LIMITS: {
-    stripeCheckout: { limit: 5, windowSeconds: 3600, prefix: 'stripe-checkout' },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 // Test the security functions directly since we can't easily test the full endpoint
 describe('Checkout Endpoint Security', () => {
@@ -160,13 +152,13 @@ describe('Duplicate Payment Prevention', () => {
 describe('Stripe Checkout - Rate Limiting', () => {
   it('should return 429 when rate limit is exceeded', async () => {
     const { checkRateLimit, createRateLimitResponse } = await import('../../../lib/rateLimit');
-    (checkRateLimit as any).mockReturnValue({
+    vi.mocked(checkRateLimit).mockReturnValue({
       allowed: false,
       remaining: 0,
       resetAt: new Date(Date.now() + 3600 * 1000),
       retryAfterSeconds: 3600,
     });
-    (createRateLimitResponse as any).mockReturnValue(
+    vi.mocked(createRateLimitResponse).mockReturnValue(
       new Response(
         JSON.stringify({
           error: 'Too many requests',
@@ -204,7 +196,7 @@ describe('Stripe Checkout - Rate Limiting', () => {
 
   it('should allow request when rate limit is not exceeded', async () => {
     const { checkRateLimit } = await import('../../../lib/rateLimit');
-    (checkRateLimit as any).mockReturnValue({
+    vi.mocked(checkRateLimit).mockReturnValue({
       allowed: true,
       remaining: 4,
       resetAt: new Date(Date.now() + 3600 * 1000),

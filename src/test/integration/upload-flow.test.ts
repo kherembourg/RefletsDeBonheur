@@ -59,17 +59,19 @@ describe('Media Upload Flow Integration', () => {
       }),
     };
 
+    // Deterministic counter for unique upload IDs
+    let uploadIdCounter = 0;
+
     // Mock fetch
     (global.fetch as any).mockImplementation((url: string, options?: any) => {
       if (url.includes('/api/upload/presign')) {
-        // Generate unique IDs for each call
-        const uniqueId = Math.random().toString(36).substring(2, 15);
-        const timestamp = Date.now();
+        // Generate deterministic IDs for each call
+        const uniqueId = `upload-${++uploadIdCounter}`;
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({
             presignedUrl: `https://r2.example.com/presigned/upload-url-${uniqueId}`,
-            key: `weddings/wedding-123/media/${timestamp}-${uniqueId}-test-image.jpg`,
+            key: `weddings/wedding-123/media/${uniqueId}-test-image.jpg`,
             mediaId: `media-${uniqueId}`,
           }),
         });

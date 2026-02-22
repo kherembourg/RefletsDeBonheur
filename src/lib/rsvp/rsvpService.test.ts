@@ -12,13 +12,16 @@ import {
 // Note: localStorage mock is provided by the global test setup (src/test/setup.ts)
 // which clears it before each test
 
+// Deterministic counter for unique wedding IDs
+let weddingCounter = 0;
+
 describe('RSVPService', () => {
   let service: RSVPService;
   let weddingId: string;
 
   beforeEach(() => {
     // Use a unique weddingId for each test to ensure complete isolation
-    weddingId = `test-wedding-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    weddingId = `test-wedding-${++weddingCounter}`;
     // localStorage is cleared by the global setup's beforeEach
     // Create a fresh service instance for each test
     service = new RSVPService({ weddingId, demoMode: true });
