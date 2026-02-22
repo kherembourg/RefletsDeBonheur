@@ -24,8 +24,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Astro hydration
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.supabase.co",
-      "media-src 'self' blob: https://*.r2.cloudflarestorage.com",
+      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.supabase.co https://images.unsplash.com",
+      "media-src 'self' blob: https://*.r2.cloudflarestorage.com https://commondatastorage.googleapis.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com",
       "frame-ancestors 'self'", // Allow same-origin embedding (for website editor preview)
       "form-action 'self'",
