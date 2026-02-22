@@ -327,6 +327,40 @@ export const translations = {
       inFrance: 'en France',
     },
 
+    // Editor
+    editor: {
+      toolbar: {
+        back: 'Retour',
+        title: 'Éditeur de site',
+        subtitle: 'Personnalisation',
+        saving: 'Enregistrement...',
+        saved: 'Enregistré',
+        error: 'Erreur',
+        unsaved: 'Modifications...',
+        desktop: 'Bureau',
+        tablet: 'Tablette',
+        mobile: 'Mobile',
+        refresh: "Actualiser l'aperçu",
+        reset: 'Réinitialiser',
+        openNewTab: 'Ouvrir dans un nouvel onglet',
+      },
+      sidebar: {
+        theme: 'Thèmes',
+        colors: 'Couleurs',
+        content: 'Contenu',
+        images: 'Images',
+        collapse: 'Réduire',
+      },
+      preview: {
+        title: 'Aperçu du site',
+        livePreview: 'Aperçu en direct',
+      },
+      themeTab: {
+        selectTheme: 'Sélectionner un thème',
+        chooseStyle: 'Choisissez le style de base pour votre site',
+      },
+    },
+
     // Common
     common: {
       loading: 'Chargement...',
@@ -664,6 +698,40 @@ export const translations = {
       copyright: 'All rights reserved',
       madeWith: 'Made with',
       inFrance: 'in France',
+    },
+
+    // Editor
+    editor: {
+      toolbar: {
+        back: 'Back',
+        title: 'Website Editor',
+        subtitle: 'Customization',
+        saving: 'Saving...',
+        saved: 'Saved',
+        error: 'Error',
+        unsaved: 'Unsaved changes...',
+        desktop: 'Desktop',
+        tablet: 'Tablet',
+        mobile: 'Mobile',
+        refresh: 'Refresh preview',
+        reset: 'Reset',
+        openNewTab: 'Open in new tab',
+      },
+      sidebar: {
+        theme: 'Themes',
+        colors: 'Colors',
+        content: 'Content',
+        images: 'Images',
+        collapse: 'Collapse',
+      },
+      preview: {
+        title: 'Website preview',
+        livePreview: 'Live preview',
+      },
+      themeTab: {
+        selectTheme: 'Select a theme',
+        chooseStyle: 'Choose the base style for your website',
+      },
     },
 
     // Common
@@ -1004,6 +1072,40 @@ export const translations = {
       copyright: 'Todos los derechos reservados',
       madeWith: 'Hecho con',
       inFrance: 'en Francia',
+    },
+
+    // Editor
+    editor: {
+      toolbar: {
+        back: 'Atrás',
+        title: 'Editor del sitio',
+        subtitle: 'Personalización',
+        saving: 'Guardando...',
+        saved: 'Guardado',
+        error: 'Error',
+        unsaved: 'Cambios sin guardar...',
+        desktop: 'Escritorio',
+        tablet: 'Tableta',
+        mobile: 'Móvil',
+        refresh: 'Actualizar vista previa',
+        reset: 'Restablecer',
+        openNewTab: 'Abrir en nueva pestaña',
+      },
+      sidebar: {
+        theme: 'Temas',
+        colors: 'Colores',
+        content: 'Contenido',
+        images: 'Imágenes',
+        collapse: 'Contraer',
+      },
+      preview: {
+        title: 'Vista previa del sitio',
+        livePreview: 'Vista previa en vivo',
+      },
+      themeTab: {
+        selectTheme: 'Seleccionar un tema',
+        chooseStyle: 'Elige el estilo base para tu sitio web',
+      },
     },
 
     // Common

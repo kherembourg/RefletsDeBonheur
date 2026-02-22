@@ -7,6 +7,7 @@ export function WebsiteEditor({
   weddingId,
   weddingSlug,
   demoMode = false,
+  lang = 'fr',
   initialCustomization,
   onSave,
 }: WebsiteEditorProps) {
@@ -81,6 +82,7 @@ export function WebsiteEditor({
         hasUnsavedChanges={hasUnsavedChanges}
         devicePreview={devicePreview}
         zoom={zoom}
+        lang={lang}
         onBack={handleBack}
         onDeviceChange={setDevicePreview}
         onZoomIn={() => setZoom(Math.min(150, zoom + 10))}
@@ -95,6 +97,7 @@ export function WebsiteEditor({
           collapsed={sidebarCollapsed}
           customization={customization}
           uploadProgress={uploadProgress}
+          lang={lang}
           onTabChange={setActiveTab}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           onThemeChange={updateTheme}
@@ -111,6 +114,7 @@ export function WebsiteEditor({
           zoom={zoom}
           isPreviewLoading={isPreviewLoading}
           iframeRef={iframeRef}
+          lang={lang}
           onIframeLoad={handleIframeLoad}
         />
       </div>

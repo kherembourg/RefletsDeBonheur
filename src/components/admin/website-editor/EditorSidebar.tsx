@@ -1,5 +1,7 @@
 import { ChevronLeft, Palette, Type, Image, Sparkles } from 'lucide-react';
 import type { WeddingCustomization } from '../../../lib/customization';
+import type { Language } from '../../../i18n/translations';
+import { t } from '../../../i18n/utils';
 import { ColorPaletteEditor } from '../ColorPaletteEditor';
 import { ContentEditor } from '../ContentEditor';
 import { ImageManager } from '../ImageManager';
@@ -11,6 +13,7 @@ interface EditorSidebarProps {
   collapsed: boolean;
   customization: WeddingCustomization;
   uploadProgress: number | null;
+  lang?: Language;
   onTabChange: (tab: EditorTab) => void;
   onToggleCollapse: () => void;
   onThemeChange: (themeId: string) => void;
@@ -20,11 +23,11 @@ interface EditorSidebarProps {
   onUpload: (file: File, key: string) => Promise<string>;
 }
 
-const tabs = [
-  { id: 'theme' as const, label: 'Thèmes', icon: Sparkles },
-  { id: 'colors' as const, label: 'Couleurs', icon: Palette },
-  { id: 'content' as const, label: 'Contenu', icon: Type },
-  { id: 'images' as const, label: 'Images', icon: Image },
+const tabDefs = [
+  { id: 'theme' as const, labelKey: 'editor.sidebar.theme', icon: Sparkles },
+  { id: 'colors' as const, labelKey: 'editor.sidebar.colors', icon: Palette },
+  { id: 'content' as const, labelKey: 'editor.sidebar.content', icon: Type },
+  { id: 'images' as const, labelKey: 'editor.sidebar.images', icon: Image },
 ];
 
 export function EditorSidebar({
@@ -32,6 +35,7 @@ export function EditorSidebar({
   collapsed,
   customization,
   uploadProgress,
+  lang = 'fr',
   onTabChange,
   onToggleCollapse,
   onThemeChange,
@@ -48,7 +52,7 @@ export function EditorSidebar({
     >
       {/* Tab Navigation */}
       <nav className="flex border-b border-charcoal/10">
-        {tabs.map((tab) => {
+        {tabDefs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
 
@@ -64,7 +68,7 @@ export function EditorSidebar({
             >
               <Icon className="w-5 h-5" />
               {!collapsed && (
-                <span className="text-xs font-medium">{tab.label}</span>
+                <span className="text-xs font-medium">{t(lang, tab.labelKey)}</span>
               )}
               {isActive && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-burgundy rounded-full" />
@@ -82,6 +86,7 @@ export function EditorSidebar({
               <ThemeTabContent
                 customization={customization}
                 onThemeChange={onThemeChange}
+                lang={lang}
               />
             )}
             {activeTab === 'colors' && (
@@ -115,7 +120,7 @@ export function EditorSidebar({
         className="p-3 border-t border-charcoal/10 text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all flex items-center justify-center gap-2"
       >
         <ChevronLeft className={`w-4 h-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
-        {!collapsed && <span className="text-xs">Réduire</span>}
+        {!collapsed && <span className="text-xs">{t(lang, 'editor.sidebar.collapse')}</span>}
       </button>
     </aside>
   );
