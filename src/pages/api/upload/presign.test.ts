@@ -23,31 +23,10 @@ vi.mock('../../../lib/supabase/server', () => ({
   isSupabaseServiceRoleConfigured: vi.fn().mockReturnValue(true),
 }));
 
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({ allowed: true }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn((result) => new Response(
-    JSON.stringify({
-      error: 'Rate limit exceeded',
-      message: `Too many requests. Please try again in ${result.retryAfter} seconds.`,
-      retryAfter: result.retryAfter,
-      limit: result.limit,
-      remaining: result.remaining,
-    }),
-    {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        'Retry-After': String(result.retryAfter),
-        'X-RateLimit-Limit': String(result.limit),
-        'X-RateLimit-Remaining': String(result.remaining),
-      },
-    }
-  )),
-  RATE_LIMITS: {
-    upload: { limit: 20, windowSeconds: 60, prefix: 'upload' },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 vi.mock('../../../lib/api/middleware', () => ({
   apiGuards: {
@@ -889,6 +868,26 @@ describe('Upload Presign API - Authorization Tests', () => {
         remaining: 0,
         retryAfter: 45,
       });
+      vi.mocked(createRateLimitResponse).mockReturnValue(
+        new Response(
+          JSON.stringify({
+            error: 'Rate limit exceeded',
+            message: 'Too many requests. Please try again in 45 seconds.',
+            retryAfter: 45,
+            limit: 20,
+            remaining: 0,
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': '45',
+              'X-RateLimit-Limit': '20',
+              'X-RateLimit-Remaining': '0',
+            },
+          }
+        )
+      );
 
       const request = createRequest({
         weddingId: 'wedding-123',
@@ -907,13 +906,33 @@ describe('Upload Presign API - Authorization Tests', () => {
     });
 
     it('should include rate limit headers in response', async () => {
-      const { checkRateLimit } = await import('../../../lib/rateLimit');
+      const { checkRateLimit, createRateLimitResponse } = await import('../../../lib/rateLimit');
       vi.mocked(checkRateLimit).mockReturnValue({
         allowed: false,
         limit: 20,
         remaining: 0,
         retryAfter: 45,
       });
+      vi.mocked(createRateLimitResponse).mockReturnValue(
+        new Response(
+          JSON.stringify({
+            error: 'Rate limit exceeded',
+            message: 'Too many requests. Please try again in 45 seconds.',
+            retryAfter: 45,
+            limit: 20,
+            remaining: 0,
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': '45',
+              'X-RateLimit-Limit': '20',
+              'X-RateLimit-Remaining': '0',
+            },
+          }
+        )
+      );
 
       const request = createRequest({
         weddingId: 'wedding-123',
@@ -949,13 +968,33 @@ describe('Upload Presign API - Authorization Tests', () => {
     });
 
     it('should return correct rate limit message format', async () => {
-      const { checkRateLimit } = await import('../../../lib/rateLimit');
+      const { checkRateLimit, createRateLimitResponse } = await import('../../../lib/rateLimit');
       vi.mocked(checkRateLimit).mockReturnValue({
         allowed: false,
         limit: 20,
         remaining: 0,
         retryAfter: 60,
       });
+      vi.mocked(createRateLimitResponse).mockReturnValue(
+        new Response(
+          JSON.stringify({
+            error: 'Rate limit exceeded',
+            message: 'Too many requests. Please try again in 60 seconds.',
+            retryAfter: 60,
+            limit: 20,
+            remaining: 0,
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': '60',
+              'X-RateLimit-Limit': '20',
+              'X-RateLimit-Remaining': '0',
+            },
+          }
+        )
+      );
 
       const request = createRequest({
         weddingId: 'wedding-123',

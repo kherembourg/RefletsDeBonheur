@@ -20,14 +20,10 @@ vi.mock('../../../lib/stripe/server', () => ({
   },
 }));
 
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({ allowed: true }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn(),
-  RATE_LIMITS: {
-    signup: { maxAttempts: 5, windowMs: 3600000 },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 describe('Create Checkout - Slug Reservation System', () => {
   beforeEach(() => {

@@ -23,16 +23,10 @@ vi.mock('../../../lib/supabase/server', () => ({
   isSupabaseServiceRoleConfigured: vi.fn().mockReturnValue(true),
 }));
 
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({ allowed: true }),
-  checkWeddingRateLimit: vi.fn().mockReturnValue({ allowed: true }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn(),
-  RATE_LIMITS: {
-    upload: { limit: 20, windowSeconds: 60, prefix: 'upload' },
-    uploadPerWedding: { limit: 50, windowSeconds: 60, prefix: 'upload-wedding' },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 vi.mock('../../../lib/api/middleware', () => ({
   apiGuards: {

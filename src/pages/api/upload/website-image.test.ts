@@ -40,14 +40,10 @@ vi.mock('../../../lib/api/middleware', () => ({
   },
 }));
 
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({ allowed: true }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn(),
-  RATE_LIMITS: {
-    upload: { maxAttempts: 20, windowMs: 60000 },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 // Mock R2 functions
 let mockGetR2Config: any;

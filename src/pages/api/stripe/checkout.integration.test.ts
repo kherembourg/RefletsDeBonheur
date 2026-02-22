@@ -25,18 +25,10 @@ vi.mock('../../../lib/stripe/server', () => ({
   },
 }));
 
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({
-    allowed: true,
-    remaining: 4,
-    resetAt: new Date(Date.now() + 3600 * 1000),
-  }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn(),
-  RATE_LIMITS: {
-    stripeCheckout: { limit: 5, windowSeconds: 3600, prefix: 'stripe-checkout' },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 vi.mock('../../../lib/stripe/apiAuth', () => ({
   verifyProfileOwnership: vi.fn(),

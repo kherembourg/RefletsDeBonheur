@@ -24,40 +24,10 @@ vi.mock('../../../lib/api/middleware', () => ({
 }));
 
 // Mock rate limiting to always allow in tests (to avoid in-memory state interference)
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({
-    allowed: true,
-    remaining: 9,
-    resetAt: new Date(Date.now() + 3600 * 1000),
-  }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn().mockReturnValue(
-    new Response(
-      JSON.stringify({
-        error: 'Too many requests',
-        message: 'Rate limit exceeded. Please try again later.',
-        retryAfter: 3600,
-      }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': '3600',
-          'X-RateLimit-Remaining': '0',
-        },
-      }
-    )
-  ),
-  RATE_LIMITS: {
-    verifyPayment: { limit: 10, windowSeconds: 3600, prefix: 'verify-payment' },
-    signup: { limit: 5, windowSeconds: 3600, prefix: 'signup' },
-    slugCheck: { limit: 30, windowSeconds: 60, prefix: 'slug-check' },
-    general: { limit: 100, windowSeconds: 60, prefix: 'general' },
-    upload: { limit: 20, windowSeconds: 60, prefix: 'upload' },
-    uploadPerWedding: { limit: 50, windowSeconds: 60, prefix: 'upload-wedding' },
-    stripeCheckout: { limit: 5, windowSeconds: 3600, prefix: 'stripe-checkout' },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 describe('Verify Payment - Rate Limiting', () => {
   beforeEach(() => {

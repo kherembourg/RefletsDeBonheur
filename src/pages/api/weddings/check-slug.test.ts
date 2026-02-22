@@ -28,23 +28,10 @@ vi.mock('../../../lib/slugValidation', () => ({
   ]),
 }));
 
-vi.mock('../../../lib/rateLimit', () => ({
-  checkRateLimit: vi.fn().mockReturnValue({ allowed: true }),
-  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
-  createRateLimitResponse: vi.fn((result) => new Response(
-    JSON.stringify({
-      error: 'Rate limit exceeded',
-      message: `Too many requests. Please try again in ${result.retryAfter} seconds.`,
-    }),
-    {
-      status: 429,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  )),
-  RATE_LIMITS: {
-    slugCheck: { limit: 30, windowSeconds: 60, prefix: 'slug_check' },
-  },
-}));
+vi.mock('../../../lib/rateLimit', async () => {
+  const { createRateLimitMock } = await import('../../../test/helpers/rateLimitMock');
+  return createRateLimitMock();
+});
 
 describe('GET /api/weddings/check-slug', () => {
   beforeEach(() => {

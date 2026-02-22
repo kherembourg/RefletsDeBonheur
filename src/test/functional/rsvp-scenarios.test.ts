@@ -17,8 +17,9 @@ import {
 // Note: localStorage mock is provided by the global test setup (src/test/setup.ts)
 // which clears it before each test
 
-// Helper to create unique wedding IDs for each test
-const createUniqueWeddingId = () => `scenario-wedding-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+// Deterministic counter for unique wedding IDs
+let scenarioWeddingCounter = 0;
+const createUniqueWeddingId = () => `scenario-wedding-${++scenarioWeddingCounter}`;
 
 describe('RSVP Management - Functional Scenarios', () => {
 

@@ -7,10 +7,14 @@ import {
 } from './statistics';
 import type { MediaItem, GuestbookMessage } from './mockData';
 
+// Deterministic counters for test fixture IDs
+let mediaCounter = 0;
+let msgCounter = 0;
+
 // Helper to create a minimal MediaItem
 function createMedia(overrides: Partial<MediaItem> = {}): MediaItem {
   return {
-    id: `media-${Math.random()}`,
+    id: `media-${++mediaCounter}`,
     url: 'https://example.com/photo.jpg',
     type: 'image',
     author: 'Alice',
@@ -24,7 +28,7 @@ function createMedia(overrides: Partial<MediaItem> = {}): MediaItem {
 
 function createMessage(overrides: Partial<GuestbookMessage> = {}): GuestbookMessage {
   return {
-    id: `msg-${Math.random()}`,
+    id: `msg-${++msgCounter}`,
     author: 'Guest',
     content: 'Beautiful wedding!',
     createdAt: new Date('2024-06-15T10:00:00Z'),
