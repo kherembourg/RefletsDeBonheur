@@ -23,6 +23,72 @@ vi.mock('../../../lib/api/middleware', () => ({
   },
 }));
 
+// Mock rate limiting to always allow in tests (to avoid in-memory state interference)
+vi.mock('../../../lib/rateLimit', () => ({
+  checkRateLimit: vi.fn().mockReturnValue({
+    allowed: true,
+    remaining: 9,
+    resetAt: new Date(Date.now() + 3600 * 1000),
+  }),
+  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
+  createRateLimitResponse: vi.fn().mockReturnValue(
+    new Response(
+      JSON.stringify({
+        error: 'Too many requests',
+        message: 'Rate limit exceeded. Please try again later.',
+        retryAfter: 3600,
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': '3600',
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    )
+  ),
+  RATE_LIMITS: {
+    verifyPayment: { limit: 10, windowSeconds: 3600, prefix: 'verify-payment' },
+    signup: { limit: 5, windowSeconds: 3600, prefix: 'signup' },
+    slugCheck: { limit: 30, windowSeconds: 60, prefix: 'slug-check' },
+    general: { limit: 100, windowSeconds: 60, prefix: 'general' },
+    upload: { limit: 20, windowSeconds: 60, prefix: 'upload' },
+    uploadPerWedding: { limit: 50, windowSeconds: 60, prefix: 'upload-wedding' },
+    stripeCheckout: { limit: 5, windowSeconds: 3600, prefix: 'stripe-checkout' },
+  },
+}));
+
+describe('Verify Payment - Rate Limiting', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return 429 when rate limit is exceeded', async () => {
+    // Override checkRateLimit mock to return not-allowed
+    const { checkRateLimit } = await import('../../../lib/rateLimit');
+    vi.mocked(checkRateLimit).mockReturnValueOnce({
+      allowed: false,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 3600 * 1000),
+      retryAfterSeconds: 3600,
+    });
+
+    const { POST } = await import('./verify-payment');
+    const request = new Request('http://localhost:4321/api/signup/verify-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: 'cs_test_123' }),
+    });
+
+    const response = await POST({ request } as any);
+
+    expect(response.status).toBe(429);
+    const data = await response.json();
+    expect(data.error).toBe('Too many requests');
+  });
+});
+
 describe('Verify Payment - Security: Password Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -85,10 +151,10 @@ describe('Verify Payment - Security: Password Handling', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
         method: 'POST',
@@ -189,10 +255,10 @@ describe('Verify Payment - Security: Password Handling', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -291,10 +357,10 @@ describe('Verify Payment - Security: Password Handling', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -398,10 +464,10 @@ describe('Verify Payment - Security: Password Handling', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -503,10 +569,10 @@ describe('Verify Payment - Security: Password Handling', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -631,10 +697,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -724,10 +790,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -818,10 +884,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -896,10 +962,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -995,10 +1061,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1091,10 +1157,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1165,10 +1231,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1239,10 +1305,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1313,10 +1379,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1382,10 +1448,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1490,10 +1556,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1596,10 +1662,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1701,10 +1767,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1797,10 +1863,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1856,10 +1922,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1897,10 +1963,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
@@ -1913,8 +1979,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBeDefined();
-      expect(data.error).toBeDefined();
+      expect(data.error).toBe('Internal server error');
+      // Should return generic message, NOT the raw Stripe error
+      expect(data.message).toBe('An unexpected error occurred. Please try again or contact support.');
+      expect(data.message).not.toContain('Stripe API error');
     });
 
     it('handles auth user creation failure with duplicate email', async () => {
@@ -1984,10 +2052,10 @@ describe('Verify Payment - Atomicity & Transaction Rollback', () => {
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
-      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+      vi.mocked(getSupabaseAdminClient).mockReturnValue(mockClient as any);
 
       const { getStripeClient } = await import('../../../lib/stripe/server');
-      (getStripeClient as any).mockReturnValue(mockStripe);
+      vi.mocked(getStripeClient).mockReturnValue(mockStripe as any);
 
       const { POST } = await import('./verify-payment');
       const request = new Request('http://localhost:4321/api/signup/verify-payment', {
