@@ -79,7 +79,7 @@ describe('ThemeStep', () => {
       />
     );
 
-    const submitButton = screen.getByRole('button', { name: /continue to payment/i });
+    const submitButton = screen.getByRole('button', { name: /continue/i });
     fireEvent.click(submitButton);
 
     expect(mockOnNext).toHaveBeenCalled();

@@ -46,6 +46,7 @@ export function createRateLimitMock() {
       uploadPerWedding: { limit: 50, windowSeconds: 60, prefix: 'upload-wedding' },
       verifyPayment: { limit: 10, windowSeconds: 3600, prefix: 'verify-payment' },
       stripeCheckout: { limit: 5, windowSeconds: 3600, prefix: 'stripe-checkout' },
+      createAccount: { limit: 5, windowSeconds: 3600, prefix: 'create-account' },
     },
   };
 }

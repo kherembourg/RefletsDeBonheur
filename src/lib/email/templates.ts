@@ -20,6 +20,8 @@ export interface WelcomeEmailData {
   magicLink: string;
   guestCode: string;
   lang: Language;
+  /** When true, user already has a password — show login link instead of magic link */
+  hasPassword?: boolean;
 }
 
 export interface PaymentConfirmationData {
@@ -37,7 +39,9 @@ const translations = {
       intro: 'Your wedding space has been created successfully! Here\'s everything you need to get started.',
       accessTitle: 'Access Your Dashboard',
       accessText: 'Click the button below to set up your password and access your wedding dashboard:',
+      accessTextPassword: 'You can sign in anytime to access your wedding dashboard:',
       accessButton: 'Set Up My Account',
+      accessButtonPassword: 'Go to My Dashboard',
       detailsTitle: 'Your Wedding Details',
       websiteLabel: 'Your wedding website:',
       guestCodeLabel: 'Guest access code:',
@@ -45,6 +49,12 @@ const translations = {
       nextStepsTitle: 'Next Steps',
       nextSteps: [
         'Click the link above to set your password',
+        'Customize your wedding website',
+        'Share the guest code with your invitees',
+        'Start collecting memories!',
+      ],
+      nextStepsPassword: [
+        'Sign in to your dashboard',
         'Customize your wedding website',
         'Share the guest code with your invitees',
         'Start collecting memories!',
@@ -60,7 +70,9 @@ const translations = {
       intro: 'Votre espace mariage a été créé avec succès ! Voici tout ce dont vous avez besoin pour commencer.',
       accessTitle: 'Accédez à votre tableau de bord',
       accessText: 'Cliquez sur le bouton ci-dessous pour configurer votre mot de passe et accéder à votre espace :',
+      accessTextPassword: 'Connectez-vous à tout moment pour accéder à votre espace mariage :',
       accessButton: 'Configurer mon compte',
+      accessButtonPassword: 'Accéder à mon espace',
       detailsTitle: 'Détails de votre mariage',
       websiteLabel: 'Votre site de mariage :',
       guestCodeLabel: 'Code d\'accès invités :',
@@ -68,6 +80,12 @@ const translations = {
       nextStepsTitle: 'Prochaines étapes',
       nextSteps: [
         'Cliquez sur le lien ci-dessus pour définir votre mot de passe',
+        'Personnalisez votre site de mariage',
+        'Partagez le code invité avec vos proches',
+        'Commencez à collecter des souvenirs !',
+      ],
+      nextStepsPassword: [
+        'Connectez-vous à votre tableau de bord',
         'Personnalisez votre site de mariage',
         'Partagez le code invité avec vos proches',
         'Commencez à collecter des souvenirs !',
@@ -83,7 +101,9 @@ const translations = {
       intro: '¡Su espacio de boda ha sido creado con éxito! Aquí tiene todo lo que necesita para comenzar.',
       accessTitle: 'Acceda a su panel de control',
       accessText: 'Haga clic en el botón de abajo para configurar su contraseña y acceder a su espacio:',
+      accessTextPassword: 'Inicie sesión en cualquier momento para acceder a su espacio de boda:',
       accessButton: 'Configurar mi cuenta',
+      accessButtonPassword: 'Ir a mi espacio',
       detailsTitle: 'Detalles de su boda',
       websiteLabel: 'Su sitio web de boda:',
       guestCodeLabel: 'Código de acceso para invitados:',
@@ -91,6 +111,12 @@ const translations = {
       nextStepsTitle: 'Próximos pasos',
       nextSteps: [
         'Haga clic en el enlace anterior para definir su contraseña',
+        'Personalice su sitio web de boda',
+        'Comparta el código de invitado con sus invitados',
+        '¡Comience a recopilar recuerdos!',
+      ],
+      nextStepsPassword: [
+        'Inicie sesión en su panel de control',
         'Personalice su sitio web de boda',
         'Comparta el código de invitado con sus invitados',
         '¡Comience a recopilar recuerdos!',
@@ -170,6 +196,12 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
   const weddingUrl = `${siteUrl}/${data.slug}`;
   const safeWeddingUrl = escapeHtml(weddingUrl);
 
+  // Choose text based on whether user has a password
+  const accessText = data.hasPassword ? t.accessTextPassword : t.accessText;
+  const accessButton = data.hasPassword ? t.accessButtonPassword : t.accessButton;
+  const nextSteps = data.hasPassword ? t.nextStepsPassword : t.nextSteps;
+  const showLinkExpiry = !data.hasPassword;
+
   const html = `<!DOCTYPE html>
 <html lang="${data.lang}">
 <head>
@@ -196,15 +228,15 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
 
               <!-- Access Button -->
               <h2 style="color:#ae1725;font-size:18px;margin:0 0 10px;border-bottom:2px solid #f0e6e8;padding-bottom:8px;">${t.accessTitle}</h2>
-              <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">${t.accessText}</p>
+              <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">${accessText}</p>
               <table role="presentation" style="margin:0 auto 25px;">
                 <tr>
                   <td style="background-color:#ae1725;border-radius:8px;">
-                    <a href="${magicLinkHref}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">${t.accessButton}</a>
+                    <a href="${magicLinkHref}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">${accessButton}</a>
                   </td>
                 </tr>
               </table>
-              <p style="color:#999;font-size:12px;text-align:center;margin:0 0 25px;">${t.linkExpiry}</p>
+              ${showLinkExpiry ? `<p style="color:#999;font-size:12px;text-align:center;margin:0 0 25px;">${t.linkExpiry}</p>` : ''}
 
               <!-- Wedding Details -->
               <h2 style="color:#ae1725;font-size:18px;margin:0 0 15px;border-bottom:2px solid #f0e6e8;padding-bottom:8px;">${t.detailsTitle}</h2>
@@ -221,7 +253,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): { subject: string;
               <!-- Next Steps -->
               <h2 style="color:#ae1725;font-size:18px;margin:0 0 15px;border-bottom:2px solid #f0e6e8;padding-bottom:8px;">${t.nextStepsTitle}</h2>
               <ol style="color:#555;font-size:14px;line-height:2;padding-left:20px;margin:0 0 25px;">
-                ${t.nextSteps.map((step: string) => `<li>${step}</li>`).join('\n                ')}
+                ${nextSteps.map((step: string) => `<li>${step}</li>`).join('\n                ')}
               </ol>
 
               <!-- Support -->
