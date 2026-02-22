@@ -1,22 +1,25 @@
 import { Sparkles, Check } from 'lucide-react';
 import { themeList } from '../../../lib/themes';
 import type { WeddingCustomization } from '../../../lib/customization';
+import type { Language } from '../../../i18n/translations';
+import { t } from '../../../i18n/utils';
 
 interface ThemeTabContentProps {
   customization: WeddingCustomization;
   onThemeChange: (themeId: string) => void;
+  lang?: Language;
 }
 
-export function ThemeTabContent({ customization, onThemeChange }: ThemeTabContentProps) {
+export function ThemeTabContent({ customization, onThemeChange, lang = 'fr' }: ThemeTabContentProps) {
   return (
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-burgundy" />
-          Sélectionner un thème
+          {t(lang, 'editor.themeTab.selectTheme')}
         </h3>
         <p className="text-xs text-charcoal/50">
-          Choisissez le style de base pour votre site
+          {t(lang, 'editor.themeTab.chooseStyle')}
         </p>
       </div>
 

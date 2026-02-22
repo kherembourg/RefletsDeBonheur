@@ -1,6 +1,8 @@
 import { type RefObject } from 'react';
 import { Eye, Loader2 } from 'lucide-react';
 import type { DevicePreview } from './types';
+import type { Language } from '../../../i18n/translations';
+import { t } from '../../../i18n/utils';
 
 interface PreviewPanelProps {
   weddingSlug: string;
@@ -9,6 +11,7 @@ interface PreviewPanelProps {
   zoom: number;
   isPreviewLoading: boolean;
   iframeRef: RefObject<HTMLIFrameElement | null>;
+  lang?: Language;
   onIframeLoad: () => void;
 }
 
@@ -30,6 +33,7 @@ export function PreviewPanel({
   zoom,
   isPreviewLoading,
   iframeRef,
+  lang = 'fr',
   onIframeLoad,
 }: PreviewPanelProps) {
   return (
@@ -64,7 +68,7 @@ export function PreviewPanel({
               src={`/${weddingSlug}?preview=true&v=${previewKey}`}
               className="w-full h-full bg-white"
               onLoad={onIframeLoad}
-              title="Aperçu du site"
+              title={t(lang, 'editor.preview.title')}
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
             />
 
@@ -83,7 +87,7 @@ export function PreviewPanel({
         <div className="bg-white rounded-full px-4 py-2 flex items-center gap-2 text-sm shadow-sm border border-charcoal/10">
           <Eye className="w-4 h-4 text-charcoal/50" />
           <span className="text-charcoal/70">/{weddingSlug}</span>
-          <span className="text-charcoal/40">• Aperçu en direct</span>
+          <span className="text-charcoal/40">&bull; {t(lang, 'editor.preview.livePreview')}</span>
         </div>
       </div>
     </main>

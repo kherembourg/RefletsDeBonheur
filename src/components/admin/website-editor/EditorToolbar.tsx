@@ -14,6 +14,8 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { DevicePreview, SaveStatus } from './types';
+import type { Language } from '../../../i18n/translations';
+import { t } from '../../../i18n/utils';
 
 interface EditorToolbarProps {
   weddingSlug: string;
@@ -21,6 +23,7 @@ interface EditorToolbarProps {
   hasUnsavedChanges: boolean;
   devicePreview: DevicePreview;
   zoom: number;
+  lang?: Language;
   onBack: () => void;
   onDeviceChange: (device: DevicePreview) => void;
   onZoomIn: () => void;
@@ -35,6 +38,7 @@ export function EditorToolbar({
   hasUnsavedChanges,
   devicePreview,
   zoom,
+  lang = 'fr',
   onBack,
   onDeviceChange,
   onZoomIn,
@@ -51,7 +55,7 @@ export function EditorToolbar({
           className="flex items-center gap-2 text-charcoal/60 hover:text-charcoal transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Retour</span>
+          <span className="text-sm font-medium">{t(lang, 'editor.toolbar.back')}</span>
         </button>
 
         <div className="h-6 w-px bg-charcoal/10" />
@@ -61,8 +65,8 @@ export function EditorToolbar({
             <Layers className="w-4 h-4 text-burgundy" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-charcoal">Éditeur de site</h1>
-            <p className="text-xs text-charcoal/50">Personnalisation</p>
+            <h1 className="text-sm font-semibold text-charcoal">{t(lang, 'editor.toolbar.title')}</h1>
+            <p className="text-xs text-charcoal/50">{t(lang, 'editor.toolbar.subtitle')}</p>
           </div>
         </div>
 
@@ -71,24 +75,24 @@ export function EditorToolbar({
           {saveStatus === 'saving' && (
             <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 flex items-center gap-1.5">
               <Loader2 className="w-3 h-3 animate-spin" />
-              Enregistrement...
+              {t(lang, 'editor.toolbar.saving')}
             </span>
           )}
           {saveStatus === 'saved' && (
             <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
               <Cloud className="w-3 h-3" />
-              Enregistré
+              {t(lang, 'editor.toolbar.saved')}
             </span>
           )}
           {saveStatus === 'error' && (
             <span className="px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-400 rounded-full border border-red-500/30 flex items-center gap-1.5">
               <CloudOff className="w-3 h-3" />
-              Erreur
+              {t(lang, 'editor.toolbar.error')}
             </span>
           )}
           {saveStatus === 'idle' && hasUnsavedChanges && (
             <span className="px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">
-              Modifications...
+              {t(lang, 'editor.toolbar.unsaved')}
             </span>
           )}
         </div>
@@ -97,10 +101,10 @@ export function EditorToolbar({
       {/* Center section - Device Preview */}
       <div className="flex items-center gap-1 bg-charcoal/5 rounded-lg p-1">
         {[
-          { id: 'desktop' as const, icon: Monitor, label: 'Bureau' },
-          { id: 'tablet' as const, icon: Tablet, label: 'Tablette' },
-          { id: 'mobile' as const, icon: Smartphone, label: 'Mobile' },
-        ].map(({ id, icon: Icon, label }) => (
+          { id: 'desktop' as const, icon: Monitor, labelKey: 'editor.toolbar.desktop' },
+          { id: 'tablet' as const, icon: Tablet, labelKey: 'editor.toolbar.tablet' },
+          { id: 'mobile' as const, icon: Smartphone, labelKey: 'editor.toolbar.mobile' },
+        ].map(({ id, icon: Icon, labelKey }) => (
           <button
             key={id}
             onClick={() => onDeviceChange(id)}
@@ -109,7 +113,7 @@ export function EditorToolbar({
                 ? 'bg-white text-charcoal shadow-sm'
                 : 'text-charcoal/50 hover:text-charcoal'
             }`}
-            title={label}
+            title={t(lang, labelKey)}
           >
             <Icon className="w-4 h-4" />
           </button>
@@ -141,7 +145,7 @@ export function EditorToolbar({
         <button
           onClick={onRefresh}
           className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
-          title="Actualiser l'aperçu"
+          title={t(lang, 'editor.toolbar.refresh')}
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -150,7 +154,7 @@ export function EditorToolbar({
         <button
           onClick={onReset}
           className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
-          title="Réinitialiser"
+          title={t(lang, 'editor.toolbar.reset')}
         >
           <RotateCcw className="w-4 h-4" />
         </button>
@@ -161,7 +165,7 @@ export function EditorToolbar({
           target="_blank"
           rel="noopener noreferrer"
           className="p-2 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all"
-          title="Ouvrir dans un nouvel onglet"
+          title={t(lang, 'editor.toolbar.openNewTab')}
         >
           <ExternalLink className="w-4 h-4" />
         </a>
