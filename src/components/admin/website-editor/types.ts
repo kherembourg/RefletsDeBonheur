@@ -11,4 +11,4 @@ export interface WebsiteEditorProps {
   onSave?: (customization: WeddingCustomization) => Promise<void>;
 }
 
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type { SaveStatus } from '../../../hooks/useWebsiteEditor';
