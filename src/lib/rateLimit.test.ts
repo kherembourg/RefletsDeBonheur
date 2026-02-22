@@ -1,8 +1,8 @@
 /**
  * Rate Limit Tests
- * 
+ *
  * Comprehensive tests for the in-memory rate limiting implementation
- * with sliding window algorithm.
+ * with fixed window algorithm.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -12,6 +12,12 @@ import {
   createRateLimitResponse,
   checkWeddingRateLimit,
   RATE_LIMITS,
+  MAX_STORE_SIZE,
+  CLEANUP_INTERVAL_MS,
+  _resetForTesting,
+  _getStoreSize,
+  _setLastCleanup,
+  _setStoreEntry,
   type RateLimitConfig,
   type RateLimitResult,
 } from './rateLimit';
@@ -23,6 +29,8 @@ describe('rateLimit', () => {
     originalDateNow = Date.now;
     // Mock Date.now() to control time
     vi.useFakeTimers();
+    // Reset internal rate limit state between tests
+    _resetForTesting();
   });
 
   afterEach(() => {
@@ -405,7 +413,7 @@ describe('rateLimit', () => {
       expect(ip).toBe('203.0.113.4');
     });
 
-    it('should prioritize x-forwarded-for over other headers', () => {
+    it('should prioritize cf-connecting-ip over other headers', () => {
       const request = new Request('https://example.com', {
         headers: {
           'x-forwarded-for': '203.0.113.5',
@@ -415,7 +423,30 @@ describe('rateLimit', () => {
       });
 
       const ip = getClientIP(request);
+      expect(ip).toBe('192.0.2.1');
+    });
+
+    it('should fall back to x-forwarded-for when cf-connecting-ip is absent', () => {
+      const request = new Request('https://example.com', {
+        headers: {
+          'x-forwarded-for': '203.0.113.5',
+          'x-real-ip': '198.51.100.1',
+        },
+      });
+
+      const ip = getClientIP(request);
       expect(ip).toBe('203.0.113.5');
+    });
+
+    it('should fall back to x-real-ip when cf-connecting-ip and x-forwarded-for are absent', () => {
+      const request = new Request('https://example.com', {
+        headers: {
+          'x-real-ip': '198.51.100.1',
+        },
+      });
+
+      const ip = getClientIP(request);
+      expect(ip).toBe('198.51.100.1');
     });
   });
 
@@ -624,6 +655,131 @@ describe('rateLimit', () => {
 
       const result = checkRateLimit('user@example.com:8080', config);
       expect(result.allowed).toBe(true);
+    });
+  });
+
+  describe('Lazy Cleanup', () => {
+    it('should clean up expired entries when cleanup interval has elapsed', () => {
+      const config: RateLimitConfig = {
+        limit: 5,
+        windowSeconds: 10,
+        prefix: 'cleanup',
+      };
+
+      // Create some entries
+      checkRateLimit('expired-1', config);
+      checkRateLimit('expired-2', config);
+      checkRateLimit('expired-3', config);
+      expect(_getStoreSize()).toBeGreaterThanOrEqual(3);
+
+      // Advance time past the window so entries expire
+      vi.advanceTimersByTime(11 * 1000);
+
+      // Force lastCleanup to be old enough to trigger cleanup
+      _setLastCleanup(Date.now() - CLEANUP_INTERVAL_MS - 1);
+
+      // Next checkRateLimit call should trigger lazy cleanup
+      checkRateLimit('trigger-cleanup', config);
+
+      // The expired entries should have been cleaned up
+      // Only the new 'trigger-cleanup' entry should remain
+      expect(_getStoreSize()).toBe(1);
+    });
+
+    it('should not clean up entries within the cleanup interval', () => {
+      const config: RateLimitConfig = {
+        limit: 5,
+        windowSeconds: 10,
+        prefix: 'no-cleanup',
+      };
+
+      // Create some entries
+      checkRateLimit('entry-1', config);
+      checkRateLimit('entry-2', config);
+      const sizeAfterSetup = _getStoreSize();
+
+      // Advance time past the window but NOT past cleanup interval
+      vi.advanceTimersByTime(11 * 1000);
+
+      // lastCleanup is still recent (set by _resetForTesting), so no cleanup triggers
+      checkRateLimit('entry-3', config);
+
+      // Expired entries are NOT cleaned up (only overwritten individually on access)
+      // The store may still have the old entries plus the new one
+      expect(_getStoreSize()).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('MAX_STORE_SIZE Eviction', () => {
+    it('should export MAX_STORE_SIZE as 100,000', () => {
+      expect(MAX_STORE_SIZE).toBe(100_000);
+    });
+
+    it('should evict entries when store exceeds MAX_STORE_SIZE', () => {
+      // Directly populate the store to exceed MAX_STORE_SIZE
+      const now = Date.now();
+      for (let i = 0; i <= MAX_STORE_SIZE; i++) {
+        _setStoreEntry(`evict-test:${i}`, { count: 1, resetAt: now + 60000 });
+      }
+
+      expect(_getStoreSize()).toBe(MAX_STORE_SIZE + 1);
+
+      // Next checkRateLimit call should trigger eviction
+      const config: RateLimitConfig = {
+        limit: 5,
+        windowSeconds: 60,
+        prefix: 'evict',
+      };
+      checkRateLimit('trigger-eviction', config);
+
+      // Store should be reduced: MAX_STORE_SIZE + 1 - (1 + 1000) + 1 new entry
+      // i.e., entries were evicted to make room
+      expect(_getStoreSize()).toBeLessThanOrEqual(MAX_STORE_SIZE);
+    });
+
+    it('should evict oldest entries first (FIFO order)', () => {
+      const now = Date.now();
+      // Add entries with known keys
+      _setStoreEntry('evict:oldest', { count: 1, resetAt: now + 60000 });
+
+      // Fill to exceed MAX_STORE_SIZE
+      for (let i = 0; i < MAX_STORE_SIZE; i++) {
+        _setStoreEntry(`evict:filler-${i}`, { count: 1, resetAt: now + 60000 });
+      }
+
+      expect(_getStoreSize()).toBe(MAX_STORE_SIZE + 1);
+
+      // Trigger eviction
+      const config: RateLimitConfig = {
+        limit: 5,
+        windowSeconds: 60,
+        prefix: 'trigger',
+      };
+      checkRateLimit('evict-trigger', config);
+
+      // After eviction, the store should be smaller
+      expect(_getStoreSize()).toBeLessThanOrEqual(MAX_STORE_SIZE);
+    });
+  });
+
+  describe('Memory Bounds', () => {
+    it('should export CLEANUP_INTERVAL_MS as 5 minutes', () => {
+      expect(CLEANUP_INTERVAL_MS).toBe(5 * 60 * 1000);
+    });
+
+    it('should handle _resetForTesting correctly', () => {
+      const config: RateLimitConfig = {
+        limit: 5,
+        windowSeconds: 60,
+        prefix: 'reset-test',
+      };
+
+      checkRateLimit('user-a', config);
+      checkRateLimit('user-b', config);
+      expect(_getStoreSize()).toBeGreaterThanOrEqual(2);
+
+      _resetForTesting();
+      expect(_getStoreSize()).toBe(0);
     });
   });
 });

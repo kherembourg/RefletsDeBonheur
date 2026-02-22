@@ -1,7 +1,7 @@
 /**
  * Rate Limiting Utility
  *
- * In-memory rate limiter using sliding window algorithm.
+ * In-memory rate limiter using fixed window algorithm.
  * For production with multiple instances, replace with Redis-based solution.
  */
 
@@ -13,17 +13,10 @@ interface RateLimitRecord {
 // In-memory store (cleared on server restart)
 const rateLimitStore = new Map<string, RateLimitRecord>();
 
-// Cleanup old entries every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, record] of rateLimitStore.entries()) {
-      if (record.resetAt < now) {
-        rateLimitStore.delete(key);
-      }
-    }
-  }, 5 * 60 * 1000);
-}
+// Max entries before forced eviction
+const MAX_STORE_SIZE = 100_000;
+let lastCleanup = Date.now();
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 export interface RateLimitConfig {
   /** Maximum requests allowed in the window */
@@ -52,6 +45,27 @@ export function checkRateLimit(
   const key = `${prefix}:${identifier}`;
   const now = Date.now();
   const windowMs = windowSeconds * 1000;
+
+  // Lazy cleanup of expired entries
+  if (now - lastCleanup > CLEANUP_INTERVAL_MS) {
+    lastCleanup = now;
+    for (const [k, record] of rateLimitStore.entries()) {
+      if (record.resetAt < now) {
+        rateLimitStore.delete(k);
+      }
+    }
+  }
+
+  // Evict oldest entries if store is too large
+  if (rateLimitStore.size > MAX_STORE_SIZE) {
+    const entriesToDelete = rateLimitStore.size - MAX_STORE_SIZE + 1000;
+    let deleted = 0;
+    for (const k of rateLimitStore.keys()) {
+      if (deleted >= entriesToDelete) break;
+      rateLimitStore.delete(k);
+      deleted++;
+    }
+  }
 
   let record = rateLimitStore.get(key);
 
@@ -89,22 +103,18 @@ export function checkRateLimit(
  * Extract client IP from request headers
  */
 export function getClientIP(request: Request): string {
-  // Check common proxy headers
+  // Cloudflare header (trusted, cannot be spoofed by client)
+  const cfConnecting = request.headers.get('cf-connecting-ip');
+  if (cfConnecting) return cfConnecting;
+
+  // Proxy headers (less trusted, can be spoofed)
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
-    // Take the first IP in the chain (client IP)
     return forwarded.split(',')[0].trim();
   }
 
   const realIP = request.headers.get('x-real-ip');
-  if (realIP) {
-    return realIP;
-  }
-
-  const cfConnecting = request.headers.get('cf-connecting-ip');
-  if (cfConnecting) {
-    return cfConnecting;
-  }
+  if (realIP) return realIP;
 
   // Fallback - use a default for local development
   return '127.0.0.1';
@@ -142,6 +152,37 @@ export function checkWeddingRateLimit(
 ): RateLimitResult {
   const key = `wedding:${weddingId}`;
   return checkRateLimit(key, config);
+}
+
+/**
+ * Reset internal state for testing purposes only.
+ * Exported so tests can control cleanup timing and store size.
+ */
+export function _resetForTesting() {
+  rateLimitStore.clear();
+  lastCleanup = Date.now();
+}
+
+/** Expose internal store size for testing */
+export function _getStoreSize(): number {
+  return rateLimitStore.size;
+}
+
+/** Expose constants for testing */
+export { MAX_STORE_SIZE, CLEANUP_INTERVAL_MS };
+
+/**
+ * Directly set lastCleanup for testing lazy cleanup behavior.
+ */
+export function _setLastCleanup(timestamp: number) {
+  lastCleanup = timestamp;
+}
+
+/**
+ * Directly insert entries into the rate limit store for testing.
+ */
+export function _setStoreEntry(key: string, record: { count: number; resetAt: number }) {
+  rateLimitStore.set(key, record);
 }
 
 // Predefined rate limit configs for common endpoints

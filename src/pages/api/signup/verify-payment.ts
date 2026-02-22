@@ -263,7 +263,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred. Please try again or contact support.',
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
