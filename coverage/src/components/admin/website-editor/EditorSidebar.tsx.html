@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">77.27% </span>
+                <span class="strong">78.26% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>17/22</span>
+                <span class='fraction'>18/23</span>
             </div>
         
             
@@ -185,7 +185,15 @@
 <a name='L120'></a><a href='#L120'>120</a>
 <a name='L121'></a><a href='#L121'>121</a>
 <a name='L122'></a><a href='#L122'>122</a>
-<a name='L123'></a><a href='#L123'>123</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -208,6 +216,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -307,8 +316,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { ChevronLeft, Palette, Type, Image, Sparkles } from 'lucide-react';
 import type { WeddingCustomization } from '../../../lib/customization';
+import type { Language } from '../../../i18n/translations';
+import { t } from '../../../i18n/utils';
 import { ColorPaletteEditor } from '../ColorPaletteEditor';
 import { ContentEditor } from '../ContentEditor';
 import { ImageManager } from '../ImageManager';
@@ -320,6 +332,7 @@ interface EditorSidebarProps {
   collapsed: boolean;
   customization: WeddingCustomization;
   uploadProgress: number | null;
+  lang?: Language;
   onTabChange: (tab: EditorTab) =&gt; void;
   onToggleCollapse: () =&gt; void;
   onThemeChange: (themeId: string) =&gt; void;
@@ -329,11 +342,11 @@ interface EditorSidebarProps {
   onUpload: (file: File, key: string) =&gt; Promise&lt;string&gt;;
 }
 &nbsp;
-const tabs = [
-  { id: 'theme' as const, label: 'Thèmes', icon: Sparkles },
-  { id: 'colors' as const, label: 'Couleurs', icon: Palette },
-  { id: 'content' as const, label: 'Contenu', icon: Type },
-  { id: 'images' as const, label: 'Images', icon: Image },
+const tabDefs = [
+  { id: 'theme' as const, labelKey: 'editor.sidebar.theme', icon: Sparkles },
+  { id: 'colors' as const, labelKey: 'editor.sidebar.colors', icon: Palette },
+  { id: 'content' as const, labelKey: 'editor.sidebar.content', icon: Type },
+  { id: 'images' as const, labelKey: 'editor.sidebar.images', icon: Image },
 ];
 &nbsp;
 export function EditorSidebar({
@@ -341,6 +354,7 @@ export function EditorSidebar({
   collapsed,
   customization,
   uploadProgress,
+  lang = 'fr',
   onTabChange,
   onToggleCollapse,
   onThemeChange,
@@ -357,7 +371,7 @@ export function EditorSidebar({
     &gt;
       {/* Tab Navigation */}
       &lt;nav className="flex border-b border-charcoal/10"&gt;
-        {tabs.map((tab) =&gt; {
+        {tabDefs.map((tab) =&gt; {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
 &nbsp;
@@ -373,7 +387,7 @@ export function EditorSidebar({
             &gt;
               &lt;Icon className="w-5 h-5" /&gt;
               {!collapsed &amp;&amp; (
-                &lt;span className="text-xs font-medium"&gt;{tab.label}&lt;/span&gt;
+                &lt;span className="text-xs font-medium"&gt;{t(lang, tab.labelKey)}&lt;/span&gt;
               )}
               {isActive &amp;&amp; (
                 &lt;div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-burgundy rounded-full" /&gt;
@@ -391,6 +405,7 @@ export function EditorSidebar({
               &lt;ThemeTabContent
                 customization={customization}
                 onThemeChange={onThemeChange}
+                lang={lang}
               /&gt;
             )}
             {activeTab === 'colors' &amp;&amp; (
@@ -424,7 +439,7 @@ export function EditorSidebar({
         className="p-3 border-t border-charcoal/10 text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-all flex items-center justify-center gap-2"
       &gt;
         &lt;ChevronLeft className={`w-4 h-4 transition-transform ${collapsed ? <span class="branch-0 cbranch-no" title="branch not covered" >'rotate-180' : '</span>'}`} /&gt;
-        {!collapsed &amp;&amp; &lt;span className="text-xs"&gt;Réduire&lt;/span&gt;}
+        {!collapsed &amp;&amp; &lt;span className="text-xs"&gt;{t(lang, 'editor.sidebar.collapse')}&lt;/span&gt;}
       &lt;/button&gt;
     &lt;/aside&gt;
   );
@@ -436,7 +451,7 @@ export function EditorSidebar({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-22T17:56:31.237Z
+                at 2026-02-22T18:08:45.946Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
