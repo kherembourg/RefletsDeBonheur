@@ -5,7 +5,7 @@ import { QRCodeGenerator } from './QRCodeGenerator';
 // Mock qrcode.react to render a testable element
 vi.mock('qrcode.react', () => ({
   QRCodeSVG: vi.fn((props: any) => (
-    <svg data-testid="qr-svg" data-value={props.value} data-size={props.size} ref={props.ref}>
+    <svg data-testid="qr-svg" data-value={props.value} data-size={props.size}>
       <rect />
     </svg>
   )),
