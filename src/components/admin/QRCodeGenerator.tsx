@@ -19,22 +19,18 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
   const [accessCode, setAccessCode] = useState('MARIAGE2026');
   const [size, setSize] = useState(300);
   const [includeCode, setIncludeCode] = useState(true);
-  const qrRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const galleryUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/${weddingSlug ? `${weddingSlug}/photos` : 'demo_gallery'}`
     : `/${weddingSlug ? `${weddingSlug}/photos` : 'demo_gallery'}`;
 
-  const svgToDataUrl = useCallback((): string | null => {
-    const svg = qrRef.current;
-    if (!svg) return null;
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svg);
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+  const getSvgElement = useCallback((): SVGSVGElement | null => {
+    return containerRef.current?.querySelector('svg') ?? null;
   }, []);
 
   const handleDownload = useCallback(async () => {
-    const svg = qrRef.current;
+    const svg = getSvgElement();
     if (!svg) return;
 
     try {
@@ -64,11 +60,13 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
       console.error('Download failed:', error);
       alert('Erreur lors du téléchargement.');
     }
-  }, [size]);
+  }, [size, getSvgElement]);
 
   const handlePrint = useCallback(() => {
-    const dataUrl = svgToDataUrl();
-    if (!dataUrl) return;
+    const svg = getSvgElement();
+    if (!svg) return;
+    const svgString = new XMLSerializer().serializeToString(svg);
+    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -164,7 +162,7 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
     setTimeout(() => {
       printWindow.print();
     }, 500);
-  }, [svgToDataUrl, accessCode, includeCode, size]);
+  }, [getSvgElement, accessCode, includeCode, size]);
 
   const handleCopyUrl = useCallback(() => {
     navigator.clipboard.writeText(galleryUrl);
@@ -189,9 +187,8 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
 
       {/* QR Code Preview */}
       <div className="bg-white rounded-xl p-6 mb-6 border-2 border-burgundy-old/30 text-center">
-        <div className="mx-auto rounded-lg shadow-md inline-block" style={{ width: size, height: size }}>
+        <div ref={containerRef} className="mx-auto rounded-lg shadow-md inline-block" style={{ width: size, height: size }}>
           <QRCodeSVG
-            ref={qrRef}
             value={galleryUrl}
             size={size}
             bgColor="#FFFFF0"
