@@ -21,6 +21,10 @@ vi.mock('./QRCodeGenerator', () => ({
   QRCodeGenerator: () => <div data-testid="qr-generator">QRCodeGenerator</div>,
 }));
 
+vi.mock('qrcode.react', () => ({
+  QRCodeSVG: (props: any) => <svg data-testid="qr-svg" data-value={props.value} />,
+}));
+
 vi.mock('./EnhancedStatistics', () => ({
   EnhancedStatistics: () => <div data-testid="enhanced-stats">EnhancedStatistics</div>,
 }));
@@ -311,11 +315,11 @@ describe('AdminPanel Component', () => {
       });
     });
 
-    it('should render QRCodeGenerator component', async () => {
+    it('should render QR code SVG on dashboard', async () => {
       render(<AdminPanel demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByAltText('QR Code')).toBeInTheDocument();
+        expect(screen.getByTestId('qr-svg')).toBeInTheDocument();
       });
     });
   });
