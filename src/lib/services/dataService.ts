@@ -246,7 +246,7 @@ export class DataService {
     }
 
     const media = await mediaApi.getByWeddingId(this.weddingId, {
-      status: 'ready',
+      status: 'all',
       moderation: 'approved',
     });
 
