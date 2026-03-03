@@ -1,20 +1,23 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense, useCallback } from 'react';
-import { Upload, Lock, ImageIcon, Loader2, CheckSquare, Trash2, FolderPlus } from 'lucide-react';
+import { Upload, Lock, ImageIcon, Loader2, CheckSquare, Trash2, FolderPlus, KeyRound, X } from 'lucide-react';
 import { MediaCard } from './MediaCard';
 import { UploadModal } from './UploadModal';
 
 // Lazy load heavy components that are conditionally rendered
 const Lightbox = lazy(() => import('./Lightbox').then(m => ({ default: m.Lightbox })));
-import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
+import { isAdmin as checkIsAdmin, isAuthenticated } from '../../lib/auth';
+import { guestLogin } from '../../lib/auth/clientAuth';
+import { extractAndSavePinFromUrl, getSavedPin } from '../../lib/auth/pinFromUrl';
 import { DataService, type MediaItem, type Album } from '../../lib/services/dataService';
 
 interface GalleryGridProps {
   weddingId?: string;
+  weddingSlug?: string;
   demoMode?: boolean; // Skip auth check for demo page
   variant?: 'public' | 'admin';
 }
 
-export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }: GalleryGridProps) {
+export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant = 'public' }: GalleryGridProps) {
   // Create service once using ref
   const serviceRef = useRef<DataService | null>(null);
   if (!serviceRef.current) {
@@ -76,21 +79,25 @@ export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }:
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
+  // PIN modal state
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+
   useEffect(() => {
-    // Run auth check and favorites loading in parallel
+    // Extract PIN from URL on mount (for QR code users)
+    if (weddingSlug) {
+      extractAndSavePinFromUrl(weddingSlug);
+    }
+
     const init = async () => {
-      const [, favorites] = await Promise.all([
-        // Check authentication (skip in demo mode)
-        !demoMode ? requireAuth() : Promise.resolve(),
-        // Load user favorites
-        dataService.getFavorites()
-      ]);
-      // Check admin status (in demo mode, allow admin features)
+      const favorites = await dataService.getFavorites();
       setIsAdmin(demoMode || checkIsAdmin());
       setUserFavorites(favorites);
     };
     init();
-  }, [demoMode, dataService]);
+  }, [demoMode, dataService, weddingSlug]);
 
   // Filter and sort media
   const filteredMedia = useMemo(() => {
@@ -129,6 +136,59 @@ export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }:
     await refresh();
     setShowUploadModal(false);
   }, [refresh]);
+
+  const handleUploadClick = useCallback(async () => {
+    // In demo mode, skip auth entirely
+    if (demoMode) {
+      setShowUploadModal(true);
+      return;
+    }
+
+    // Already authenticated? Open upload modal directly
+    if (isAuthenticated()) {
+      setShowUploadModal(true);
+      return;
+    }
+
+    // Try auto-login with saved PIN (from URL or previous visit)
+    if (weddingSlug) {
+      const savedPin = getSavedPin(weddingSlug);
+      if (savedPin) {
+        const result = await guestLogin(savedPin);
+        if (result.success) {
+          setShowUploadModal(true);
+          return;
+        }
+      }
+    }
+
+    // No saved PIN or auto-login failed — show PIN modal
+    setPinInput('');
+    setPinError('');
+    setShowPinModal(true);
+  }, [demoMode, weddingSlug]);
+
+  const handlePinSubmit = useCallback(async () => {
+    if (!pinInput.trim()) return;
+
+    setPinLoading(true);
+    setPinError('');
+
+    const result = await guestLogin(pinInput);
+
+    if (result.success) {
+      // Save PIN for future visits
+      if (weddingSlug) {
+        localStorage.setItem(`reflets_pin_${weddingSlug}`, pinInput.toUpperCase().trim());
+      }
+      setShowPinModal(false);
+      setShowUploadModal(true);
+    } else {
+      setPinError(result.error || 'Code invalide');
+    }
+
+    setPinLoading(false);
+  }, [pinInput, weddingSlug]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -250,7 +310,7 @@ export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }:
 
             {settings.allowUploads ? (
               <button
-                onClick={() => setShowUploadModal(true)}
+                onClick={handleUploadClick}
                 className="px-4 py-2 rounded-full bg-burgundy-old text-white text-sm font-medium hover:bg-[#c92a38] transition-colors"
               >
                 <Upload size={16} className="inline-block mr-2" />
@@ -294,7 +354,7 @@ export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }:
 
           {settings.allowUploads ? (
             <button
-              onClick={() => setShowUploadModal(true)}
+              onClick={handleUploadClick}
               className="inline-flex items-center gap-3 px-8 py-4 bg-burgundy-old text-white rounded-full hover:bg-[#c92a38] transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <Upload size={20} />
@@ -348,7 +408,7 @@ export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }:
       {isPublicView && media.length > 0 && settings.allowUploads && (
         <div className="pt-6 flex justify-center">
           <button
-            onClick={() => setShowUploadModal(true)}
+            onClick={handleUploadClick}
             className="px-8 py-3 rounded-full bg-burgundy-old text-white text-sm font-medium tracking-wide hover:bg-[#c92a38] transition-colors shadow-md"
           >
             Contribuer à la galerie
@@ -363,6 +423,55 @@ export function GalleryGrid({ weddingId, demoMode = false, variant = 'public' }:
         onUploadComplete={handleUploadComplete}
         dataService={dataService}
       />
+
+      {/* PIN Modal */}
+      {showPinModal && (
+        <div className="fixed inset-0 bg-deep-charcoal/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative">
+            <button
+              onClick={() => setShowPinModal(false)}
+              className="absolute top-4 right-4 text-charcoal/40 hover:text-charcoal"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 mx-auto mb-3 bg-burgundy-old/10 rounded-full flex items-center justify-center">
+                <KeyRound className="text-burgundy-old" size={24} />
+              </div>
+              <h3 className="font-serif text-xl text-charcoal">Code d'accès</h3>
+              <p className="text-sm text-charcoal/50 mt-1">
+                Entrez le code pour contribuer à la galerie
+              </p>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handlePinSubmit(); }}>
+              <input
+                type="text"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value.toUpperCase())}
+                placeholder="CODE"
+                autoFocus
+                className="w-full px-4 py-3 text-center text-lg font-mono tracking-widest border border-charcoal/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-burgundy-old/30 focus:border-burgundy-old"
+              />
+              {pinError && (
+                <p className="text-red-500 text-sm text-center mt-2">{pinError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={pinLoading || !pinInput.trim()}
+                className="w-full mt-4 px-6 py-3 bg-burgundy-old text-white rounded-full font-medium hover:bg-[#c92a38] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {pinLoading ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  'Valider'
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Lightbox (lazy loaded) */}
       {lightboxIndex !== null && (

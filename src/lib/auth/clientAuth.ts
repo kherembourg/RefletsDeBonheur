@@ -193,86 +193,34 @@ export async function guestLogin(code: string, guestName?: string): Promise<{
   token?: string;
 }> {
   try {
-    const upperCode = code.toUpperCase().trim();
-
-    const { data: weddings, error: fetchError } = await supabase
-      .from('weddings')
-      .select('*')
-      .or(`pin_code.eq.${upperCode},magic_token.eq.${upperCode}`);
-
-    if (fetchError || !weddings || weddings.length === 0) {
-      return { success: false, error: 'Invalid access code' };
-    }
-
-    const wedding = weddings[0];
-    const isAdminCode = wedding.magic_token === upperCode;
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', wedding.owner_id)
-      .single();
-
-    if (profileError || !profile) {
-      return { success: false, error: 'Profile not found' };
-    }
-
-    if (profile.subscription_status !== 'active' && profile.subscription_status !== 'trial') {
-      return { success: false, error: 'This wedding space is not available' };
-    }
-
-    const client = profileToClient(profile, wedding);
-
-    // Generate token
-    const token = generateToken();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + GUEST_SESSION_HOURS);
-
-    const guestIdentifier = typeof window !== 'undefined' ? (localStorage.getItem('reflets_guest_id') || crypto.randomUUID()) : generateToken(12);
-
-    if (typeof window !== 'undefined' && !localStorage.getItem('reflets_guest_id')) {
-      localStorage.setItem('reflets_guest_id', guestIdentifier);
-    }
-
-    // Create guest session
-    const { error: sessionError } = await supabase
-      .from('guest_sessions')
-      .insert({
-        wedding_id: wedding.id,
-        session_token: token,
-        guest_identifier: guestIdentifier,
-        guest_name: guestName || null,
-        auth_method: isAdminCode ? 'magic_token' : 'pin',
-        expires_at: expiresAt.toISOString(),
-        last_active_at: new Date().toISOString(),
-      });
-
-    if (sessionError) {
-      console.error('Failed to create guest session:', sessionError);
-      return { success: false, error: 'Failed to create session' };
-    }
-
-    await logAuditEvent('guest_login', 'guest', null, {
-      wedding_id: wedding.id,
-      access_type: isAdminCode ? 'admin' : 'guest',
-      guest_name: guestName,
+    const response = await fetch('/api/auth/guest-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, guestName }),
     });
 
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Invalid access code' };
+    }
+
+    const { session_token, wedding_id, wedding_slug, access_type, guest_name } = data;
+
     if (typeof window !== 'undefined') {
-      localStorage.setItem(GUEST_TOKEN_KEY, token);
+      localStorage.setItem(GUEST_TOKEN_KEY, session_token);
       localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify({
-        client_id: wedding.owner_id,
-        wedding_slug: wedding.slug,
-        access_type: isAdminCode ? 'admin' : 'guest',
-        guest_name: guestName,
+        client_id: wedding_id,
+        wedding_slug,
+        access_type,
+        guest_name,
       } as GuestSession));
     }
 
     return {
       success: true,
-      client,
-      accessType: isAdminCode ? 'admin' : 'guest',
-      token,
+      accessType: access_type,
+      token: session_token,
     };
   } catch (error) {
     console.error('Guest login error:', error);

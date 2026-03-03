@@ -22,8 +22,8 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const galleryUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/${weddingSlug ? `${weddingSlug}/photos` : 'demo_gallery'}`
-    : `/${weddingSlug ? `${weddingSlug}/photos` : 'demo_gallery'}`;
+    ? `${window.location.origin}/${weddingSlug ? `${weddingSlug}/photos?pin=${accessCode}` : 'demo_gallery'}`
+    : `/${weddingSlug ? `${weddingSlug}/photos?pin=${accessCode}` : 'demo_gallery'}`;
 
   const getSvgElement = useCallback((): SVGSVGElement | null => {
     return containerRef.current?.querySelector('svg') ?? null;

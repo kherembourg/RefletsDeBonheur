@@ -84,19 +84,19 @@ describe('QRCodeGenerator Component', () => {
       ).toBeInTheDocument();
     });
 
-    it('should display correct URL with weddingSlug', () => {
+    it('should display correct URL with weddingSlug including PIN', () => {
       render(<QRCodeGenerator weddingSlug="julie-thomas" />);
 
       expect(
-        screen.getByText('http://localhost:4321/julie-thomas/photos')
+        screen.getByText('http://localhost:4321/julie-thomas/photos?pin=MARIAGE2026')
       ).toBeInTheDocument();
     });
 
-    it('should pass correct value to QRCodeSVG', () => {
+    it('should pass correct value with PIN to QRCodeSVG', () => {
       render(<QRCodeGenerator weddingSlug="julie-thomas" />);
 
       const svg = screen.getByTestId('qr-svg');
-      expect(svg.getAttribute('data-value')).toBe('http://localhost:4321/julie-thomas/photos');
+      expect(svg.getAttribute('data-value')).toBe('http://localhost:4321/julie-thomas/photos?pin=MARIAGE2026');
     });
   });
 
@@ -205,13 +205,13 @@ describe('QRCodeGenerator Component', () => {
     });
 
     it('should copy URL to clipboard when copy button clicked', async () => {
-      render(<QRCodeGenerator />);
+      render(<QRCodeGenerator weddingSlug="julie-thomas" />);
 
       fireEvent.click(screen.getByText('Copier URL'));
 
       await waitFor(() => {
         expect(mockClipboard.writeText).toHaveBeenCalledWith(
-          'http://localhost:4321/demo_gallery'
+          'http://localhost:4321/julie-thomas/photos?pin=MARIAGE2026'
         );
       });
     });
