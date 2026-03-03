@@ -1,4 +1,4 @@
-import { Home, Camera, Radio, BookOpen } from 'lucide-react';
+import { Home, Camera, Radio } from 'lucide-react';
 import { luxeTheme } from '../../lib/themes';
 
 interface LuxeNavProps {
@@ -13,7 +13,6 @@ export function LuxeNav({ slug, currentPage }: LuxeNavProps) {
     { id: 'home', label: 'Info', icon: Home, href: `/${slug}` },
     { id: 'photos', label: 'Photos', icon: Camera, href: `/${slug}/photos` },
     { id: 'live', label: 'Live', icon: Radio, href: `/${slug}/photos?live=true` },
-    { id: 'guestbook', label: 'Livre', icon: BookOpen, href: `/${slug}/livre-or` },
   ];
 
   return (

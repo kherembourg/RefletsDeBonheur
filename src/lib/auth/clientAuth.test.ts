@@ -284,96 +284,95 @@ describe('Client Auth Module', () => {
     };
 
     it('should successfully login with guest PIN code', async () => {
-      const weddingChain = {
-        select: vi.fn().mockReturnThis(),
-        or: vi.fn().mockResolvedValue({ data: [mockWedding], error: null }),
-      };
-      const profileChain = createMockChain(mockProfile);
-      const sessionChain = { insert: vi.fn().mockResolvedValue({ data: null, error: null }) };
-      const auditChain = createMockChain(null);
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'weddings') return weddingChain;
-        if (table === 'profiles') return profileChain;
-        if (table === 'guest_sessions') return sessionChain;
-        if (table === 'audit_log') return auditChain;
-        return profileChain;
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          session_token: 'test-session-token',
+          wedding_id: mockWedding.id,
+          wedding_slug: mockWedding.slug,
+          access_type: 'guest',
+          guest_name: 'John',
+        }),
       });
+      vi.stubGlobal('fetch', mockFetch);
 
       const result = await guestLogin('ABC123', 'John');
 
       expect(result.success).toBe(true);
       expect(result.accessType).toBe('guest');
-      expect(result.token).toBeDefined();
-      expect(localStorage.getItem('reflets_guest_token')).toBeTruthy();
+      expect(result.token).toBe('test-session-token');
+      expect(localStorage.getItem('reflets_guest_token')).toBe('test-session-token');
+
+      vi.unstubAllGlobals();
     });
 
     it('should successfully login with admin magic token', async () => {
-      const weddingChain = {
-        select: vi.fn().mockReturnThis(),
-        or: vi.fn().mockResolvedValue({ data: [mockWedding], error: null }),
-      };
-      const profileChain = createMockChain(mockProfile);
-      const sessionChain = { insert: vi.fn().mockResolvedValue({ data: null, error: null }) };
-      const auditChain = createMockChain(null);
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'weddings') return weddingChain;
-        if (table === 'profiles') return profileChain;
-        if (table === 'guest_sessions') return sessionChain;
-        if (table === 'audit_log') return auditChain;
-        return profileChain;
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          session_token: 'test-admin-token',
+          wedding_id: mockWedding.id,
+          wedding_slug: mockWedding.slug,
+          access_type: 'admin',
+          guest_name: null,
+        }),
       });
+      vi.stubGlobal('fetch', mockFetch);
 
       const result = await guestLogin('ADMIN99');
 
       expect(result.success).toBe(true);
       expect(result.accessType).toBe('admin');
+
+      vi.unstubAllGlobals();
     });
 
     it('should fail with invalid access code', async () => {
-      const weddingChain = {
-        select: vi.fn().mockReturnThis(),
-        or: vi.fn().mockResolvedValue({ data: [], error: null }),
-      };
-
-      mockFrom.mockReturnValue(weddingChain);
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({
+          error: 'Invalid code',
+          message: 'Invalid access code.',
+        }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
 
       const result = await guestLogin('INVALID');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid access code');
+      expect(result.error).toBe('Invalid access code.');
+
+      vi.unstubAllGlobals();
     });
 
     it('should fail when wedding space is not available', async () => {
-      const inactiveProfile = { ...mockProfile, subscription_status: 'cancelled' };
-      const weddingChain = {
-        select: vi.fn().mockReturnThis(),
-        or: vi.fn().mockResolvedValue({ data: [mockWedding], error: null }),
-      };
-      const profileChain = createMockChain(inactiveProfile);
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'weddings') return weddingChain;
-        if (table === 'profiles') return profileChain;
-        return profileChain;
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({
+          error: 'Unavailable',
+          message: 'This wedding space is not available.',
+        }),
       });
+      vi.stubGlobal('fetch', mockFetch);
 
       const result = await guestLogin('ABC123');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('This wedding space is not available');
+      expect(result.error).toBe('This wedding space is not available.');
+
+      vi.unstubAllGlobals();
     });
 
     it('should handle errors gracefully', async () => {
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
+      const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'));
+      vi.stubGlobal('fetch', mockFetch);
 
       const result = await guestLogin('ABC123');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('An unexpected error occurred');
+
+      vi.unstubAllGlobals();
     });
   });
 

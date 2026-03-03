@@ -222,6 +222,11 @@ export class DataService {
   private getOrCreateGuestIdentifier(): string {
     if (typeof window === 'undefined') return 'server';
 
+    // Prefer session_token from guest login (used by presign endpoint for auth)
+    const sessionToken = localStorage.getItem('reflets_guest_token');
+    if (sessionToken) return sessionToken;
+
+    // Fallback to browser UUID for demo mode / unauthenticated browsing
     const key = 'reflets_guest_id';
     let id = localStorage.getItem(key);
     if (!id) {
@@ -246,7 +251,7 @@ export class DataService {
     }
 
     const media = await mediaApi.getByWeddingId(this.weddingId, {
-      status: 'ready',
+      status: 'all',
       moderation: 'approved',
     });
 

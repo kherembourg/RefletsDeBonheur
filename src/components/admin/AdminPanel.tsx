@@ -18,6 +18,7 @@ import {
   Printer,
   Link2
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { SettingsToggle } from './SettingsToggle';
 import { QRCodeGenerator } from './QRCodeGenerator';
 import { AlbumManager } from './AlbumManager';
@@ -201,7 +202,8 @@ export function AdminPanel({
   );
   const storagePercent = Math.min(100, (storageUsed / storageLimit) * 100);
 
-  const shareUrl = weddingSlug ? `/${weddingSlug}/photos` : '/demo_gallery';
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const shareUrl = weddingSlug ? `${origin}/${weddingSlug}/photos` : `${origin}/demo_gallery`;
 
   const navItems: Array<{
     id: AdminView;
@@ -391,11 +393,15 @@ export function AdminPanel({
             <span className="text-[10px] text-charcoal/40 mb-6 truncate w-full text-center">
               {shareUrl}
             </span>
-            <img
-              alt="QR Code"
-              className="w-40 h-40 mb-6 object-contain rounded-xl bg-white border border-charcoal/5"
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`}
-            />
+            <div className="w-40 h-40 mb-6 rounded-xl bg-white border border-charcoal/5 flex items-center justify-center">
+              <QRCodeSVG
+                value={shareUrl}
+                size={160}
+                bgColor="#FFFFFF"
+                fgColor="#2D2D2D"
+                level="M"
+              />
+            </div>
             <div className="w-full mb-4">
               <label className="block text-xs font-semibold text-charcoal mb-1">Sentiaeprint :</label>
               <div className="relative">
@@ -634,7 +640,7 @@ export function AdminPanel({
               {shareUrl}
             </div>
             <div className="mt-4 flex justify-center">
-              <QRCodeGenerator />
+              <QRCodeGenerator weddingSlug={weddingSlug} />
             </div>
           </div>
         </aside>

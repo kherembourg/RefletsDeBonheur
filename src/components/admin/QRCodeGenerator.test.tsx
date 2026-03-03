@@ -2,10 +2,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QRCodeGenerator } from './QRCodeGenerator';
 
+// Mock qrcode.react to render a testable element
+vi.mock('qrcode.react', () => ({
+  QRCodeSVG: vi.fn((props: any) => (
+    <svg data-testid="qr-svg" data-value={props.value} data-size={props.size}>
+      <rect />
+    </svg>
+  )),
+}));
+
 describe('QRCodeGenerator Component', () => {
-  // Store original values
   let originalOpen: typeof window.open;
-  let originalFetch: typeof window.fetch;
   let originalLocation: Location;
 
   const mockOpen = vi.fn(() => ({
@@ -20,17 +27,12 @@ describe('QRCodeGenerator Component', () => {
     writeText: vi.fn().mockResolvedValue(undefined),
   };
 
-  const mockFetch = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Store originals
     originalOpen = window.open;
-    originalFetch = window.fetch;
     originalLocation = window.location;
 
-    // Mock window.location
     Object.defineProperty(window, 'location', {
       value: {
         origin: 'http://localhost:4321',
@@ -40,31 +42,17 @@ describe('QRCodeGenerator Component', () => {
       configurable: true,
     });
 
-    // Mock window.open
     window.open = mockOpen as any;
 
-    // Mock clipboard
     Object.defineProperty(navigator, 'clipboard', {
       value: mockClipboard,
       writable: true,
       configurable: true,
     });
-
-    // Mock fetch
-    window.fetch = mockFetch as any;
-    mockFetch.mockResolvedValue({
-      blob: () => Promise.resolve(new Blob(['mock-image'], { type: 'image/png' })),
-    });
-
-    // Mock URL methods
-    window.URL.createObjectURL = vi.fn(() => 'blob:http://localhost/mock-url');
-    window.URL.revokeObjectURL = vi.fn();
   });
 
   afterEach(() => {
-    // Restore originals
     window.open = originalOpen;
-    window.fetch = originalFetch;
     Object.defineProperty(window, 'location', {
       value: originalLocation,
       writable: true,
@@ -82,21 +70,33 @@ describe('QRCodeGenerator Component', () => {
       ).toBeInTheDocument();
     });
 
-    it('should render QR code image', () => {
+    it('should render QRCodeSVG component', () => {
       render(<QRCodeGenerator />);
 
-      const qrImage = screen.getByAltText('QR Code');
-      expect(qrImage).toBeInTheDocument();
-      expect(qrImage).toHaveAttribute('src');
-      expect(qrImage.getAttribute('src')).toContain('api.qrserver.com');
+      expect(screen.getByTestId('qr-svg')).toBeInTheDocument();
     });
 
-    it('should display current URL', () => {
+    it('should display gallery URL for demo mode (no slug)', () => {
       render(<QRCodeGenerator />);
 
       expect(
-        screen.getByText('http://localhost:4321/gallery')
+        screen.getByText('http://localhost:4321/demo_gallery')
       ).toBeInTheDocument();
+    });
+
+    it('should display correct URL with weddingSlug including PIN', () => {
+      render(<QRCodeGenerator weddingSlug="julie-thomas" />);
+
+      expect(
+        screen.getByText('http://localhost:4321/julie-thomas/photos?pin=MARIAGE2026')
+      ).toBeInTheDocument();
+    });
+
+    it('should pass correct value with PIN to QRCodeSVG', () => {
+      render(<QRCodeGenerator weddingSlug="julie-thomas" />);
+
+      const svg = screen.getByTestId('qr-svg');
+      expect(svg.getAttribute('data-value')).toBe('http://localhost:4321/julie-thomas/photos?pin=MARIAGE2026');
     });
   });
 
@@ -123,8 +123,8 @@ describe('QRCodeGenerator Component', () => {
       const select = screen.getByRole('combobox');
       fireEvent.change(select, { target: { value: '400' } });
 
-      const qrImage = screen.getByAltText('QR Code');
-      expect(qrImage.getAttribute('src')).toContain('size=400x400');
+      const svg = screen.getByTestId('qr-svg');
+      expect(svg.getAttribute('data-size')).toBe('400');
     });
   });
 
@@ -146,7 +146,6 @@ describe('QRCodeGenerator Component', () => {
     it('should hide access code input when toggle is off', () => {
       render(<QRCodeGenerator />);
 
-      // Find and click the toggle button
       const toggles = screen.getAllByRole('button');
       const accessCodeToggle = toggles.find((btn) =>
         btn.className.includes('rounded-full')
@@ -156,7 +155,6 @@ describe('QRCodeGenerator Component', () => {
         fireEvent.click(accessCodeToggle);
       }
 
-      // Access code input should be hidden
       expect(screen.queryByDisplayValue('MARIAGE2026')).not.toBeInTheDocument();
     });
 
@@ -198,16 +196,6 @@ describe('QRCodeGenerator Component', () => {
       expect(screen.getByText('Copier URL')).toBeInTheDocument();
     });
 
-    it('should download QR code when download button clicked', async () => {
-      render(<QRCodeGenerator />);
-
-      fireEvent.click(screen.getByText('Télécharger'));
-
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalled();
-      });
-    });
-
     it('should open print window when print button clicked', () => {
       render(<QRCodeGenerator />);
 
@@ -217,13 +205,13 @@ describe('QRCodeGenerator Component', () => {
     });
 
     it('should copy URL to clipboard when copy button clicked', async () => {
-      render(<QRCodeGenerator />);
+      render(<QRCodeGenerator weddingSlug="julie-thomas" />);
 
       fireEvent.click(screen.getByText('Copier URL'));
 
       await waitFor(() => {
         expect(mockClipboard.writeText).toHaveBeenCalledWith(
-          'http://localhost:4321/gallery'
+          'http://localhost:4321/julie-thomas/photos?pin=MARIAGE2026'
         );
       });
     });
@@ -233,23 +221,10 @@ describe('QRCodeGenerator Component', () => {
     it('should display usage tips', () => {
       render(<QRCodeGenerator />);
 
-      // Text includes emoji: "💡 Conseils d'utilisation"
       expect(screen.getByText(/Conseils d'utilisation/)).toBeInTheDocument();
       expect(
         screen.getByText(/Imprimez le QR code sur les cartons de table/)
       ).toBeInTheDocument();
-    });
-  });
-
-  describe('QR Code URL Generation', () => {
-    it('should use window.location.origin for QR code URL', () => {
-      render(<QRCodeGenerator />);
-
-      const qrImage = screen.getByAltText('QR Code');
-      // In browser, component uses window.location.origin which we mocked to localhost:4321
-      expect(qrImage.getAttribute('src')).toContain(
-        encodeURIComponent('http://localhost:4321/gallery')
-      );
     });
   });
 });

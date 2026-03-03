@@ -1,4 +1,4 @@
-import { useState, useEffect, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import { Upload, Plus, Trash2, Sparkles, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { getUsername, setUsername as saveUsername } from '../../lib/auth';
 import { mockAPI } from '../../lib/api';
@@ -26,6 +26,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
   const [queue, setQueue] = useState<UploadItem[]>([]);
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const uploadingRef = useRef(false);
 
   // Save username to localStorage when it changes
   useEffect(() => {
@@ -84,12 +85,14 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
   };
 
   const handleUploadAll = async () => {
+    if (uploadingRef.current) return;
     if (queue.length === 0) return;
     if (!authorName.trim()) {
       alert('Veuillez entrer votre prénom');
       return;
     }
 
+    uploadingRef.current = true;
     setUploading(true);
 
     // Mark all as pending
@@ -134,6 +137,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
       // Mark all as error
       setQueue(prev => prev.map(item => ({ ...item, uploadStatus: 'error' as const })));
     } finally {
+      uploadingRef.current = false;
       setUploading(false);
     }
   };
