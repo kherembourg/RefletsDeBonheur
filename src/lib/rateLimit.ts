@@ -229,4 +229,10 @@ export const RATE_LIMITS = {
     windowSeconds: 3600,
     prefix: 'stripe-checkout',
   },
+  /** Account creation: 5 attempts per IP per hour (prevents account spam) */
+  createAccount: {
+    limit: 5,
+    windowSeconds: 3600,
+    prefix: 'create-account',
+  },
 } as const;

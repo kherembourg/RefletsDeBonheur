@@ -4,7 +4,7 @@ import { AccountStep, type AccountData } from './steps/AccountStep';
 import { WeddingStep, type WeddingData } from './steps/WeddingStep';
 import { SlugStep, type SlugData } from './steps/SlugStep';
 import { ThemeStep, type ThemeData } from './steps/ThemeStep';
-import { PaymentStep } from './steps/PaymentStep';
+import { ValidationStep } from './steps/ValidationStep';
 import type { ThemeId } from '../../lib/themes';
 import { t } from '../../i18n/utils';
 import type { Language } from '../../i18n/translations';
@@ -41,7 +41,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
     { id: 2, label: t(lang, 'signup.steps.details') },
     { id: 3, label: t(lang, 'signup.steps.url') },
     { id: 4, label: t(lang, 'signup.steps.theme') },
-    { id: 5, label: t(lang, 'signup.steps.payment') },
+    { id: 5, label: t(lang, 'signup.steps.validation') },
   ];
 
   // Load state from sessionStorage on mount
@@ -166,7 +166,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
         )}
 
         {currentStep === 5 && (
-          <PaymentStep
+          <ValidationStep
             data={{
               ...state.account,
               ...state.wedding,
@@ -174,6 +174,7 @@ export function SignupWizard({ lang = 'en' }: SignupWizardProps) {
               ...state.theme,
             }}
             onBack={() => goToStep(4)}
+            onSuccess={clearStorage}
             lang={lang}
           />
         )}

@@ -2,11 +2,9 @@ import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { getStripeClient, PRODUCT_CONFIG } from '../../../lib/stripe/server';
 import type { ThemeId } from '../../../lib/themes';
-import { RESERVED_SLUGS, isValidSlugFormat } from '../../../lib/slugValidation';
-import { validatePassword, getPasswordRequirementsMessage } from '../../../lib/passwordValidation';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
-import { isValidEmail } from '../../../lib/validation/emailValidation';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateSignupFields } from './validation';
 
 export const prerender = false;
 
@@ -42,66 +40,11 @@ export const POST: APIRoute = async ({ request }) => {
     const body: CreateCheckoutRequest = await request.json();
     const { email, password, partner1_name, partner2_name, wedding_date, slug, theme_id } = body;
 
-    // Validate required fields
-    if (!email || !password || !partner1_name || !partner2_name || !slug || !theme_id) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          message: 'Email, password, partner names, slug, and theme are required.',
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    // Validate all fields
+    const validationError = validateSignupFields({ email, password, partner1_name, partner2_name, slug, theme_id });
+    if (validationError) return validationError;
 
-    // Validate email format
-    if (!isValidEmail(email)) {
-      return new Response(
-        JSON.stringify({
-          error: 'Invalid email',
-          field: 'email',
-          message: 'Please enter a valid email address.',
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate password strength
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      return new Response(
-        JSON.stringify({
-          error: 'Weak password',
-          field: 'password',
-          message: getPasswordRequirementsMessage(),
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate slug
     const normalizedSlug = slug.toLowerCase().trim();
-    if (!isValidSlugFormat(normalizedSlug)) {
-      return new Response(
-        JSON.stringify({
-          error: 'Invalid slug format',
-          field: 'slug',
-          message: 'URL must be 3-50 characters, lowercase letters, numbers, and hyphens only.',
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (RESERVED_SLUGS.has(normalizedSlug)) {
-      return new Response(
-        JSON.stringify({
-          error: 'Slug reserved',
-          field: 'slug',
-          message: 'This URL is reserved and cannot be used.',
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
     const adminClient = getSupabaseAdminClient();
 
     // Check if slug is already taken (early fail before payment)
@@ -112,14 +55,7 @@ export const POST: APIRoute = async ({ request }) => {
       .maybeSingle();
 
     if (existingWedding) {
-      return new Response(
-        JSON.stringify({
-          error: 'Slug taken',
-          field: 'slug',
-          message: 'This URL is already in use. Please choose another.',
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return apiResponse.error('Slug taken', 'This URL is already in use. Please choose another.', 400, 'slug');
     }
 
     // Note: Password is validated but NOT stored in pending_signups for security
@@ -181,22 +117,18 @@ export const POST: APIRoute = async ({ request }) => {
       // Check for unique constraint violation (slug already reserved by another pending signup)
       // PostgreSQL error code 23505 = unique_violation
       if (insertError?.code === '23505' && insertError?.message?.includes('idx_pending_signups_slug_active')) {
-        return new Response(
-          JSON.stringify({
-            error: 'Slug reserved',
-            field: 'slug',
-            message: 'This URL is currently being used by another signup in progress. Please choose a different URL or try again in a few minutes.',
-          }),
-          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        return apiResponse.error(
+          'Slug reserved',
+          'This URL is currently being used by another signup in progress. Please choose a different URL or try again in a few minutes.',
+          409,
+          'slug'
         );
       }
 
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to prepare checkout',
-          message: 'Unable to prepare your account. Please try again.',
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      return apiResponse.error(
+        'Failed to prepare checkout',
+        'Unable to prepare your account. Please try again.',
+        500
       );
     }
 
@@ -207,12 +139,10 @@ export const POST: APIRoute = async ({ request }) => {
     });
   } catch (error) {
     console.error('[API] Create checkout error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return apiResponse.error(
+      'Internal server error',
+      'An unexpected error occurred. Please try again.',
+      500
     );
   }
 };

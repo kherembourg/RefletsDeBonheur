@@ -35,6 +35,10 @@ vi.mock('../../../lib/api/middleware', () => ({
   },
 }));
 
+vi.mock('../../../lib/email', () => ({
+  sendPaymentConfirmationEmail: vi.fn().mockResolvedValue({ success: true, id: 'mock-email-id' }),
+}));
+
 describe('Stripe Webhook Handler - Phase 1.1: Comprehensive Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -593,6 +597,16 @@ describe('Stripe Webhook Handler - Phase 1.1: Comprehensive Integration Tests', 
           if (table === 'profiles') {
             return {
               update: mockProfileUpdate,
+              select: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: {
+                      email: 'couple@example.com',
+                      full_name: 'Alice & Bob',
+                    },
+                  }),
+                }),
+              }),
             };
           }
           return {};
