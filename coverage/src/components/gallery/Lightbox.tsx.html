@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">46.8% </span>
+                <span class="strong">47.91% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>22/47</span>
+                <span class='fraction'>23/48</span>
             </div>
         
             
@@ -329,7 +329,13 @@
 <a name='L264'></a><a href='#L264'>264</a>
 <a name='L265'></a><a href='#L265'>265</a>
 <a name='L266'></a><a href='#L266'>266</a>
-<a name='L267'></a><a href='#L267'>267</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -599,14 +605,17 @@
 import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import type { MediaItem } from '../../lib/services/dataService';
 import ReactionsPanel from './ReactionsPanel';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 &nbsp;
 interface LightboxProps {
   media: MediaItem[];
   initialIndex: number;
   onClose: () =&gt; void;
+  lang?: Language;
 }
 &nbsp;
-export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
+export function Lightbox({ media, initialIndex, onClose, lang = 'fr' }: LightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isZoomed, setIsZoomed] = useState(false);
 &nbsp;
@@ -746,7 +755,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
       &lt;button
         onClick={onClose}
         className="absolute top-4 right-4 z-10 p-2 bg-deep-charcoal/80 hover:bg-deep-charcoal text-ivory rounded-full transition-all duration-200 hover:scale-110"
-        aria-label="Fermer"
+        aria-label={t(lang, 'common.close')}
       &gt;
         &lt;X className="w-6 h-6" /&gt;
       &lt;/button&gt;
@@ -759,7 +768,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
             goToPrevious();
           }}
           className="absolute left-4 z-10 p-3 bg-deep-charcoal/80 hover:bg-deep-charcoal text-ivory rounded-full transition-all duration-200 hover:scale-110"
-          aria-label="Photo précédente"
+          aria-label="Previous"
         &gt;
           &lt;ChevronLeft className="w-8 h-8" /&gt;
         &lt;/button&gt;
@@ -772,7 +781,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
             goToNext();
           }}
           className="absolute right-4 z-10 p-3 bg-deep-charcoal/80 hover:bg-deep-charcoal text-ivory rounded-full transition-all duration-200 hover:scale-110"
-          aria-label="Photo suivante"
+          aria-label="Next"
         &gt;
           &lt;ChevronRight className="w-8 h-8" /&gt;
         &lt;/button&gt;
@@ -796,7 +805,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
         ) : (
           &lt;img
             src={currentItem.url}
-            alt={currentItem.caption || `Photo par ${currentItem.author}`}
+            alt={currentItem.caption || `${t(lang, 'media.photoBy')} ${currentItem.author}`}
             className={`max-w-full max-h-[80vh] rounded-lg shadow-2xl transition-transform duration-300 ${
               isZoomed ? 'cursor-zoom-out scale-150' : 'cursor-zoom-in'
             }`}
@@ -822,8 +831,8 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
                   &lt;button
                     onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etIsZoomed(!isZoomed)}</span>
                     className="p-2 bg-deep-charcoal/80 hover:bg-burgundy-old hover:text-white rounded-lg transition-all duration-200"
-                    aria-label={isZoomed ? 'Dézoomer' : 'Zoomer'}
-                    title={isZoomed ? 'Dézoomer' : 'Zoomer'}
+                    aria-label={isZoomed ? t(lang, 'lightbox.zoomOut') : t(lang, 'lightbox.zoomIn')}
+                    title={isZoomed ? t(lang, 'lightbox.zoomOut') : t(lang, 'lightbox.zoomIn')}
                   &gt;
                     {isZoomed ? &lt;ZoomOut className="w-5 h-5" /&gt; : &lt;ZoomIn className="w-5 h-5" /&gt;}
                   &lt;/button&gt;
@@ -832,8 +841,8 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
               &lt;button
                 onClick={handleDownload}
                 className="p-2 bg-deep-charcoal/80 hover:bg-burgundy-old hover:text-white rounded-lg transition-all duration-200"
-                aria-label="Télécharger"
-                title="Télécharger"
+                aria-label={t(lang, 'gallery.download')}
+                title={t(lang, 'gallery.download')}
               &gt;
                 &lt;Download className="w-5 h-5" /&gt;
               &lt;/button&gt;
@@ -855,7 +864,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
       {/* Keyboard shortcuts hint */}
       &lt;div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-ivory/40 text-xs hidden md:block"&gt;
         &lt;span className="bg-deep-charcoal/60 px-3 py-1 rounded-full"&gt;
-          ESC pour fermer • ← → pour naviguer
+          ESC &amp;bull; &amp;larr; &amp;rarr;
         &lt;/span&gt;
       &lt;/div&gt;
     &lt;/div&gt;
@@ -868,7 +877,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-08T17:17:28.240Z
+                at 2026-03-08T17:22:14.401Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

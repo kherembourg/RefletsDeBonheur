@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80.43% </span>
+                <span class="strong">80.85% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>74/92</span>
+                <span class='fraction'>76/94</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">70.66% </span>
+                <span class="strong">71.01% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>53/75</span>
+                <span class='fraction'>49/69</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">82.22% </span>
+                <span class="strong">83.51% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>74/90</span>
+                <span class='fraction'>76/91</span>
             </div>
         
             
@@ -499,7 +499,9 @@
 <a name='L434'></a><a href='#L434'>434</a>
 <a name='L435'></a><a href='#L435'>435</a>
 <a name='L436'></a><a href='#L436'>436</a>
-<a name='L437'></a><a href='#L437'>437</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L437'></a><a href='#L437'>437</a>
+<a name='L438'></a><a href='#L438'>438</a>
+<a name='L439'></a><a href='#L439'>439</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -523,6 +525,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -678,6 +692,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -709,19 +724,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">20x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -961,12 +965,24 @@
  */
 &nbsp;
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { supabase } from '../../../lib/supabase/client';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { checkRateLimit, checkWeddingRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateBody } from '../../../lib/api/validation';
 import { generateThumbnail } from '../../../lib/imageProcessing';
 import { extractKeyFromUrl, fetchFile, uploadFile, generateThumbnailKey } from '../../../lib/r2';
+&nbsp;
+const bodySchema = z.object({
+  weddingId: z.string().min(1),
+  key: z.string().min(1),
+  publicUrl: z.string().min(1),
+  contentType: z.string().min(1),
+  caption: z.string().optional(),
+  guestName: z.string().optional(),
+  guestIdentifier: z.string().optional(),
+});
 &nbsp;
 export const prerender = false;
 &nbsp;
@@ -1112,6 +1128,7 @@ async function validateUploadAuthorization(
       .select('id, wedding_id')
       .eq('session_token', guestIdentifier)
       .eq('wedding_id', weddingId)
+      .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (!error &amp;&amp; guestSession) {</span>
@@ -1144,20 +1161,9 @@ export const POST: APIRoute = async ({ request }) =&gt; {
     const body = await request.json();
 &nbsp;
     // Validate required fields
-    const { weddingId, key, publicUrl, contentType, caption, guestName, guestIdentifier } = body;
-&nbsp;
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!weddingId || !key || !publicUrl || !contentType) {
-<span class="cstat-no" title="statement not covered" >      return new Response(</span>
-        JSON.stringify({
-          error: 'Missing required fields',
-          message: 'weddingId, key, publicUrl, and contentType are required',
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const validation = validateBody(bodySchema, body);
+    <span class="missing-if-branch" title="if path not taken" >I</span>if ('error' in validation) <span class="cstat-no" title="statement not covered" >return validation.error;</span>
+    const { weddingId, key, publicUrl, contentType, caption, guestName, guestIdentifier } = validation.data;
 &nbsp;
     // Per-wedding rate limit check - 50 uploads per wedding per minute
     // Protects against distributed abuse across multiple IPs
@@ -1362,7 +1368,7 @@ export const POST: APIRoute = async ({ request }) =&gt; {
 <span class="cstat-no" title="statement not covered" >    return new Response(</span>
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred.',
       }),
       {
         status: 500,
@@ -1378,7 +1384,7 @@ export const POST: APIRoute = async ({ request }) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-08T17:17:28.240Z
+                at 2026-03-08T17:22:14.401Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

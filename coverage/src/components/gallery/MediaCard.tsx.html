@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.05% </span>
+                <span class="strong">81.25% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>77/95</span>
+                <span class='fraction'>78/96</span>
             </div>
         
             
@@ -322,7 +322,13 @@
 <a name='L257'></a><a href='#L257'>257</a>
 <a name='L258'></a><a href='#L258'>258</a>
 <a name='L259'></a><a href='#L259'>259</a>
-<a name='L260'></a><a href='#L260'>260</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -355,7 +361,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -584,6 +592,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useState, memo, useCallback } from 'react';
 import { Trash2, Video, Heart, CheckCircle, Circle, Download } from 'lucide-react';
 import type { MediaItem, DataService } from '../../lib/services/dataService';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 &nbsp;
 // Default placeholder gradient for items without a pre-generated placeholder
 const DEFAULT_PLACEHOLDER = 'linear-gradient(135deg, #f5f0e8 0%, #e8d5d3 50%, #f0e6e4 100%)';
@@ -612,6 +622,7 @@ interface MediaCardProps {
   onToggleFavorite?: (id: string) =&gt; void;
   dataService?: DataService;
   variant?: 'public' | 'admin';
+  lang?: Language;
 }
 &nbsp;
 export const MediaCard = memo(function MediaCard({
@@ -625,7 +636,8 @@ export const MediaCard = memo(function MediaCard({
   isFavorited: isFavoritedProp = false,
   onToggleFavorite,
   dataService,
-  variant = 'public'
+  variant = 'public',
+  lang = 'fr'
 }: MediaCardProps) {
   const isPublicView = variant === 'public';
   const isAdminView = variant === 'admin';
@@ -708,7 +720,7 @@ export const MediaCard = memo(function MediaCard({
       }}
       onMouseEnter={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etIsHovered(true)}</span>
       onMouseLeave={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etIsHovered(false)}</span>
-      aria-label={item.caption || `Photo par ${item.author || <span class="branch-1 cbranch-no" title="branch not covered" >'Anonyme'}</span>`}
+      aria-label={item.caption || `${t(lang, 'media.photoBy')} ${item.<span class="branch-1 cbranch-no" title="branch not covered" >author || t(lang, 'media.anonymous')}</span>`}
     &gt;
       &lt;div
         className={`relative overflow-hidden ${
@@ -753,7 +765,7 @@ export const MediaCard = memo(function MediaCard({
               src={item.thumbnailUrl || item.url}
               srcSet={generateSrcSet(item.thumbnailUrl || item.url)}
               sizes="(max-width: 640px) 320px, (max-width: 1024px) 480px, 400px"
-              alt={item.caption || `Photo par ${item.author}`}
+              alt={item.caption || `${t(lang, 'media.photoBy')} ${item.author}`}
               className={`w-full object-cover transition-opacity duration-300 ${isAdminView ? 'aspect-[4/3]' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
@@ -793,7 +805,7 @@ export const MediaCard = memo(function MediaCard({
               className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors ${
                 favorited ? 'bg-burgundy-old text-white' : 'bg-white text-charcoal/60 hover:text-charcoal'
               }`}
-              aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              aria-label={favorited ? t(lang, 'media.removeFavorite') : t(lang, 'media.addFavorite')}
             &gt;
               &lt;Heart size={16} fill={favorited ? 'currentColor' : 'none'} strokeWidth={1.5} /&gt;
             &lt;/button&gt;
@@ -801,7 +813,7 @@ export const MediaCard = memo(function MediaCard({
               &lt;button
                 onClick={handleDownload}
                 className="w-9 h-9 rounded-full flex items-center justify-center bg-white text-charcoal/60 hover:text-charcoal shadow-sm"
-                aria-label="Télécharger"
+                aria-label={t(lang, 'gallery.download')}
               &gt;
                 &lt;Download size={16} /&gt;
               &lt;/button&gt;
@@ -814,7 +826,7 @@ export const MediaCard = memo(function MediaCard({
           &lt;button
             onClick={handleSelection}
             className="absolute top-3 left-3 p-1.5 bg-white/90 backdrop-blur-xs shadow-xs rounded-full transition-all duration-200 hover:bg-white"
-            aria-label={isSelected ? 'Désélectionner' : 'Sélectionner'}
+            aria-label={isSelected ? t(lang, 'media.deselect') : t(lang, 'media.select')}
           &gt;
             {isSelected ? (
               &lt;CheckCircle size={20} className="text-burgundy-old" fill="currentColor" /&gt;
@@ -831,7 +843,7 @@ export const MediaCard = memo(function MediaCard({
             className={`absolute top-3 right-3 bg-white/90 backdrop-blur-xs text-charcoal/60 p-2 rounded-full transition-all duration-300 hover:bg-burgundy-old hover:text-white shadow-xs ${
               isHovered ? <span class="branch-0 cbranch-no" title="branch not covered" >'opacity-100' : '</span>opacity-0'
             }`}
-            aria-label="Supprimer"
+            aria-label={t(lang, 'common.delete')}
           &gt;
             &lt;Trash2 size={14} /&gt;
           &lt;/button&gt;
@@ -847,7 +859,7 @@ export const MediaCard = memo(function MediaCard({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-08T17:17:28.240Z
+                at 2026-03-08T17:22:14.401Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

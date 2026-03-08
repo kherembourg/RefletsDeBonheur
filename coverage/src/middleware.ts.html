@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>0/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/16</span>
+                <span class='fraction'>0/20</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>0/23</span>
             </div>
         
             
@@ -138,7 +138,25 @@
 <a name='L73'></a><a href='#L73'>73</a>
 <a name='L74'></a><a href='#L74'>74</a>
 <a name='L75'></a><a href='#L75'>75</a>
-<a name='L76'></a><a href='#L76'>76</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -184,6 +202,24 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -236,7 +272,7 @@ export const <span class="cstat-no" title="statement not covered" >onRequest = d
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Astro hydration
+      "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.supabase.co https://images.unsplash.com",
@@ -251,7 +287,7 @@ export const <span class="cstat-no" title="statement not covered" >onRequest = d
   // Permissions Policy
 <span class="cstat-no" title="statement not covered" >  response.headers.set(</span>
     'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), payment=()'
+    'camera=(self), microphone=(), geolocation=(), payment=()'
   );
 &nbsp;
   // For API endpoints, check Origin header for CSRF protection
@@ -260,7 +296,25 @@ export const <span class="cstat-no" title="statement not covered" >onRequest = d
     const origin = <span class="cstat-no" title="statement not covered" >context.request.headers.get('Origin');</span>
     const host = <span class="cstat-no" title="statement not covered" >context.request.headers.get('Host');</span>
 &nbsp;
-    // Allow requests without Origin (non-browser clients) but check referer
+    // Require Origin header for CSRF protection on all non-webhook requests.
+    // Stripe webhooks are exempt (authenticated via stripe-signature header).
+<span class="cstat-no" title="statement not covered" >    if (!origin) {</span>
+      const isStripeWebhook = <span class="cstat-no" title="statement not covered" >!!context.request.headers.get('stripe-signature');</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (!isStripeWebhook) {</span>
+<span class="cstat-no" title="statement not covered" >        return new Response(</span>
+          JSON.stringify({
+            error: 'CSRF validation failed',
+            message: 'Origin header required',
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    if (origin) {</span>
       const originHost = <span class="cstat-no" title="statement not covered" >new URL(origin).host;</span>
       // Ensure origin matches host (same-origin request)
@@ -295,7 +349,7 @@ export const <span class="cstat-no" title="statement not covered" >onRequest = d
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-08T17:17:28.240Z
+                at 2026-03-08T17:22:14.401Z
             </div>
         <script src="../prettify.js"></script>
         <script>

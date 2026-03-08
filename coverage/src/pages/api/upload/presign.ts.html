@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.42% </span>
+                <span class="strong">92.64% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>61/66</span>
+                <span class='fraction'>63/68</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">84.74% </span>
+                <span class="strong">87.03% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>50/59</span>
+                <span class='fraction'>47/54</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.84% </span>
+                <span class="strong">93.93% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>61/65</span>
+                <span class='fraction'>62/66</span>
             </div>
         
             
@@ -399,8 +399,7 @@
 <a name='L334'></a><a href='#L334'>334</a>
 <a name='L335'></a><a href='#L335'>335</a>
 <a name='L336'></a><a href='#L336'>336</a>
-<a name='L337'></a><a href='#L337'>337</a>
-<a name='L338'></a><a href='#L338'>338</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L337'></a><a href='#L337'>337</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -423,6 +422,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -468,6 +476,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -497,19 +506,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">38x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">38x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">34x</span>
@@ -760,11 +758,20 @@
  */
 &nbsp;
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { generatePresignedUploadUrl } from '../../../lib/r2';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateBody } from '../../../lib/api/validation';
+&nbsp;
+const bodySchema = z.object({
+  weddingId: z.string().min(1),
+  fileName: z.string().min(1),
+  contentType: z.string().min(1),
+  guestIdentifier: z.string().optional(),
+});
 &nbsp;
 export const prerender = false;
 &nbsp;
@@ -803,6 +810,7 @@ async function validateUploadAuthorization(
       .select('id, wedding_id')
       .eq('session_token', guestIdentifier)
       .eq('wedding_id', weddingId)
+      .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 &nbsp;
     if (!error &amp;&amp; guestSession) {
@@ -833,20 +841,9 @@ export const POST: APIRoute = async ({ request }) =&gt; {
     const body = await request.json();
 &nbsp;
     // Validate required fields
-    const { weddingId, fileName, contentType, guestIdentifier } = body;
-&nbsp;
-    if (!weddingId || !fileName || !contentType) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          message: 'weddingId, fileName, and contentType are required',
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const validation = validateBody(bodySchema, body);
+    if ('error' in validation) return validation.error;
+    const { weddingId, fileName, contentType, guestIdentifier } = validation.data;
 &nbsp;
     // Check subscription status - only allow cloud uploads for active subscriptions
     <span class="missing-if-branch" title="else path not taken" >E</span>if (isSupabaseConfigured() &amp;&amp; isSupabaseServiceRoleConfigured()) {
@@ -1065,7 +1062,7 @@ export const POST: APIRoute = async ({ request }) =&gt; {
 <span class="cstat-no" title="statement not covered" >    return new Response(</span>
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred.',
       }),
       {
         status: 500,
@@ -1081,7 +1078,7 @@ export const POST: APIRoute = async ({ request }) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-08T17:17:28.240Z
+                at 2026-03-08T17:22:14.401Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

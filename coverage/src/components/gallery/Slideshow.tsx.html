@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.54% </span>
+                <span class="strong">92% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>65/71</span>
+                <span class='fraction'>69/75</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.45% </span>
+                <span class="strong">95.83% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>21/22</span>
+                <span class='fraction'>23/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.04% </span>
+                <span class="strong">91.3% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>61/67</span>
+                <span class='fraction'>63/69</span>
             </div>
         
             
@@ -348,7 +348,9 @@
 <a name='L283'></a><a href='#L283'>283</a>
 <a name='L284'></a><a href='#L284'>284</a>
 <a name='L285'></a><a href='#L285'>285</a>
-<a name='L286'></a><a href='#L286'>286</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -361,6 +363,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">67x</span>
+<span class="cline-any cline-yes">67x</span>
 <span class="cline-any cline-yes">67x</span>
 <span class="cline-any cline-yes">67x</span>
 <span class="cline-any cline-yes">67x</span>
@@ -398,7 +402,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">67x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -419,8 +423,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-yes">45x</span>
+<span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -633,7 +637,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useEffect, useState, useRef } from 'react';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useEffect, useState, useRef, useCallback } from 'react';
 import { X, Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize, Settings } from 'lucide-react';
 import type { MediaItem } from '../../lib/services/dataService';
 &nbsp;
@@ -653,6 +657,8 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
   const [showSettings, setShowSettings] = useState(false);
   const containerRef = useRef&lt;HTMLDivElement&gt;(null);
   const intervalRef = useRef&lt;NodeJS.Timeout | null&gt;(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 &nbsp;
   const currentItem = media[currentIndex];
   const isFirst = currentIndex === 0;
@@ -686,7 +692,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
     const handleKeyDown = (e: KeyboardEvent) =&gt; {
       switch (e.key) {
         case 'Escape':
-          onClose();
+          onCloseRef.current();
           break;
         case 'ArrowLeft':
           goToPrevious();
@@ -696,7 +702,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
           break;
         case ' ':
           e.preventDefault();
-          setIsPlaying(!isPlaying);
+          setIsPlaying(prev =&gt; !prev);
           break;
         case 'f':
           toggleFullscreen();
@@ -706,7 +712,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
 &nbsp;
     window.addEventListener('keydown', handleKeyDown);
     return () =&gt; window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, isPlaying, onClose]);
+  }, []);
 &nbsp;
   // Prevent body scroll
   useEffect(() =&gt; {
@@ -890,7 +896,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
             &lt;/button&gt;
 &nbsp;
             &lt;button
-              onClick={() =&gt; setIsPlaying(!isPlaying)}
+              onClick={() =&gt; setIsPlaying(prev =&gt; !prev)}
               className="p-4 bg-burgundy-old hover:bg-[#c92a38] text-white rounded-full transition-all duration-200 hover:scale-110 shadow-lg"
               aria-label={isPlaying ? 'Pause' : 'Lecture'}
             &gt;
@@ -925,7 +931,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-08T17:17:28.240Z
+                at 2026-03-08T17:22:14.401Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

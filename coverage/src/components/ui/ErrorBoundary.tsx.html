@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/components/ui/Skeleton.tsx</title>
+    <title>Code coverage report for src/components/ui/ErrorBoundary.tsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../prettify.css" />
     <link rel="stylesheet" href="../../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/components/ui</a> Skeleton.tsx</h1>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/components/ui</a> ErrorBoundary.tsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -122,43 +122,16 @@
 <a name='L57'></a><a href='#L57'>57</a>
 <a name='L58'></a><a href='#L58'>58</a>
 <a name='L59'></a><a href='#L59'>59</a>
-<a name='L60'></a><a href='#L60'>60</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -174,71 +147,125 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">52x</span>
+<span class="cline-any cline-yes">52x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">71x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useMemo } from 'react';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Component, type ReactNode, type ErrorInfo } from 'react';
 &nbsp;
-interface SkeletonProps {
-  className?: string;
-  style?: React.CSSProperties;
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  /** Custom fallback UI to render when an error is caught */
+  fallback?: ReactNode | ((error: Error, reset: () =&gt; void) =&gt; ReactNode);
+  /** Optional callback when an error is caught */
+  onError?: (error: Error, errorInfo: ErrorInfo) =&gt; void;
 }
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >Skeleton({</span> className = <span class="branch-0 cbranch-no" title="branch not covered" >'', s</span>tyle }: SkeletonProps) {
-<span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;div
-      className={`animate-pulse bg-silver-mist/30 rounded-sm ${className}`}
-      style={style}
-      aria-live="polite"
-      aria-busy="true"
-    /&gt;
-  );
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
 }
 &nbsp;
-// Pre-generated heights for gallery skeleton (stable across renders)
-const GALLERY_SKELETON_HEIGHTS = <span class="cstat-no" title="statement not covered" >[280, 350, 240, 320, 290, 360, 250, 310];</span>
+export class ErrorBoundary extends Component&lt;ErrorBoundaryProps, ErrorBoundaryState&gt; {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 &nbsp;
-// Gallery Skeleton
-export function <span class="fstat-no" title="function not covered" >GallerySkeleton() {</span>
-<span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4"&gt;
-      {GALLERY_SKELETON_HEIGHTS.map(<span class="fstat-no" title="function not covered" >(h</span>eight, i) =&gt; (
-<span class="cstat-no" title="statement not covered" >        &lt;div key={i} className="break-inside-avoid"&gt;</span>
-          &lt;Skeleton className="w-full rounded-xl" style={{ height: `${height}px` }} /&gt;
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+&nbsp;
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error('[ErrorBoundary] Caught error:', error, errorInfo);
+    this.props.onError?.(error, errorInfo);
+  }
+&nbsp;
+  reset = () =&gt; {
+    this.setState({ hasError: false, error: null });
+  };
+&nbsp;
+  render() {
+    if (this.state.hasError &amp;&amp; this.state.error) {
+      // Render function fallback
+      if (typeof this.props.fallback === 'function') {
+        return this.props.fallback(this.state.error, this.reset);
+      }
+&nbsp;
+      // Render element fallback
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+&nbsp;
+      // Default fallback
+      return (
+        &lt;div className="text-center py-12 px-4" role="alert"&gt;
+          &lt;p className="text-charcoal/70 font-medium mb-2"&gt;
+            Quelque chose s'est mal passé.
+          &lt;/p&gt;
+          &lt;p className="text-charcoal/50 text-sm mb-4"&gt;
+            Une erreur inattendue est survenue.
+          &lt;/p&gt;
+          &lt;button
+            onClick={this.reset}
+            className="px-4 py-2 text-sm rounded-full border border-charcoal/20 text-charcoal/70 hover:bg-charcoal/5 transition-colors"
+          &gt;
+            Réessayer
+          &lt;/button&gt;
         &lt;/div&gt;
-      ))}
-    &lt;/div&gt;
-  );
-}
+      );
+    }
 &nbsp;
-// Message Skeleton
-export function <span class="fstat-no" title="function not covered" >MessageSkeleton() {</span>
-<span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;div className="bg-ivory p-6 rounded-xl shadow-xs border border-silver-mist space-y-3"&gt;
-      &lt;div className="flex items-start gap-4"&gt;
-        &lt;Skeleton className="w-10 h-10 rounded-full" /&gt;
-        &lt;div className="flex-1 space-y-2"&gt;
-          &lt;Skeleton className="h-4 w-24" /&gt;
-          &lt;Skeleton className="h-16 w-full" /&gt;
-          &lt;Skeleton className="h-3 w-32" /&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  );
-}
-&nbsp;
-// Stats Card Skeleton
-export function <span class="fstat-no" title="function not covered" >StatsCardSkeleton() {</span>
-<span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;div className="p-4 border-2 border-silver-mist rounded-lg text-center bg-ivory"&gt;
-      &lt;Skeleton className="h-10 w-20 mx-auto mb-2" /&gt;
-      &lt;Skeleton className="h-3 w-16 mx-auto" /&gt;
-    &lt;/div&gt;
-  );
+    return this.props.children;
+  }
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -247,7 +274,7 @@ export function <span class="fstat-no" title="function not covered" >StatsCardSk
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-08T17:17:28.240Z
+                at 2026-03-08T17:22:14.401Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
