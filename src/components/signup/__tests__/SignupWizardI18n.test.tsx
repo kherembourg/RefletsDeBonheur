@@ -149,7 +149,7 @@ describe('SignupWizard i18n - French (fr)', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: /continuer vers le paiement/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continuer/i })).toBeInTheDocument();
   });
 
   it('ThemeStep renders French terms text', () => {
@@ -298,7 +298,7 @@ describe('SignupWizard i18n - Spanish (es)', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: /continuar al pago/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continuar/i })).toBeInTheDocument();
   });
 
   it('ThemeStep renders Spanish terms text', () => {

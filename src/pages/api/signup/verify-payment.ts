@@ -1,8 +1,10 @@
 import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
-import { getStripeClient } from '../../../lib/stripe/server';
+import { getStripeClient, PRODUCT_CONFIG } from '../../../lib/stripe/server';
 import { apiGuards } from '../../../lib/api/middleware';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+import { sendWelcomeEmail, sendPaymentConfirmationEmail } from '../../../lib/email';
+import { detectLanguageFromRequest } from '../../../lib/email/lang';
 import crypto from 'crypto';
 
 export const prerender = false;
@@ -225,13 +227,16 @@ export const POST: APIRoute = async ({ request }) => {
     // Send password reset email so user can set their own password
     // This is more secure than storing passwords or auto-logging in
     const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
-    const { error: resetError } = await adminClient.auth.admin.generateLink({
+    const { data: linkData, error: resetError } = await adminClient.auth.admin.generateLink({
       type: 'magiclink',
       email: accountData.email,
       options: {
         redirectTo: `${siteUrl}/${accountData.slug}/admin`,
       },
     });
+
+    // Detect language from request for email localization
+    const lang = detectLanguageFromRequest(request);
 
     if (resetError) {
       console.error('[API] Password reset email failed:', resetError);
@@ -247,6 +252,26 @@ export const POST: APIRoute = async ({ request }) => {
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    // Send welcome email with magic link (non-blocking - failure doesn't affect response)
+    const magicLink = linkData?.properties?.action_link || `${siteUrl}/connexion`;
+    sendWelcomeEmail({
+      coupleNames: accountData.couple_names,
+      email: accountData.email,
+      slug: accountData.slug,
+      magicLink,
+      guestCode: accountData.guest_code,
+      lang,
+    }).catch((err) => console.error('[Email] Welcome email fire-and-forget error:', err));
+
+    // Send payment confirmation email (non-blocking)
+    const amountPaid = `€${(session.amount_total ? session.amount_total / 100 : PRODUCT_CONFIG.initialPrice / 100).toFixed(2)}`;
+    sendPaymentConfirmationEmail({
+      coupleNames: accountData.couple_names,
+      email: accountData.email,
+      amount: amountPaid,
+      lang,
+    }).catch((err) => console.error('[Email] Payment confirmation fire-and-forget error:', err));
 
     // Return success - user will receive email with magic link
     return new Response(
