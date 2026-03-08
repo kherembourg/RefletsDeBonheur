@@ -50,8 +50,26 @@ describe('CookieConsent Component', () => {
 
   it('should render a link to the privacy policy', () => {
     render(<CookieConsent />);
-    const link = screen.getByText(/politique de confidentialite/i);
+    const link = screen.getByText(/politique de confidentialité/i);
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', '/politique-confidentialite');
+  });
+
+  it('should render in English when lang="en"', () => {
+    render(<CookieConsent lang="en" />);
+    expect(screen.getByRole('dialog', { name: /cookie consent/i })).toBeInTheDocument();
+    expect(screen.getByText(/essential cookies/i)).toBeInTheDocument();
+    expect(screen.getByText('Accept')).toBeInTheDocument();
+    expect(screen.getByText('Reject')).toBeInTheDocument();
+    expect(screen.getByText('Privacy policy')).toBeInTheDocument();
+  });
+
+  it('should render in Spanish when lang="es"', () => {
+    render(<CookieConsent lang="es" />);
+    expect(screen.getByRole('dialog', { name: /consentimiento de cookies/i })).toBeInTheDocument();
+    expect(screen.getByText(/cookies esenciales/i)).toBeInTheDocument();
+    expect(screen.getByText('Aceptar')).toBeInTheDocument();
+    expect(screen.getByText('Rechazar')).toBeInTheDocument();
+    expect(screen.getByText('Política de privacidad')).toBeInTheDocument();
   });
 });

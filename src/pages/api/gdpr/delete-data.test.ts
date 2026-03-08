@@ -47,30 +47,11 @@ vi.mock('../../../lib/api/middleware', () => ({
   },
 }));
 
-function createChainMock(resolvedValue: any = { data: [], error: null }) {
-  const mock: any = {
-    select: vi.fn(),
-    delete: vi.fn(),
-    eq: vi.fn(),
-    single: vi.fn(),
-  };
-  Object.keys(mock).forEach((key) => {
-    if (key === 'single') {
-      mock[key].mockResolvedValue(resolvedValue);
-    } else {
-      mock[key].mockReturnValue(mock);
-    }
-  });
-  // For delete chains that don't call single(), the final eq() should resolve
-  mock.eq.mockImplementation(() => {
-    const next = { ...mock };
-    // If select is called after eq, return a promise
-    next.select = vi.fn().mockResolvedValue(resolvedValue);
-    next.eq = vi.fn().mockReturnValue(next);
-    return next;
-  });
-  return mock;
-}
+const mockDeleteR2MediaFiles = vi.fn().mockResolvedValue([]);
+
+vi.mock('../../../lib/r2/deleteMedia', () => ({
+  deleteR2MediaFiles: (...args: any[]) => mockDeleteR2MediaFiles(...args),
+}));
 
 function createRequest(body: any): Request {
   return new Request('http://localhost:4321/api/gdpr/delete-data', {
@@ -86,11 +67,97 @@ const mockCookies = {
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
+// Media records with URLs for R2 cleanup testing
+const MEDIA_RECORDS = [
+  { id: 'm1', original_url: 'https://r2.example.com/weddings/abc/media/photo1.jpg', thumbnail_url: 'https://r2.example.com/weddings/abc/thumbnails/photo1-400w.webp' },
+  { id: 'm2', original_url: 'https://r2.example.com/weddings/abc/media/photo2.jpg', thumbnail_url: null },
+];
+
+/**
+ * Build mock for the `media` table which is called twice:
+ *   1st call: .select('id, original_url, thumbnail_url').eq('wedding_id', id) → fetch
+ *   2nd call: .delete().eq('wedding_id', id).select('id') → delete
+ */
+function createMediaTableMock(
+  fetchData: any[] = MEDIA_RECORDS,
+  fetchError: any = null,
+  deleteData: any[] | null = null,
+  deleteError: any = null,
+) {
+  let callCount = 0;
+  return () => {
+    callCount++;
+    if (callCount === 1) {
+      // SELECT chain: .select(...).eq(...)
+      const chain: any = {};
+      chain.select = vi.fn().mockReturnValue(chain);
+      chain.eq = vi.fn().mockResolvedValue({ data: fetchData, error: fetchError });
+      return chain;
+    }
+    // DELETE chain: .delete().eq(...).select('id')
+    const chain: any = {};
+    chain.delete = vi.fn().mockReturnValue(chain);
+    chain.eq = vi.fn().mockReturnValue(chain);
+    chain.select = vi.fn().mockResolvedValue({
+      data: deleteData ?? fetchData.map((r) => ({ id: r.id })),
+      error: deleteError,
+    });
+    return chain;
+  };
+}
+
+/** Standard delete chain for non-media tables: .delete().eq(...).select('id') */
+function createDeleteMock(data: any[], error: any = null) {
+  const chain: any = {};
+  chain.delete = vi.fn().mockReturnValue(chain);
+  chain.eq = vi.fn().mockReturnValue(chain);
+  chain.select = vi.fn().mockResolvedValue({ data, error });
+  return chain;
+}
+
+/** Wedding delete chain: .delete().eq(...) — no .select() */
+function createWeddingDeleteMock(error: any = null) {
+  const chain: any = {};
+  chain.delete = vi.fn().mockReturnValue(chain);
+  chain.eq = vi.fn().mockResolvedValue({ error });
+  return chain;
+}
+
+/**
+ * Set up mockAdminClient.from to return the right mock for each table.
+ * mediaFactory is a function so it can track call counts.
+ */
+function setupDefaultMocks(overrides: {
+  mediaFactory?: () => any;
+  guestbookMessages?: any;
+  rsvps?: any;
+  guestSessions?: any;
+  weddings?: any;
+} = {}) {
+  const mediaFactory = overrides.mediaFactory ?? createMediaTableMock();
+  const guestbookMessages = overrides.guestbookMessages ?? createDeleteMock([{ id: 'g1' }]);
+  const rsvps = overrides.rsvps ?? createDeleteMock([{ id: 'r1' }, { id: 'r2' }, { id: 'r3' }]);
+  const guestSessions = overrides.guestSessions ?? createDeleteMock([{ id: 's1' }]);
+  const weddings = overrides.weddings ?? createWeddingDeleteMock();
+
+  mockAdminClient.from.mockImplementation((table: string) => {
+    switch (table) {
+      case 'media': return mediaFactory();
+      case 'guestbook_messages': return guestbookMessages;
+      case 'rsvps': return rsvps;
+      case 'guest_sessions': return guestSessions;
+      case 'weddings': return weddings;
+      default: return createDeleteMock([]);
+    }
+  });
+}
+
 describe('GDPR Delete Data Endpoint', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockVerifyServerSession.mockResolvedValue({ userId: 'user-1', userType: 'client' });
     mockVerifyWeddingOwnership.mockResolvedValue(true);
+    mockDeleteR2MediaFiles.mockResolvedValue([]);
   });
 
   it('should return 401 if not authenticated', async () => {
@@ -143,33 +210,7 @@ describe('GDPR Delete Data Endpoint', () => {
   });
 
   it('should delete all data and return counts on success', async () => {
-    // Supabase chain: .from(table).delete().eq(col, val).select('id')
-    // The chain returns a builder at each step; final call is awaited.
-    const deleteMock = (data: any[]) => {
-      const chain: any = {};
-      chain.delete = vi.fn().mockReturnValue(chain);
-      chain.eq = vi.fn().mockReturnValue(chain);
-      chain.select = vi.fn().mockResolvedValue({ data, error: null });
-      // Make chain itself thenable in case it's awaited without .select()
-      chain.then = undefined;
-      return chain;
-    };
-
-    // Wedding delete chain: .from('weddings').delete().eq('id', weddingId) - awaited directly
-    const weddingDeleteChain: any = {};
-    weddingDeleteChain.delete = vi.fn().mockReturnValue(weddingDeleteChain);
-    weddingDeleteChain.eq = vi.fn().mockResolvedValue({ error: null });
-
-    mockAdminClient.from.mockImplementation((table: string) => {
-      switch (table) {
-        case 'media': return deleteMock([{ id: 'm1' }, { id: 'm2' }]);
-        case 'guestbook_messages': return deleteMock([{ id: 'g1' }]);
-        case 'rsvps': return deleteMock([{ id: 'r1' }, { id: 'r2' }, { id: 'r3' }]);
-        case 'guest_sessions': return deleteMock([{ id: 's1' }]);
-        case 'weddings': return weddingDeleteChain;
-        default: return deleteMock([]);
-      }
-    });
+    setupDefaultMocks();
 
     const response = await POST({
       request: createRequest({ weddingId: VALID_UUID, confirmation: 'DELETE_ALL_DATA' }),
@@ -186,5 +227,95 @@ describe('GDPR Delete Data Endpoint', () => {
       guestSessions: 1,
       wedding: true,
     });
+  });
+
+  it('should call deleteR2MediaFiles for each media record', async () => {
+    setupDefaultMocks();
+
+    await POST({
+      request: createRequest({ weddingId: VALID_UUID, confirmation: 'DELETE_ALL_DATA' }),
+      cookies: mockCookies,
+    } as any);
+
+    expect(mockDeleteR2MediaFiles).toHaveBeenCalledTimes(2);
+    expect(mockDeleteR2MediaFiles).toHaveBeenCalledWith(
+      MEDIA_RECORDS[0].original_url,
+      MEDIA_RECORDS[0].thumbnail_url,
+    );
+    expect(mockDeleteR2MediaFiles).toHaveBeenCalledWith(
+      MEDIA_RECORDS[1].original_url,
+      MEDIA_RECORDS[1].thumbnail_url,
+    );
+  });
+
+  it('should succeed even if R2 cleanup fails', async () => {
+    mockDeleteR2MediaFiles.mockRejectedValue(new Error('R2 unavailable'));
+    setupDefaultMocks();
+
+    const response = await POST({
+      request: createRequest({ weddingId: VALID_UUID, confirmation: 'DELETE_ALL_DATA' }),
+      cookies: mockCookies,
+    } as any);
+
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+  });
+
+  it('should return 500 if media fetch fails', async () => {
+    setupDefaultMocks({
+      mediaFactory: createMediaTableMock([], { message: 'DB error' }),
+    });
+
+    const response = await POST({
+      request: createRequest({ weddingId: VALID_UUID, confirmation: 'DELETE_ALL_DATA' }),
+      cookies: mockCookies,
+    } as any);
+
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data.error).toBe('Deletion failed');
+  });
+
+  it('should return 500 if media delete fails', async () => {
+    setupDefaultMocks({
+      mediaFactory: createMediaTableMock(MEDIA_RECORDS, null, null, { message: 'DB error' }),
+    });
+
+    const response = await POST({
+      request: createRequest({ weddingId: VALID_UUID, confirmation: 'DELETE_ALL_DATA' }),
+      cookies: mockCookies,
+    } as any);
+
+    expect(response.status).toBe(500);
+  });
+
+  it('should return 500 if wedding delete fails', async () => {
+    setupDefaultMocks({
+      weddings: createWeddingDeleteMock({ message: 'FK constraint' }),
+    });
+
+    const response = await POST({
+      request: createRequest({ weddingId: VALID_UUID, confirmation: 'DELETE_ALL_DATA' }),
+      cookies: mockCookies,
+    } as any);
+
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data.error).toBe('Partial deletion');
+  });
+
+  it('should not call R2 cleanup when there are no media records', async () => {
+    setupDefaultMocks({
+      mediaFactory: createMediaTableMock([]),
+    });
+
+    const response = await POST({
+      request: createRequest({ weddingId: VALID_UUID, confirmation: 'DELETE_ALL_DATA' }),
+      cookies: mockCookies,
+    } as any);
+
+    expect(response.status).toBe(200);
+    expect(mockDeleteR2MediaFiles).not.toHaveBeenCalled();
   });
 });

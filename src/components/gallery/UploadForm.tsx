@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react';
-import { Upload, Plus, Trash2, Sparkles, Loader2, CheckCircle2, XCircle, Ban } from 'lucide-react';
+import { Upload, Plus, Trash2, Loader2, CheckCircle2, XCircle, Ban } from 'lucide-react';
 import { getUsername, setUsername as saveUsername } from '../../lib/auth';
-import { mockAPI } from '../../lib/api';
 import type { DataService, MediaItem } from '../../lib/services/dataService';
 import { t } from '../../i18n/utils';
 import type { Language } from '../../i18n/translations';
@@ -38,7 +37,6 @@ interface UploadFormProps {
 export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr' }: UploadFormProps) {
   const [authorName, setAuthorName] = useState(getUsername());
   const [queue, setQueue] = useState<UploadItem[]>([]);
-  const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const uploadingRef = useRef(false);
@@ -51,55 +49,51 @@ export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr'
     }
   }, [authorName]);
 
+  // Revoke all object URLs on unmount to prevent memory leaks
+  const queueRef = useRef(queue);
+  queueRef.current = queue;
+  useEffect(() => {
+    return () => {
+      queueRef.current.forEach(item => URL.revokeObjectURL(item.preview));
+    };
+  }, []);
+
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach(file => {
+    const newItems: UploadItem[] = Array.from(files).map(file => {
       const oversized = file.size > MAX_FILE_SIZE;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const newItem: UploadItem = {
-          id: Math.random().toString(36).substr(2, 9),
-          file,
-          preview: event.target?.result as string,
-          type: file.type.startsWith('video') ? 'video' : 'image',
-          caption: '',
-          originalName: file.name,
-          sizeError: oversized,
-        };
-        setQueue(prev => [...prev, newItem]);
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+        preview: URL.createObjectURL(file),
+        type: file.type.startsWith('video') ? 'video' as const : 'image' as const,
+        caption: '',
+        originalName: file.name,
+        sizeError: oversized,
       };
-      reader.readAsDataURL(file);
     });
+    setQueue(prev => [...prev, ...newItems]);
 
     // Reset input
     e.target.value = '';
   };
 
   const removeFile = (id: string) => {
-    setQueue(prev => prev.filter(item => item.id !== id));
+    setQueue(prev => {
+      const item = prev.find(item => item.id === id);
+      if (item) {
+        URL.revokeObjectURL(item.preview);
+      }
+      return prev.filter(item => item.id !== id);
+    });
   };
 
   const updateCaption = (id: string, text: string) => {
     setQueue(prev => prev.map(item =>
       item.id === id ? { ...item, caption: text } : item
     ));
-  };
-
-  const generateAICaption = async (id: string) => {
-    const item = queue.find(q => q.id === id);
-    if (!item || item.type === 'video') return;
-
-    setGeneratingFor(id);
-    try {
-      const caption = await mockAPI.generateCaption(item.preview);
-      updateCaption(id, caption);
-    } catch (error) {
-      console.error('Caption generation failed:', error);
-    } finally {
-      setGeneratingFor(null);
-    }
   };
 
   const handleUploadAll = async () => {
@@ -311,29 +305,15 @@ export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr'
 
                 {/* Caption Input (Images Only) */}
                 {item.type === 'image' && !uploading && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      name={`caption-${item.id}`}
-                      value={item.caption}
-                      onChange={(e) => updateCaption(item.id, e.target.value)}
-                      placeholder={t(lang, 'gallery.captionPlaceholder')}
-                      className="flex-1 px-2 py-1 text-sm border border-silver-mist rounded-sm focus:outline-hidden focus:ring-1 focus:ring-burgundy-old bg-ivory"
-                      aria-label={`${t(lang, 'gallery.captionFor')} ${item.originalName}`}
-                    />
-                    <button
-                      onClick={() => generateAICaption(item.id)}
-                      disabled={generatingFor === item.id}
-                      className="bg-violet-100 text-violet-600 p-1.5 rounded-sm hover:bg-violet-200 transition-colors disabled:opacity-50"
-                      aria-label={t(lang, 'gallery.generateCaption')}
-                    >
-                      {generatingFor === item.id ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <Sparkles size={16} />
-                      )}
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    name={`caption-${item.id}`}
+                    value={item.caption}
+                    onChange={(e) => updateCaption(item.id, e.target.value)}
+                    placeholder={t(lang, 'gallery.captionPlaceholder')}
+                    className="flex-1 px-2 py-1 text-sm border border-silver-mist rounded-sm focus:outline-hidden focus:ring-1 focus:ring-burgundy-old bg-ivory"
+                    aria-label={`${t(lang, 'gallery.captionFor')} ${item.originalName}`}
+                  />
                 )}
               </div>
             </div>

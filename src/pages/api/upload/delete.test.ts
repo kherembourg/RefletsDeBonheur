@@ -90,15 +90,15 @@ function createRequest(body: any, headers?: Record<string, string>): Request {
 
 describe('POST /api/upload/delete', () => {
   const mockMedia = {
-    id: 'media-123',
-    wedding_id: 'wedding-456',
+    id: '00000000-0000-0000-0000-000000000123',
+    wedding_id: '00000000-0000-0000-0000-000000000456',
     original_url: 'https://r2.example.com/weddings/wedding-456/media/photo.jpg',
     thumbnail_url: 'https://r2.example.com/weddings/wedding-456/thumbnails/photo-400w.webp',
     guest_identifier: null,
   };
 
   const mockWedding = {
-    owner_id: 'user-789',
+    owner_id: '00000000-0000-0000-0000-000000000789',
   };
 
   beforeEach(() => {
@@ -129,12 +129,12 @@ describe('POST /api/upload/delete', () => {
 
     // Mock auth - owner is making the request
     (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: { id: 'user-789' } },
+      data: { user: { id: '00000000-0000-0000-0000-000000000789' } },
       error: null,
     });
 
     const request = createRequest(
-      { mediaId: 'media-123' },
+      { mediaId: '00000000-0000-0000-0000-000000000123' },
       { Authorization: 'Bearer valid-token' }
     );
 
@@ -164,7 +164,7 @@ describe('POST /api/upload/delete', () => {
     });
     mockAdminClient.from.mockReturnValue(queryMock);
 
-    const request = createRequest({ mediaId: 'non-existent' });
+    const request = createRequest({ mediaId: '00000000-0000-0000-0000-999999999999' });
     const response = await POST({ request } as any);
 
     expect(response.status).toBe(404);
@@ -193,7 +193,7 @@ describe('POST /api/upload/delete', () => {
     });
 
     const request = createRequest(
-      { mediaId: 'media-123' },
+      { mediaId: '00000000-0000-0000-0000-000000000123' },
       { Authorization: 'Bearer valid-token' }
     );
 
@@ -226,7 +226,7 @@ describe('POST /api/upload/delete', () => {
 
     // Mock auth - owner
     (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: { id: 'user-789' } },
+      data: { user: { id: '00000000-0000-0000-0000-000000000789' } },
       error: null,
     });
 
@@ -236,7 +236,7 @@ describe('POST /api/upload/delete', () => {
     ]);
 
     const request = createRequest(
-      { mediaId: 'media-123' },
+      { mediaId: '00000000-0000-0000-0000-000000000123' },
       { Authorization: 'Bearer valid-token' }
     );
 
@@ -278,12 +278,12 @@ describe('POST /api/upload/delete', () => {
 
     // Mock auth - owner
     (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: { id: 'user-789' } },
+      data: { user: { id: '00000000-0000-0000-0000-000000000789' } },
       error: null,
     });
 
     const request = createRequest(
-      { mediaId: 'media-123' },
+      { mediaId: '00000000-0000-0000-0000-000000000123' },
       { Authorization: 'Bearer valid-token' }
     );
 

@@ -16,17 +16,16 @@ const mockDataService = {
   uploadMediaBatch: mockUploadMediaBatch,
 };
 
+// Mock URL.createObjectURL and revokeObjectURL for jsdom
+const mockCreateObjectURL = vi.fn((file: File) => `blob:mock/${file.name}`);
+const mockRevokeObjectURL = vi.fn();
+globalThis.URL.createObjectURL = mockCreateObjectURL;
+globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
+
 // Mock auth module
 vi.mock('../../lib/auth', () => ({
   getUsername: vi.fn(() => 'Sophie'),
   setUsername: vi.fn(),
-}));
-
-// Mock API
-vi.mock('../../lib/api', () => ({
-  mockAPI: {
-    generateCaption: vi.fn().mockResolvedValue('Beautiful moment captured'),
-  },
 }));
 
 describe('UploadForm Component', () => {
@@ -253,54 +252,6 @@ describe('UploadForm Component', () => {
       expect(captionInput).toHaveValue('Beautiful sunset');
     });
 
-    it('should show AI caption generation button for images', async () => {
-      const user = userEvent.setup();
-      render(
-        <UploadForm
-          onUploadComplete={mockOnUploadComplete}
-          onClose={mockOnClose}
-          dataService={mockDataService as any}
-        />
-      );
-
-      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
-      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
-
-      await user.upload(input, file);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/générer une légende avec l'ia/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should generate AI caption when button clicked', async () => {
-      const user = userEvent.setup();
-      const { mockAPI } = await import('../../lib/api');
-      
-      render(
-        <UploadForm
-          onUploadComplete={mockOnUploadComplete}
-          onClose={mockOnClose}
-          dataService={mockDataService as any}
-        />
-      );
-
-      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
-      const fileInput = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
-
-      await user.upload(fileInput, file);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/générer une légende avec l'ia/i)).toBeInTheDocument();
-      });
-
-      const aiButton = screen.getByLabelText(/générer une légende avec l'ia/i);
-      await user.click(aiButton);
-
-      await waitFor(() => {
-        expect(mockAPI.generateCaption).toHaveBeenCalled();
-      });
-    });
   });
 
   describe('File Removal', () => {

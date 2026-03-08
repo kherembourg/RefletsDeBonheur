@@ -545,6 +545,15 @@ export const translations = {
       select: 'Sélectionner',
     },
 
+    // GDPR
+    gdpr: {
+      cookieText: 'Ce site utilise des cookies essentiels pour son fonctionnement (authentification, préférences). Aucun cookie publicitaire n\'est utilisé.',
+      privacyPolicy: 'Politique de confidentialité',
+      reject: 'Refuser',
+      accept: 'Accepter',
+      cookieAriaLabel: 'Consentement aux cookies',
+    },
+
     // Common
     common: {
       loading: 'Chargement...',
@@ -1100,6 +1109,15 @@ export const translations = {
       addFavorite: 'Add to favorites',
       deselect: 'Deselect',
       select: 'Select',
+    },
+
+    // GDPR
+    gdpr: {
+      cookieText: 'This site uses essential cookies for its operation (authentication, preferences). No advertising cookies are used.',
+      privacyPolicy: 'Privacy policy',
+      reject: 'Reject',
+      accept: 'Accept',
+      cookieAriaLabel: 'Cookie consent',
     },
 
     // Common
@@ -1658,6 +1676,15 @@ export const translations = {
       addFavorite: 'Agregar a favoritos',
       deselect: 'Deseleccionar',
       select: 'Seleccionar',
+    },
+
+    // GDPR
+    gdpr: {
+      cookieText: 'Este sitio utiliza cookies esenciales para su funcionamiento (autenticación, preferencias). No se utilizan cookies publicitarias.',
+      privacyPolicy: 'Política de privacidad',
+      reject: 'Rechazar',
+      accept: 'Aceptar',
+      cookieAriaLabel: 'Consentimiento de cookies',
     },
 
     // Common

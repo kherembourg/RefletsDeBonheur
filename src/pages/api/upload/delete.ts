@@ -21,11 +21,17 @@
  */
 
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateBody } from '../../../lib/api/validation';
 import { deleteR2MediaFiles } from '../../../lib/r2/deleteMedia';
 import { supabase } from '../../../lib/supabase/client';
+
+const deleteMediaSchema = z.object({
+  mediaId: z.string().uuid('Invalid media ID'),
+});
 
 export const prerender = false;
 
@@ -95,15 +101,9 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const body = await request.json();
-    const { mediaId } = body;
-
-    if (!mediaId) {
-      return apiResponse.error(
-        'Missing required field',
-        'mediaId is required',
-        400
-      );
-    }
+    const validation = validateBody(deleteMediaSchema, body);
+    if ('error' in validation) return validation.error;
+    const { mediaId } = validation.data;
 
     const adminClient = getSupabaseAdminClient();
 

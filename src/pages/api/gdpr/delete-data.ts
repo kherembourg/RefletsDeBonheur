@@ -28,6 +28,7 @@ import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { validateBody } from '../../../lib/api/validation';
 import { getSupabaseAdminClient, verifyServerSession, verifyWeddingOwnership } from '../../../lib/supabase/server';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+import { deleteR2MediaFiles } from '../../../lib/r2/deleteMedia';
 
 export const prerender = false;
 
@@ -75,35 +76,106 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const admin = getSupabaseAdminClient();
 
     // Delete in order: child records first, then the wedding itself.
-    // Media R2 cleanup is best-effort; we always delete DB records.
+    // Each step checks for errors and aborts early on critical failures.
+    // R2 cleanup is best-effort — failures are logged but don't block DB deletion.
 
-    // 1. Delete media records (R2 objects would be cleaned up by a separate job or TTL policy)
-    const { data: deletedMedia } = await admin
+    // 1. Fetch media records (URLs needed for R2 cleanup) then delete them
+    const { data: mediaRecords, error: mediaFetchError } = await admin
+      .from('media')
+      .select('id, original_url, thumbnail_url')
+      .eq('wedding_id', weddingId);
+
+    if (mediaFetchError) {
+      console.error('[API] Error fetching media records:', mediaFetchError);
+      return apiResponse.error(
+        'Deletion failed',
+        'Could not fetch media records. No data was deleted.',
+        500
+      );
+    }
+
+    // Best-effort R2 cleanup — fire all deletions in parallel, don't await before DB work
+    const r2CleanupPromise = Promise.allSettled(
+      (mediaRecords ?? []).map((record) =>
+        deleteR2MediaFiles(record.original_url, record.thumbnail_url)
+      )
+    ).then((results) => {
+      const r2Errors = results
+        .filter((r): r is PromiseFulfilledResult<string[]> => r.status === 'fulfilled')
+        .flatMap((r) => r.value)
+        .concat(
+          results
+            .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+            .map((r) => String(r.reason))
+        );
+      if (r2Errors.length > 0) {
+        console.warn('[API] R2 cleanup errors (best-effort):', r2Errors);
+      }
+    });
+
+    // Now delete media DB records
+    const { data: deletedMedia, error: mediaDeleteError } = await admin
       .from('media')
       .delete()
       .eq('wedding_id', weddingId)
       .select('id');
 
+    if (mediaDeleteError) {
+      console.error('[API] Error deleting media records:', mediaDeleteError);
+      return apiResponse.error(
+        'Deletion failed',
+        'Could not delete media records. Some data may remain.',
+        500
+      );
+    }
+
     // 2. Delete guestbook messages
-    const { data: deletedMessages } = await admin
+    const { data: deletedMessages, error: messagesDeleteError } = await admin
       .from('guestbook_messages')
       .delete()
       .eq('wedding_id', weddingId)
       .select('id');
 
+    if (messagesDeleteError) {
+      console.error('[API] Error deleting guestbook messages:', messagesDeleteError);
+      return apiResponse.error(
+        'Partial deletion',
+        'Media was deleted but guestbook messages could not be removed. Contact support.',
+        500
+      );
+    }
+
     // 3. Delete RSVPs
-    const { data: deletedRsvps } = await admin
+    const { data: deletedRsvps, error: rsvpsDeleteError } = await admin
       .from('rsvps')
       .delete()
       .eq('wedding_id', weddingId)
       .select('id');
 
+    if (rsvpsDeleteError) {
+      console.error('[API] Error deleting RSVPs:', rsvpsDeleteError);
+      return apiResponse.error(
+        'Partial deletion',
+        'Some child records were deleted but RSVPs could not be removed. Contact support.',
+        500
+      );
+    }
+
     // 4. Delete guest sessions
-    const { data: deletedSessions } = await admin
+    const { data: deletedSessions, error: sessionsDeleteError } = await admin
       .from('guest_sessions')
       .delete()
       .eq('wedding_id', weddingId)
       .select('id');
+
+    if (sessionsDeleteError) {
+      console.error('[API] Error deleting guest sessions:', sessionsDeleteError);
+      return apiResponse.error(
+        'Partial deletion',
+        'Some child records were deleted but guest sessions could not be removed. Contact support.',
+        500
+      );
+    }
 
     // 5. Delete the wedding record
     const { error: weddingDeleteError } = await admin
@@ -119,6 +191,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         500
       );
     }
+
+    // Wait for R2 cleanup to finish (best-effort, don't fail if it errors)
+    await r2CleanupPromise;
 
     return apiResponse.success({
       success: true,

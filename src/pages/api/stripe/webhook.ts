@@ -85,10 +85,10 @@ export const POST: APIRoute = async ({ request }) => {
             .eq('stripe_session_id', session.id);
 
           if (error) {
-            console.error('[Webhook] Failed to mark pending signup as completed:', error);
-          } else {
-            console.log(`[Webhook] Pending signup marked complete for session ${session.id}`);
+            throw new Error(`Failed to mark pending signup as completed for session ${session.id}: ${error.message}`);
           }
+
+          console.log(`[Webhook] Pending signup marked complete for session ${session.id}`);
         } else {
           // Existing profile upgrade flow
           const profileId = session.metadata?.profileId;
@@ -114,26 +114,26 @@ export const POST: APIRoute = async ({ request }) => {
               .eq('id', profileId);
 
             if (error) {
-              console.error('[Webhook] Failed to update profile:', error);
-            } else {
-              console.log(`[Webhook] Profile ${profileId} upgraded to active`);
+              throw new Error(`Failed to update profile ${profileId}: ${error.message}`);
+            }
 
-              // Send payment confirmation email (non-blocking)
-              const { data: profileData } = await adminClient
-                .from('profiles')
-                .select('email, full_name')
-                .eq('id', profileId)
-                .single();
+            console.log(`[Webhook] Profile ${profileId} upgraded to active`);
 
-              if (profileData?.email) {
-                const amountPaid = `€${(session.amount_total ? session.amount_total / 100 : PRODUCT_CONFIG.initialPrice / 100).toFixed(2)}`;
-                sendPaymentConfirmationEmail({
-                  coupleNames: profileData.full_name || 'Customer',
-                  email: profileData.email,
-                  amount: amountPaid,
-                  lang: 'fr',
-                }).catch((err) => console.error('[Webhook] Payment email error:', err));
-              }
+            // Send payment confirmation email (non-blocking)
+            const { data: profileData } = await adminClient
+              .from('profiles')
+              .select('email, full_name')
+              .eq('id', profileId)
+              .single();
+
+            if (profileData?.email) {
+              const amountPaid = `€${(session.amount_total ? session.amount_total / 100 : PRODUCT_CONFIG.initialPrice / 100).toFixed(2)}`;
+              sendPaymentConfirmationEmail({
+                coupleNames: profileData.full_name || 'Customer',
+                email: profileData.email,
+                amount: amountPaid,
+                lang: 'fr',
+              }).catch((err) => console.error('[Webhook] Payment email error:', err));
             }
           }
         }

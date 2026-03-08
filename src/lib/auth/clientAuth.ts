@@ -25,11 +25,15 @@ const SESSION_COOKIE_NAME = 'reflets_session_token';
 /**
  * Set the session token as an HTTP cookie for server-side verification.
  * Uses SameSite=Lax for CSRF protection.
+ *
+ * NOTE: This cookie is NOT HttpOnly because it's set from client-side JS.
+ * The token is already in localStorage (same XSS exposure). Moving to
+ * HttpOnly would require server-set Set-Cookie headers from login endpoints.
  */
 function setSessionCookie(token: string, maxAgeHours: number): void {
   if (typeof document === 'undefined') return;
   const maxAge = maxAgeHours * 60 * 60;
-  document.cookie = `${SESSION_COOKIE_NAME}=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  document.cookie = `${SESSION_COOKIE_NAME}=${token}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
 }
 
 /**

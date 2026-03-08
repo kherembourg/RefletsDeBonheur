@@ -45,20 +45,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const origin = context.request.headers.get('Origin');
     const host = context.request.headers.get('Host');
 
-    // Require Origin for browser requests (CSRF protection)
+    // Require Origin header for CSRF protection on all non-webhook requests.
+    // Stripe webhooks are exempt (authenticated via stripe-signature header).
     if (!origin) {
-      const userAgent = context.request.headers.get('User-Agent') || '';
-      const isStripeWebhook = context.request.headers.get('stripe-signature');
-      const isBrowser =
-        userAgent.includes('Mozilla') ||
-        userAgent.includes('Chrome') ||
-        userAgent.includes('Safari');
+      const isStripeWebhook = !!context.request.headers.get('stripe-signature');
 
-      if (isBrowser && !isStripeWebhook) {
+      if (!isStripeWebhook) {
         return new Response(
           JSON.stringify({
             error: 'CSRF validation failed',
-            message: 'Origin header required for browser requests',
+            message: 'Origin header required',
           }),
           {
             status: 403,
