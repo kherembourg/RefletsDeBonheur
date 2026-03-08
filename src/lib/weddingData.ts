@@ -48,7 +48,7 @@ export const MOCK_WEDDINGS: Wedding[] = [
       features: {
         rsvp: true,
         guestbook: true,
-        photoGallery: true,
+        gallery: true,
         liveWall: true,
         geoFencing: false,
         countdown: true,
@@ -102,7 +102,7 @@ export const MOCK_WEDDINGS: Wedding[] = [
       features: {
         rsvp: true,
         guestbook: true,
-        photoGallery: true,
+        gallery: true,
         liveWall: false,
         geoFencing: false,
         countdown: true,
@@ -240,7 +240,7 @@ function supabaseWeddingToWedding(wedding: any): Wedding {
       features: {
         rsvp: true,
         guestbook: wedding.config?.features?.guestbook ?? true,
-        photoGallery: wedding.config?.features?.gallery ?? true,
+        gallery: wedding.config?.features?.gallery ?? true,
         liveWall: wedding.config?.features?.liveWall ?? false,
         geoFencing: wedding.config?.features?.geoFencing ?? false,
         countdown: true,

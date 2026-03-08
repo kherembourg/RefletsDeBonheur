@@ -240,9 +240,15 @@ export class DataService {
   // Media Methods
   // ============================================
 
-  async getMedia(): Promise<MediaItem[]> {
+  async getMedia(options?: { limit?: number; offset?: number }): Promise<MediaItem[]> {
     if (this.demoMode) {
-      return mockMedia.map(mockMediaToItem);
+      const items = mockMedia.map(mockMediaToItem);
+      if (options?.offset || options?.limit) {
+        const start = options.offset || 0;
+        const end = options.limit ? start + options.limit : undefined;
+        return items.slice(start, end);
+      }
+      return items;
     }
 
     if (!this.weddingId) {
@@ -253,6 +259,8 @@ export class DataService {
     const media = await mediaApi.getByWeddingId(this.weddingId, {
       status: 'all',
       moderation: 'approved',
+      limit: options?.limit,
+      offset: options?.offset,
     });
 
     return media.map(mediaToItem);
@@ -303,7 +311,26 @@ export class DataService {
       return;
     }
 
-    await mediaApi.delete(id);
+    // Use the server-side API endpoint to delete both the DB record and R2 objects
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Pass guest identifier for authorization
+    if (this.guestIdentifier && this.guestIdentifier !== 'server') {
+      headers['X-Guest-Identifier'] = this.guestIdentifier;
+    }
+
+    const response = await fetch('/api/upload/delete', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ mediaId: id }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to delete media' }));
+      throw new Error(error.message || 'Failed to delete media');
+    }
   }
 
   /**

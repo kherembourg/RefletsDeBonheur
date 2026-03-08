@@ -191,7 +191,7 @@ export const POST: APIRoute = async ({ params, request }) => {
 
     return apiResponse.error(
       'Regeneration failed',
-      error instanceof Error ? error.message : 'Unknown error',
+      'An unexpected error occurred.',
       500
     );
   }

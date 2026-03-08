@@ -175,6 +175,7 @@ async function validateUploadAuthorization(
       .select('id, wedding_id')
       .eq('session_token', guestIdentifier)
       .eq('wedding_id', weddingId)
+      .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 
     if (!error && guestSession) {
@@ -425,7 +426,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred.',
       }),
       {
         status: 500,

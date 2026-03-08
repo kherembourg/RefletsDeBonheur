@@ -21,7 +21,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Astro hydration
+      "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.supabase.co https://images.unsplash.com",
@@ -36,7 +36,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Permissions Policy
   response.headers.set(
     'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), payment=()'
+    'camera=(self), microphone=(), geolocation=(), payment=()'
   );
 
   // For API endpoints, check Origin header for CSRF protection
@@ -45,7 +45,29 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const origin = context.request.headers.get('Origin');
     const host = context.request.headers.get('Host');
 
-    // Allow requests without Origin (non-browser clients) but check referer
+    // Require Origin for browser requests (CSRF protection)
+    if (!origin) {
+      const userAgent = context.request.headers.get('User-Agent') || '';
+      const isStripeWebhook = context.request.headers.get('stripe-signature');
+      const isBrowser =
+        userAgent.includes('Mozilla') ||
+        userAgent.includes('Chrome') ||
+        userAgent.includes('Safari');
+
+      if (isBrowser && !isStripeWebhook) {
+        return new Response(
+          JSON.stringify({
+            error: 'CSRF validation failed',
+            message: 'Origin header required for browser requests',
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
     if (origin) {
       const originHost = new URL(origin).host;
       // Ensure origin matches host (same-origin request)

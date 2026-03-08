@@ -128,9 +128,11 @@ describe('Upload Presign API - Authorization Tests', () => {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({
-                    data: { id: 'guest-123', wedding_id: 'wedding-123' },
-                    error: null,
+                  gt: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({
+                      data: { id: 'guest-123', wedding_id: 'wedding-123' },
+                      error: null,
+                    }),
                   }),
                 }),
               }),
@@ -210,9 +212,11 @@ describe('Upload Presign API - Authorization Tests', () => {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
+                  gt: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({
+                      data: null,
+                      error: null,
+                    }),
                   }),
                 }),
               }),
@@ -297,9 +301,11 @@ describe('Upload Presign API - Authorization Tests', () => {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({
-                    data: null, // No match for wedding-123
-                    error: null,
+                  gt: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({
+                      data: null, // No match for wedding-123
+                      error: null,
+                    }),
                   }),
                 }),
               }),

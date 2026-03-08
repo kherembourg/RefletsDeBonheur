@@ -112,7 +112,7 @@ export const GET: APIRoute = async ({ params, request }) => {
 
     return apiResponse.error(
       'Query failed',
-      error instanceof Error ? error.message : 'Unknown error',
+      'An unexpected error occurred.',
       500
     );
   }

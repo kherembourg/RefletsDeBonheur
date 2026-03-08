@@ -20,20 +20,46 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const upperCode = code.toUpperCase().trim();
-    const adminClient = getSupabaseAdminClient();
 
-    // Find wedding by PIN or magic token
-    const { data: weddings, error: fetchError } = await adminClient
-      .from('weddings')
-      .select('id, owner_id, slug, pin_code, magic_token')
-      .or(`pin_code.eq.${upperCode},magic_token.eq.${upperCode}`);
-
-    if (fetchError || !weddings || weddings.length === 0) {
-      return apiResponse.error('Invalid code', 'Invalid access code.', 401);
+    // Validate code format: alphanumeric only (prevents PostgREST filter injection)
+    if (!/^[A-Z0-9]+$/.test(upperCode)) {
+      return apiResponse.error('Invalid code', 'Invalid access code format.', 400);
     }
 
-    const wedding = weddings[0];
-    const isAdminCode = wedding.magic_token === upperCode;
+    const adminClient = getSupabaseAdminClient();
+
+    // Find wedding by PIN or magic token using separate parameterized queries
+    // (avoids .or() string interpolation which is vulnerable to PostgREST filter injection)
+    let wedding = null;
+    let isAdminCode = false;
+
+    const { data: byPin } = await adminClient
+      .from('weddings')
+      .select('id, owner_id, slug, pin_code, magic_token')
+      .eq('pin_code', upperCode)
+      .limit(1)
+      .maybeSingle();
+
+    if (byPin) {
+      wedding = byPin;
+      isAdminCode = byPin.magic_token === upperCode;
+    } else {
+      const { data: byToken } = await adminClient
+        .from('weddings')
+        .select('id, owner_id, slug, pin_code, magic_token')
+        .eq('magic_token', upperCode)
+        .limit(1)
+        .maybeSingle();
+
+      if (byToken) {
+        wedding = byToken;
+        isAdminCode = true;
+      }
+    }
+
+    if (!wedding) {
+      return apiResponse.error('Invalid code', 'Invalid access code.', 401);
+    }
 
     // Verify owner subscription is active
     const { data: profile, error: profileError } = await adminClient
@@ -87,7 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
     console.error('[API] Guest login error:', error);
     return apiResponse.error(
       'Internal error',
-      error instanceof Error ? error.message : 'Unknown error',
+      'An unexpected error occurred.',
       500
     );
   }

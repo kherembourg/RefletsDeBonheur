@@ -243,7 +243,7 @@ export const POST: APIRoute = async ({ params, request, url }) => {
 
     return apiResponse.error(
       'Batch regeneration failed',
-      error instanceof Error ? error.message : 'Unknown error',
+      'An unexpected error occurred.',
       500
     );
   }

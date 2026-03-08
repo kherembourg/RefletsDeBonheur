@@ -144,26 +144,32 @@ export const POST: APIRoute = async ({ request }) => {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
-        // Find profile by stripe_customer_id
-        const { data: profile } = await adminClient
+        const { data: profile, error: lookupError } = await adminClient
           .from('profiles')
           .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
 
+        if (lookupError) {
+          throw new Error(`Failed to look up profile for customer ${customerId}: ${lookupError.message}`);
+        }
+
         if (profile) {
           const status = mapStripeStatus(subscription.status);
-          // Access current_period_end with type assertion - property exists in Stripe API but may not be in types
           const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
           const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000) : new Date();
 
-          await adminClient
+          const { error: updateError } = await adminClient
             .from('profiles')
             .update({
               subscription_status: status,
               subscription_end_date: currentPeriodEnd.toISOString(),
             })
             .eq('id', profile.id);
+
+          if (updateError) {
+            throw new Error(`Failed to update subscription for profile ${profile.id}: ${updateError.message}`);
+          }
 
           console.log(`[Webhook] Subscription updated for profile ${profile.id}: ${status}`);
         }
@@ -174,20 +180,27 @@ export const POST: APIRoute = async ({ request }) => {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
-        // Find profile by stripe_customer_id
-        const { data: profile } = await adminClient
+        const { data: profile, error: lookupError } = await adminClient
           .from('profiles')
           .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
 
+        if (lookupError) {
+          throw new Error(`Failed to look up profile for customer ${customerId}: ${lookupError.message}`);
+        }
+
         if (profile) {
-          await adminClient
+          const { error: updateError } = await adminClient
             .from('profiles')
             .update({
               subscription_status: 'cancelled',
             })
             .eq('id', profile.id);
+
+          if (updateError) {
+            throw new Error(`Failed to cancel subscription for profile ${profile.id}: ${updateError.message}`);
+          }
 
           console.log(`[Webhook] Subscription cancelled for profile ${profile.id}`);
         }
@@ -198,26 +211,32 @@ export const POST: APIRoute = async ({ request }) => {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
 
-        // Only process renewal invoices (not the initial payment)
         if (invoice.billing_reason === 'subscription_cycle') {
-          const { data: profile } = await adminClient
+          const { data: profile, error: lookupError } = await adminClient
             .from('profiles')
             .select('id')
             .eq('stripe_customer_id', customerId)
             .single();
 
+          if (lookupError) {
+            throw new Error(`Failed to look up profile for customer ${customerId}: ${lookupError.message}`);
+          }
+
           if (profile) {
-            // Extend subscription by 1 year for renewals
             const endDate = new Date();
             endDate.setFullYear(endDate.getFullYear() + 1);
 
-            await adminClient
+            const { error: updateError } = await adminClient
               .from('profiles')
               .update({
                 subscription_status: 'active',
                 subscription_end_date: endDate.toISOString(),
               })
               .eq('id', profile.id);
+
+            if (updateError) {
+              throw new Error(`Failed to renew subscription for profile ${profile.id}: ${updateError.message}`);
+            }
 
             console.log(`[Webhook] Subscription renewed for profile ${profile.id}`);
           }
@@ -229,20 +248,27 @@ export const POST: APIRoute = async ({ request }) => {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
 
-        const { data: profile } = await adminClient
+        const { data: profile, error: lookupError } = await adminClient
           .from('profiles')
           .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
 
+        if (lookupError) {
+          throw new Error(`Failed to look up profile for customer ${customerId}: ${lookupError.message}`);
+        }
+
         if (profile) {
-          // Mark as expired after payment failure
-          await adminClient
+          const { error: updateError } = await adminClient
             .from('profiles')
             .update({
               subscription_status: 'expired',
             })
             .eq('id', profile.id);
+
+          if (updateError) {
+            throw new Error(`Failed to mark payment failed for profile ${profile.id}: ${updateError.message}`);
+          }
 
           console.log(`[Webhook] Payment failed for profile ${profile.id}`);
         }
@@ -267,13 +293,17 @@ export const POST: APIRoute = async ({ request }) => {
     console.error('[Webhook] Handler error:', error);
 
     // Mark event as failed for investigation
-    await adminClient
-      .from('stripe_events')
-      .update({
-        status: 'failed',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-      })
-      .eq('stripe_event_id', event.id);
+    try {
+      await adminClient
+        .from('stripe_events')
+        .update({
+          status: 'failed',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+        })
+        .eq('stripe_event_id', event.id);
+    } catch (markError) {
+      console.error('[Webhook] Failed to mark event as failed:', markError);
+    }
 
     return new Response(
       JSON.stringify({ error: 'Webhook handler failed' }),
