@@ -1,7 +1,19 @@
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateBody } from '../../../lib/api/validation';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
+
+const bodySchema = z.object({
+  wedding_name: z.string().min(1),
+  couple_names: z.string().min(1),
+  wedding_slug: z.string().min(1),
+  email: z.string().min(1),
+  password: z.string().min(1),
+  wedding_date: z.string().optional(),
+  username: z.string().optional(),
+});
 
 export const prerender = false;
 
@@ -61,20 +73,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const body = await request.json();
-    const { wedding_name, couple_names, wedding_date, wedding_slug, username, password, email } = body;
-
-    if (!wedding_name || !couple_names || !wedding_slug || !password || !email) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          message: 'wedding_name, couple_names, wedding_slug, email, and password are required',
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const validation = validateBody(bodySchema, body);
+    if ('error' in validation) return validation.error;
+    const { wedding_name, couple_names, wedding_date, wedding_slug, username, password, email } = validation.data;
 
     const authResult = await adminClient.auth.admin.createUser({
       email,

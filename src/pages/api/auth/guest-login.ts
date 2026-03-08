@@ -1,6 +1,13 @@
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateBody } from '../../../lib/api/validation';
+
+const bodySchema = z.object({
+  code: z.string().min(1),
+  guestName: z.string().optional(),
+});
 
 export const prerender = false;
 
@@ -13,11 +20,9 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const body = await request.json();
-    const { code, guestName } = body;
-
-    if (!code || typeof code !== 'string') {
-      return apiResponse.error('Missing code', 'Access code is required.', 400, 'code');
-    }
+    const validation = validateBody(bodySchema, body);
+    if ('error' in validation) return validation.error;
+    const { code, guestName } = validation.data;
 
     const upperCode = code.toUpperCase().trim();
 

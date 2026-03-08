@@ -18,6 +18,28 @@ const CLIENT_SESSION_HOURS = 24 * 7; // 7 days
 const GUEST_SESSION_HOURS = 24; // 1 day
 const REFRESH_TOKEN_DAYS = 30;
 
+// Cookie name for server-side auth verification.
+// Must match AUTH_SESSION_COOKIE in src/lib/supabase/server.ts.
+const SESSION_COOKIE_NAME = 'reflets_session_token';
+
+/**
+ * Set the session token as an HTTP cookie for server-side verification.
+ * Uses SameSite=Lax for CSRF protection.
+ */
+function setSessionCookie(token: string, maxAgeHours: number): void {
+  if (typeof document === 'undefined') return;
+  const maxAge = maxAgeHours * 60 * 60;
+  document.cookie = `${SESSION_COOKIE_NAME}=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
+/**
+ * Clear the session cookie.
+ */
+function clearSessionCookie(): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${SESSION_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
+}
+
 /**
  * Generate a secure random token
  */
@@ -168,6 +190,8 @@ export async function clientLogin(username: string, password: string): Promise<{
         wedding_slug: client.wedding_slug,
         is_admin: true,
       } as ClientSession));
+      // Also set cookie for server-side auth verification
+      setSessionCookie(token, CLIENT_SESSION_HOURS);
     }
 
     return {
@@ -427,9 +451,10 @@ export async function refreshClientToken(refreshToken: string): Promise<{
       return { success: false, error: 'Failed to refresh token' };
     }
 
-    // Update localStorage
+    // Update localStorage and cookie
     if (typeof window !== 'undefined') {
       localStorage.setItem(CLIENT_TOKEN_KEY, newToken);
+      setSessionCookie(newToken, CLIENT_SESSION_HOURS);
     }
 
     return { success: true, token: newToken };
@@ -459,6 +484,7 @@ export async function clientLogout(): Promise<void> {
 
     localStorage.removeItem(CLIENT_TOKEN_KEY);
     localStorage.removeItem(CLIENT_SESSION_KEY);
+    clearSessionCookie();
   } catch (error) {
     console.error('Client logout error:', error);
   }

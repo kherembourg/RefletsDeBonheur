@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Check, X, AlertCircle, Send, Heart } from 'lucide-react';
 import type { AttendanceStatus, WeddingConfig } from '../../lib/types';
+import { RSVPService } from '../../lib/rsvp/rsvpService';
 
 interface WeddingRSVPProps {
   weddingId: string;
@@ -15,6 +16,11 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  const rsvpServiceRef = useRef<RSVPService | null>(null);
+  if (!rsvpServiceRef.current) {
+    rsvpServiceRef.current = new RSVPService({ weddingId });
+  }
 
   const primaryColor = config.theme.primaryColor || '#ae1725';
 
@@ -34,20 +40,26 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
 
     setIsSubmitting(true);
 
-    // Simulate API call (replace with actual Supabase call)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      await rsvpServiceRef.current!.submitResponse({
+        weddingId,
+        respondentName: name.trim(),
+        attendance,
+        guests: [],
+        answers: [],
+        message: [
+          mealPreference ? `Meal: ${mealPreference}` : '',
+          dietaryRestrictions ? `Dietary: ${dietaryRestrictions}` : '',
+        ].filter(Boolean).join('; ') || undefined,
+      });
 
-    // In production:
-    // await supabase.from('guests_rsvp').insert({
-    //   wedding_id: weddingId,
-    //   name,
-    //   attendance,
-    //   meal_preference: mealPreference,
-    //   dietary_restrictions: dietaryRestrictions,
-    // });
-
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('RSVP submission failed:', err);
+      setError('Une erreur est survenue lors de l\'envoi. Veuillez réessayer.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {

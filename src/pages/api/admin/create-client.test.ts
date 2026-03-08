@@ -543,12 +543,13 @@ describe('Admin Create Client Endpoint', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required fields');
-      expect(data.message).toContain('wedding_name');
-      expect(data.message).toContain('couple_names');
-      expect(data.message).toContain('wedding_slug');
-      expect(data.message).toContain('email');
-      expect(data.message).toContain('password');
+      expect(data.error).toBe('Validation error');
+      expect(data.message).toBe('Invalid request body');
+      // Field-level errors are in details
+      expect(data.details.couple_names).toBeDefined();
+      expect(data.details.wedding_slug).toBeDefined();
+      expect(data.details.email).toBeDefined();
+      expect(data.details.password).toBeDefined();
     });
 
     it('should handle duplicate email gracefully', async () => {

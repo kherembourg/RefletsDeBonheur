@@ -30,7 +30,6 @@ import { AdminSection, AdminCard, AdminButton } from './ui';
 import { useToast } from '../ui/Toast';
 import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
 import { DataService, type Album, type GallerySettings, type WeddingStatistics } from '../../lib/services/dataService';
-import { mockAPI, downloadBlob } from '../../lib/api';
 import { calculateEnhancedStatistics } from '../../lib/statistics';
 import type { ThemeId } from '../../lib/themes';
 
@@ -75,7 +74,7 @@ export function AdminPanel({
   const [enhancedStats, setEnhancedStats] = useState<ReturnType<typeof calculateEnhancedStatistics> | null>(null);
   const [settings, setSettingsState] = useState<GallerySettings>(dataService.getSettings());
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const exporting = false; // Backup export not yet implemented
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('classic');
   const [subscriptionRefreshKey, setSubscriptionRefreshKey] = useState(0);
   const { showToast, ToastContainer } = useToast();
@@ -162,7 +161,7 @@ export function AdminPanel({
   const toggleUploads = async (enabled: boolean) => {
     setSettingsLoading(true);
     try {
-      await mockAPI.toggleUploads(enabled);
+      await dataService.updateSettings({ allowUploads: enabled });
       // Update local settings state
       setSettingsState(prev => ({ ...prev, allowUploads: enabled }));
     } catch (error) {
@@ -174,17 +173,10 @@ export function AdminPanel({
   };
 
   const handleBackup = async () => {
-    setExporting(true);
-    try {
-      const blob = await mockAPI.exportBackup();
-      const filename = `reflets-de-bonheur-backup-${new Date().toISOString().split('T')[0]}.zip`;
-      downloadBlob(blob, filename);
-    } catch (error) {
-      console.error('Backup failed:', error);
-      alert('Erreur lors de la création de la sauvegarde');
-    } finally {
-      setExporting(false);
-    }
+    // Real export requires server-side ZIP generation from R2 storage
+    // This is not yet implemented
+    console.warn('[TODO] Real export not implemented yet');
+    showToast('info', 'La fonctionnalité d\'export sera bientôt disponible.');
   };
 
   const profileLabel = settings.coupleName || weddingSlug || 'Profil';

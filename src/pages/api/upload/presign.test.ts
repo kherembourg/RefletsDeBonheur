@@ -710,7 +710,7 @@ describe('Upload Presign API - Authorization Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required fields');
+      expect(data.error).toBe('Validation error');
     });
 
     it('should reject missing fileName (400)', async () => {
@@ -723,7 +723,7 @@ describe('Upload Presign API - Authorization Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required fields');
+      expect(data.error).toBe('Validation error');
     });
 
     it('should reject missing contentType (400)', async () => {
@@ -736,7 +736,7 @@ describe('Upload Presign API - Authorization Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required fields');
+      expect(data.error).toBe('Validation error');
     });
 
     it('should reject invalid content type (text/plain not allowed)', async () => {
@@ -861,7 +861,7 @@ describe('Upload Presign API - Authorization Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required fields');
+      expect(data.error).toBe('Validation error');
     });
   });
 

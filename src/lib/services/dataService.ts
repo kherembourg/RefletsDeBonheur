@@ -622,6 +622,51 @@ export class DataService {
     };
   }
 
+  /**
+   * Update gallery settings (e.g., toggle uploads)
+   * In production, updates the wedding config in Supabase.
+   * In demo mode, updates local mock state.
+   */
+  async updateSettings(updates: Partial<GallerySettings>): Promise<void> {
+    if (this.demoMode) {
+      // Update local mock settings
+      if (updates.allowUploads !== undefined) {
+        mockSettings.allowUploads = updates.allowUploads;
+      }
+      return;
+    }
+
+    if (!this.weddingId) {
+      throw new Error('No wedding ID set for production mode');
+    }
+
+    // Fetch current wedding config, then merge the update
+    const wedding = await weddingsApi.getById(this.weddingId);
+    if (!wedding) {
+      throw new Error('Wedding not found');
+    }
+
+    const updatedConfig = { ...wedding.config };
+
+    if (updates.allowUploads !== undefined) {
+      updatedConfig.features = {
+        ...updatedConfig.features,
+        gallery: updates.allowUploads,
+      };
+    }
+
+    if (updates.moderationEnabled !== undefined) {
+      updatedConfig.moderation = {
+        ...updatedConfig.moderation,
+        enabled: updates.moderationEnabled,
+      };
+    }
+
+    await weddingsApi.update(this.weddingId, {
+      config: updatedConfig,
+    });
+  }
+
   // ============================================
   // Album Methods
   // ============================================

@@ -21,11 +21,20 @@
  */
 
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { generatePresignedUploadUrl } from '../../../lib/r2';
 import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
 import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateBody } from '../../../lib/api/validation';
+
+const bodySchema = z.object({
+  weddingId: z.string().min(1),
+  fileName: z.string().min(1),
+  contentType: z.string().min(1),
+  guestIdentifier: z.string().optional(),
+});
 
 export const prerender = false;
 
@@ -95,20 +104,9 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
 
     // Validate required fields
-    const { weddingId, fileName, contentType, guestIdentifier } = body;
-
-    if (!weddingId || !fileName || !contentType) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          message: 'weddingId, fileName, and contentType are required',
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const validation = validateBody(bodySchema, body);
+    if ('error' in validation) return validation.error;
+    const { weddingId, fileName, contentType, guestIdentifier } = validation.data;
 
     // Check subscription status - only allow cloud uploads for active subscriptions
     if (isSupabaseConfigured() && isSupabaseServiceRoleConfigured()) {
