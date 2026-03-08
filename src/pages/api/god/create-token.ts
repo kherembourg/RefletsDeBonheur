@@ -111,7 +111,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (insertError) {
       console.error('[API] Create token error:', insertError);
       return new Response(
-        JSON.stringify({ error: 'Failed to create access token', message: insertError.message }),
+        JSON.stringify({ error: 'Failed to create access token', message: 'An unexpected error occurred.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }

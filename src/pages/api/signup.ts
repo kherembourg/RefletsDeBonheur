@@ -160,10 +160,11 @@ export const POST: APIRoute = async ({ request }) => {
         );
       }
 
+      console.error('[API] Failed to create auth user:', authResult.error);
       return new Response(
         JSON.stringify({
           error: 'Failed to create account',
-          message: authResult.error?.message || 'Unknown error occurred.',
+          message: 'An unexpected error occurred.',
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
@@ -343,7 +344,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred.',
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );

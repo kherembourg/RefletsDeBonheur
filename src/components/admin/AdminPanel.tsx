@@ -18,6 +18,7 @@ import {
   Printer,
   Link2
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { SettingsToggle } from './SettingsToggle';
 import { QRCodeGenerator } from './QRCodeGenerator';
 import { AlbumManager } from './AlbumManager';
@@ -29,9 +30,10 @@ import { AdminSection, AdminCard, AdminButton } from './ui';
 import { useToast } from '../ui/Toast';
 import { requireAuth, isAdmin as checkIsAdmin } from '../../lib/auth';
 import { DataService, type Album, type GallerySettings, type WeddingStatistics } from '../../lib/services/dataService';
-import { mockAPI, downloadBlob } from '../../lib/api';
 import { calculateEnhancedStatistics } from '../../lib/statistics';
 import type { ThemeId } from '../../lib/themes';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 
 type AdminView = 'dashboard' | 'rsvp' | 'gallery' | 'settings' | 'account';
 type GalleryTab = 'all' | 'albums' | 'settings';
@@ -42,6 +44,7 @@ interface AdminPanelProps {
   profileId?: string;
   demoMode?: boolean;
   initialView?: AdminView;
+  lang?: Language;
 }
 
 export function AdminPanel({
@@ -49,7 +52,8 @@ export function AdminPanel({
   weddingSlug,
   profileId,
   demoMode = false,
-  initialView
+  initialView,
+  lang = 'fr'
 }: AdminPanelProps) {
   // Create service once using ref
   const serviceRef = useRef<DataService | null>(null);
@@ -74,7 +78,7 @@ export function AdminPanel({
   const [enhancedStats, setEnhancedStats] = useState<ReturnType<typeof calculateEnhancedStatistics> | null>(null);
   const [settings, setSettingsState] = useState<GallerySettings>(dataService.getSettings());
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const exporting = false; // Backup export not yet implemented
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('classic');
   const [subscriptionRefreshKey, setSubscriptionRefreshKey] = useState(0);
   const { showToast, ToastContainer } = useToast();
@@ -113,7 +117,7 @@ export function AdminPanel({
             id: m.id,
             url: m.url,
             type: m.type,
-            author: m.author || 'Anonyme',
+            author: m.author || t(lang, 'media.anonymous'),
             createdAt: m.createdAt,
             reactions: m.reactions ? Object.entries(m.reactions).map(([type, count]) => ({
               type: type as any,
@@ -145,13 +149,13 @@ export function AdminPanel({
     const payment = params.get('payment');
 
     if (payment === 'success') {
-      showToast('success', 'Paiement réussi ! Votre abonnement est maintenant actif.');
+      showToast('success', t(lang, 'admin.paymentSuccess'));
       // Remove query param from URL to prevent re-showing on refresh
       window.history.replaceState({}, '', window.location.pathname);
       // Trigger subscription status refresh
       setSubscriptionRefreshKey(prev => prev + 1);
     } else if (payment === 'cancelled') {
-      showToast('info', 'Paiement annulé. Vous pouvez réessayer à tout moment.');
+      showToast('info', t(lang, 'admin.paymentCancelled'));
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [showToast]);
@@ -161,32 +165,25 @@ export function AdminPanel({
   const toggleUploads = async (enabled: boolean) => {
     setSettingsLoading(true);
     try {
-      await mockAPI.toggleUploads(enabled);
+      await dataService.updateSettings({ allowUploads: enabled });
       // Update local settings state
       setSettingsState(prev => ({ ...prev, allowUploads: enabled }));
     } catch (error) {
       console.error('Settings update failed:', error);
-      alert('Erreur lors de la mise à jour des paramètres');
+      alert(t(lang, 'admin.settingsUpdateError'));
     } finally {
       setSettingsLoading(false);
     }
   };
 
   const handleBackup = async () => {
-    setExporting(true);
-    try {
-      const blob = await mockAPI.exportBackup();
-      const filename = `reflets-de-bonheur-backup-${new Date().toISOString().split('T')[0]}.zip`;
-      downloadBlob(blob, filename);
-    } catch (error) {
-      console.error('Backup failed:', error);
-      alert('Erreur lors de la création de la sauvegarde');
-    } finally {
-      setExporting(false);
-    }
+    // Real export requires server-side ZIP generation from R2 storage
+    // This is not yet implemented
+    console.warn('[TODO] Real export not implemented yet');
+    showToast('info', t(lang, 'admin.exportComingSoon'));
   };
 
-  const profileLabel = settings.coupleName || weddingSlug || 'Profil';
+  const profileLabel = settings.coupleName || weddingSlug || t(lang, 'admin.profile');
   const initials = profileLabel
     .split(' ')
     .map(part => part[0])
@@ -201,7 +198,8 @@ export function AdminPanel({
   );
   const storagePercent = Math.min(100, (storageUsed / storageLimit) * 100);
 
-  const shareUrl = weddingSlug ? `/${weddingSlug}/photos` : '/demo_gallery';
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const shareUrl = weddingSlug ? `${origin}/${weddingSlug}/photos` : `${origin}/demo_gallery`;
 
   const navItems: Array<{
     id: AdminView;
@@ -215,34 +213,34 @@ export function AdminPanel({
     type: 'link';
     href: string;
   }> = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, type: 'view' },
-    { id: 'rsvp', label: 'RSVPs', icon: UserCheck, type: 'view' },
+    { id: 'dashboard', label: t(lang, 'admin.dashboard'), icon: LayoutDashboard, type: 'view' },
+    { id: 'rsvp', label: t(lang, 'admin.rsvps'), icon: UserCheck, type: 'view' },
     {
       id: 'website',
-      label: 'Website Editor',
+      label: t(lang, 'admin.websiteEditor'),
       icon: Edit3,
       type: 'link',
       href: weddingSlug ? `/${weddingSlug}/admin/website-editor` : '/admin/website-editor'
     },
-    { id: 'gallery', label: 'Photo Gallery', icon: ImageIcon, type: 'view' },
+    { id: 'gallery', label: t(lang, 'admin.photoGallery'), icon: ImageIcon, type: 'view' },
     {
       id: 'guestbook',
-      label: "Guestbook",
+      label: t(lang, 'admin.guestbook'),
       icon: BookOpen,
       type: 'link',
       href: weddingSlug ? `/${weddingSlug}/livre-or` : '/guestbook'
     },
-    { id: 'settings', label: 'Settings', icon: Settings, type: 'view' },
-    { id: 'account', label: 'Account', icon: User, type: 'view' },
+    { id: 'settings', label: t(lang, 'admin.settingsNav'), icon: Settings, type: 'view' },
+    { id: 'account', label: t(lang, 'admin.accountNav'), icon: User, type: 'view' },
   ];
 
   const handleCopyGalleryUrl = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      alert('URL copiée dans le presse-papiers.');
-    } catch (error) {
-      console.error('Copy failed', error);
-      alert('Impossible de copier l’URL.');
+      alert(t(lang, "admin.urlCopied"));
+    } catch (copyErr) {
+      console.error("Copy failed", copyErr);
+      alert(t(lang, "admin.urlCopyError"));
     }
   };
 
@@ -254,19 +252,19 @@ export function AdminPanel({
   const renderDashboardContent = () => (
     <div className="space-y-10">
       <header>
-        <h1 className="font-serif text-3xl sm:text-4xl text-charcoal">Welcome back</h1>
+        <h1 className="font-serif text-3xl sm:text-4xl text-charcoal">{t(lang, 'admin.welcomeBack')}</h1>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8 space-y-8">
           <section>
-            <h2 className="font-serif text-xl text-charcoal mb-4">Vue d'ensemble</h2>
+            <h2 className="font-serif text-xl text-charcoal mb-4">{t(lang, 'admin.overview')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Photos', value: stats.photoCount, icon: ImageIcon },
-                { label: 'Messages', value: stats.messageCount, icon: MessageSquare },
-                { label: 'Favoris', value: stats.favoriteCount, icon: Heart },
-                { label: 'Albums', value: stats.albumCount, icon: FolderOpen },
+                { label: t(lang, 'admin.photosLabel'), value: stats.photoCount, icon: ImageIcon },
+                { label: t(lang, 'admin.messagesLabel'), value: stats.messageCount, icon: MessageSquare },
+                { label: t(lang, 'admin.favorites'), value: stats.favoriteCount, icon: Heart },
+                { label: t(lang, 'admin.albums'), value: stats.albumCount, icon: FolderOpen },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -285,7 +283,7 @@ export function AdminPanel({
           </section>
 
           <section>
-            <h2 className="font-serif text-xl text-charcoal mb-4">Actions rapides</h2>
+            <h2 className="font-serif text-xl text-charcoal mb-4">{t(lang, 'admin.quickActions')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button
                 onClick={() => setCurrentView('rsvp')}
@@ -296,9 +294,9 @@ export function AdminPanel({
                   <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-[#c9a8a8]/40"></div>
                   <UserCheck className="w-10 h-10 text-[#b08b8b]" />
                 </div>
-                <h3 className="font-semibold text-charcoal mb-2 font-serif">Gestion RSVP</h3>
+                <h3 className="font-semibold text-charcoal mb-2 font-serif">{t(lang, 'admin.rsvpManagement')}</h3>
                 <p className="text-xs text-charcoal/50 leading-relaxed max-w-[220px]">
-                  Configurez les questions et suivez les réponses en un clin d'œil.
+                  {t(lang, 'admin.rsvpDescription')}
                 </p>
               </button>
 
@@ -311,20 +309,20 @@ export function AdminPanel({
                   <div className="absolute right-6 bottom-4 w-14 h-14 rounded-full bg-[#c7a1a1]/40"></div>
                   <Edit3 className="w-10 h-10 text-[#b08b8b]" />
                 </div>
-                <h3 className="font-semibold text-charcoal mb-2 font-serif">Éditeur de site</h3>
+                <h3 className="font-semibold text-charcoal mb-2 font-serif">{t(lang, 'admin.siteEditor')}</h3>
                 <p className="text-xs text-charcoal/50 leading-relaxed max-w-[220px]">
-                  Personnalisez votre site et les sections clés du mariage.
+                  {t(lang, 'admin.siteEditorDescription')}
                 </p>
               </a>
             </div>
           </section>
 
           <section>
-            <h2 className="font-serif text-xl text-charcoal mb-4">Albums</h2>
+            <h2 className="font-serif text-xl text-charcoal mb-4">{t(lang, 'admin.albums')}</h2>
             <div className="bg-white rounded-xl border border-charcoal/5 shadow-xs p-6">
               <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <div className="relative w-full sm:w-auto">
-                  <label className="block text-xs font-semibold text-charcoal mb-1 ml-1">Recherche</label>
+                  <label className="block text-xs font-semibold text-charcoal mb-1 ml-1">{t(lang, 'admin.search')}</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40">
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,7 +331,7 @@ export function AdminPanel({
                     </span>
                     <input
                       className="pl-9 pr-4 py-2 border border-charcoal/10 rounded-lg text-sm text-charcoal w-full sm:w-64 focus:ring-[#b08b8b] focus:border-[#b08b8b] placeholder-charcoal/30"
-                      placeholder="Rechercher"
+                      placeholder={t(lang, 'admin.searchPlaceholder')}
                       type="text"
                     />
                   </div>
@@ -342,14 +340,14 @@ export function AdminPanel({
                   onClick={handleOpenAlbums}
                   className="bg-[#b08b8b] hover:bg-[#967272] text-white text-xs font-medium px-6 py-2.5 rounded-lg transition-colors"
                 >
-                  Nouvel Album
+                  {t(lang, 'admin.newAlbum')}
                 </button>
               </div>
 
               <div className="space-y-4">
                 {dashboardAlbums.length === 0 ? (
                   <div className="text-sm text-charcoal/50 text-center py-6">
-                    Aucun album pour le moment.
+                    {t(lang, 'admin.noAlbums')}
                   </div>
                 ) : (
                   dashboardAlbums.slice(0, 4).map((album, index) => (
@@ -362,7 +360,7 @@ export function AdminPanel({
                           />
                           <div>
                             <h4 className="text-sm font-semibold text-charcoal">{album.name}</h4>
-                            <p className="text-xs text-charcoal/50">{album.photoCount || 0} photos</p>
+                            <p className="text-xs text-charcoal/50">{album.photoCount || 0} {t(lang, 'admin.photos')}</p>
                           </div>
                         </div>
                         <button className="text-charcoal/40 hover:text-charcoal p-2 rounded-full hover:bg-charcoal/5">
@@ -385,23 +383,27 @@ export function AdminPanel({
         <div className="lg:col-span-4">
           <div className="bg-white rounded-xl border border-charcoal/10 shadow-sm p-6 flex flex-col items-center">
             <div className="flex items-center justify-between w-full mb-2">
-              <h3 className="font-serif text-lg text-charcoal">QR Code Galerie</h3>
+              <h3 className="font-serif text-lg text-charcoal">{t(lang, 'admin.qrCodeGallery')}</h3>
               <QrCode className="w-5 h-5 text-charcoal/40" />
             </div>
             <span className="text-[10px] text-charcoal/40 mb-6 truncate w-full text-center">
               {shareUrl}
             </span>
-            <img
-              alt="QR Code"
-              className="w-40 h-40 mb-6 object-contain rounded-xl bg-white border border-charcoal/5"
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`}
-            />
+            <div className="w-40 h-40 mb-6 rounded-xl bg-white border border-charcoal/5 flex items-center justify-center">
+              <QRCodeSVG
+                value={shareUrl}
+                size={160}
+                bgColor="#FFFFFF"
+                fgColor="#2D2D2D"
+                level="M"
+              />
+            </div>
             <div className="w-full mb-4">
-              <label className="block text-xs font-semibold text-charcoal mb-1">Sentiaeprint :</label>
+              <label className="block text-xs font-semibold text-charcoal mb-1">{t(lang, 'admin.fingerprint')}</label>
               <div className="relative">
                 <select className="block w-full text-xs text-charcoal border-charcoal/20 rounded-md focus:border-[#b08b8b] focus:ring-[#b08b8b] py-2 pl-3 pr-8 bg-white shadow-sm appearance-none">
-                  <option>Automatique</option>
-                  <option>Manuel</option>
+                  <option>{t(lang, 'admin.automatic')}</option>
+                  <option>{t(lang, 'admin.manual')}</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-charcoal/60">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -415,18 +417,18 @@ export function AdminPanel({
               <button
                 className="w-full bg-[#b08b8b] hover:bg-[#967272] text-white text-xs font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
-                <DownloadCloud className="w-4 h-4" /> Télécharger
+                <DownloadCloud className="w-4 h-4" /> {t(lang, 'admin.downloadQr')}
               </button>
               <button
                 className="w-full border border-charcoal/10 text-charcoal/70 hover:bg-charcoal/5 text-xs font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors bg-transparent"
               >
-                <Printer className="w-4 h-4" /> Imprimer
+                <Printer className="w-4 h-4" /> {t(lang, 'admin.printQr')}
               </button>
               <button
                 onClick={handleCopyGalleryUrl}
                 className="w-full border border-charcoal/10 text-charcoal/70 hover:bg-charcoal/5 text-xs font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors bg-transparent"
               >
-                <Link2 className="w-4 h-4" /> Copier URL
+                <Link2 className="w-4 h-4" /> {t(lang, 'admin.copyUrl')}
               </button>
             </div>
           </div>
@@ -438,20 +440,20 @@ export function AdminPanel({
   const renderSettingsContent = () => (
     <div className="space-y-8">
       <AdminSection
-        title="Paramètres"
-        description="Configuration de votre espace"
+        title={t(lang, 'admin.settings')}
+        description={t(lang, 'admin.settingsDescription')}
         icon={Settings}
       >
         <AdminCard padding="none">
           <div className="flex items-center justify-between p-6 border-b border-charcoal/5">
             <div>
               <h3 className="font-medium text-charcoal">
-                Autoriser les uploads
+                {t(lang, 'admin.allowUploads')}
               </h3>
               <p className="text-sm text-charcoal/50 font-light mt-1">
                 {settings.allowUploads
-                  ? 'Les invités peuvent ajouter des photos'
-                  : 'Les uploads sont actuellement désactivés'}
+                  ? t(lang, 'admin.uploadsEnabled')
+                  : t(lang, 'admin.uploadsDisabled')}
               </p>
             </div>
             <SettingsToggle
@@ -468,18 +470,18 @@ export function AdminPanel({
               loading={exporting}
               onClick={handleBackup}
             >
-              {exporting ? 'Création en cours...' : 'Télécharger la sauvegarde'}
+              {exporting ? t(lang, 'admin.creatingBackup') : t(lang, 'admin.downloadBackup')}
             </AdminButton>
             <p className="text-xs text-charcoal/40 text-center mt-3 font-light">
-              Archive ZIP contenant toutes les photos et messages
+              {t(lang, 'admin.backupDescription')}
             </p>
           </div>
         </AdminCard>
       </AdminSection>
 
       <AdminSection
-        title="Thème"
-        description="Personnalisez l'apparence"
+        title={t(lang, 'admin.theme')}
+        description={t(lang, 'admin.themeDescription')}
         icon={Palette}
       >
         <AdminCard>
@@ -492,8 +494,8 @@ export function AdminPanel({
       </AdminSection>
 
       <AdminSection
-        title="Albums"
-        description="Organisez vos photos"
+        title={t(lang, 'admin.albumsSettings')}
+        description={t(lang, 'admin.albumsSettingsDescription')}
         icon={FolderOpen}
       >
         <AdminCard>
@@ -502,8 +504,8 @@ export function AdminPanel({
       </AdminSection>
 
       <AdminSection
-        title="Abonnement"
-        description="Gérez votre forfait"
+        title={t(lang, 'admin.subscription')}
+        description={t(lang, 'admin.subscriptionDescription')}
         icon={CreditCard}
       >
         <AdminCard>
@@ -520,8 +522,8 @@ export function AdminPanel({
   const renderGalleryContent = () => (
     <div className="space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.35em] text-charcoal/40">Photo Gallery</p>
-        <h1 className="font-serif text-2xl text-charcoal mt-2">Galerie photos</h1>
+        <p className="text-xs uppercase tracking-[0.35em] text-charcoal/40">{t(lang, 'admin.photoGallery')}</p>
+        <h1 className="font-serif text-2xl text-charcoal mt-2">{t(lang, 'admin.galleryTitle')}</h1>
       </div>
 
       <div className="flex flex-wrap items-center gap-6 border-b border-charcoal/10 pb-3 text-sm">
@@ -531,7 +533,7 @@ export function AdminPanel({
             galleryTab === 'all' ? 'text-charcoal border-b border-charcoal' : 'text-charcoal/50 hover:text-charcoal'
           }`}
         >
-          Toutes les photos
+          {t(lang, 'admin.allPhotos')}
         </button>
         <button
           onClick={() => setGalleryTab('albums')}
@@ -539,7 +541,7 @@ export function AdminPanel({
             galleryTab === 'albums' ? 'text-charcoal border-b border-charcoal' : 'text-charcoal/50 hover:text-charcoal'
           }`}
         >
-          Albums
+          {t(lang, 'admin.albumsTab')}
         </button>
         <button
           onClick={() => setGalleryTab('settings')}
@@ -547,7 +549,7 @@ export function AdminPanel({
             galleryTab === 'settings' ? 'text-charcoal border-b border-charcoal' : 'text-charcoal/50 hover:text-charcoal'
           }`}
         >
-          Paramètres
+          {t(lang, 'admin.settingsTab')}
         </button>
       </div>
 
@@ -567,12 +569,12 @@ export function AdminPanel({
                 <div className="flex items-center justify-between p-6 border-b border-charcoal/5">
                   <div>
                     <h3 className="font-medium text-charcoal">
-                      Autoriser les uploads
+                      {t(lang, 'admin.allowUploads')}
                     </h3>
                     <p className="text-sm text-charcoal/50 font-light mt-1">
                       {settings.allowUploads
-                        ? 'Les invités peuvent ajouter des photos'
-                        : 'Les uploads sont actuellement désactivés'}
+                        ? t(lang, 'admin.uploadsEnabled')
+                        : t(lang, 'admin.uploadsDisabled')}
                     </p>
                   </div>
                   <SettingsToggle
@@ -589,10 +591,10 @@ export function AdminPanel({
                     loading={exporting}
                     onClick={handleBackup}
                   >
-                    {exporting ? 'Création en cours...' : 'Télécharger la sauvegarde'}
+                    {exporting ? t(lang, 'admin.creatingBackup') : t(lang, 'admin.downloadBackup')}
                   </AdminButton>
                   <p className="text-xs text-charcoal/40 text-center mt-3 font-light">
-                    Archive ZIP contenant toutes les photos et messages
+                    {t(lang, 'admin.backupDescription')}
                   </p>
                 </div>
               </AdminCard>
@@ -602,10 +604,10 @@ export function AdminPanel({
 
         <aside className="space-y-6">
           <div className="rounded-2xl bg-white border border-charcoal/10 shadow-sm p-5">
-            <h3 className="text-sm font-medium text-charcoal/70 mb-4">Statistiques galerie</h3>
+            <h3 className="text-sm font-medium text-charcoal/70 mb-4">{t(lang, 'admin.galleryStats')}</h3>
             <div className="space-y-4">
               <div>
-                <p className="text-xs uppercase tracking-wider text-charcoal/40">Stockage utilisé</p>
+                <p className="text-xs uppercase tracking-wider text-charcoal/40">{t(lang, 'admin.storageUsed')}</p>
                 <p className="text-lg font-semibold text-charcoal mt-1">
                   {storageUsed.toFixed(1)} GB / {storageLimit} GB
                 </p>
@@ -618,23 +620,23 @@ export function AdminPanel({
                 <span className="text-charcoal">{stats.photoCount}</span>
               </div>
               <div className="flex items-center justify-between text-sm text-charcoal/60">
-                <span>Albums</span>
+                <span>{t(lang, 'admin.albums')}</span>
                 <span className="text-charcoal">{stats.albumCount}</span>
               </div>
               <div className="flex items-center justify-between text-sm text-charcoal/60">
-                <span>Favoris</span>
+                <span>{t(lang, 'admin.favorites')}</span>
                 <span className="text-charcoal">{stats.favoriteCount}</span>
               </div>
             </div>
           </div>
 
           <div className="rounded-2xl bg-white border border-charcoal/10 shadow-sm p-5">
-            <h3 className="text-sm font-medium text-charcoal/70 mb-4">Partager la galerie</h3>
+            <h3 className="text-sm font-medium text-charcoal/70 mb-4">{t(lang, 'admin.shareGallery')}</h3>
             <div className="rounded-xl bg-cream/70 px-3 py-2 text-xs text-charcoal/60 break-all">
               {shareUrl}
             </div>
             <div className="mt-4 flex justify-center">
-              <QRCodeGenerator />
+              <QRCodeGenerator weddingSlug={weddingSlug} />
             </div>
           </div>
         </aside>
@@ -645,8 +647,8 @@ export function AdminPanel({
   const renderAccountContent = () => (
     <div className="space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.35em] text-charcoal/40">Compte</p>
-        <h1 className="font-serif text-2xl text-charcoal mt-2">Profil & accès</h1>
+        <p className="text-xs uppercase tracking-[0.35em] text-charcoal/40">{t(lang, 'admin.account')}</p>
+        <h1 className="font-serif text-2xl text-charcoal mt-2">{t(lang, 'admin.profileAndAccess')}</h1>
       </div>
       <AdminCard>
         <div className="flex items-center gap-4">
@@ -655,11 +657,11 @@ export function AdminPanel({
           </div>
           <div>
             <p className="text-lg font-medium text-charcoal">{profileLabel}</p>
-            <p className="text-sm text-charcoal/50">Administrateur</p>
+            <p className="text-sm text-charcoal/50">{t(lang, 'admin.administrator')}</p>
           </div>
         </div>
         <div className="mt-6 text-sm text-charcoal/60">
-          Gérez les accès, les codes invités et les préférences de sécurité depuis cet espace.
+          {t(lang, 'admin.accountDescription')}
         </div>
       </AdminCard>
     </div>
@@ -673,7 +675,7 @@ export function AdminPanel({
         <div className="w-8 h-8 animate-spin">
           <Loader2 className="w-full h-full text-burgundy-old" />
         </div>
-        <span className="ml-3 text-charcoal/60 font-light">Chargement...</span>
+        <span className="ml-3 text-charcoal/60 font-light">{t(lang, 'admin.loading')}</span>
       </div>
     );
   } else if (currentView === 'rsvp') {
@@ -734,7 +736,7 @@ export function AdminPanel({
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-charcoal truncate">Profile</p>
+              <p className="text-sm font-bold text-charcoal truncate">{t(lang, 'admin.profile')}</p>
               <p className="text-xs text-charcoal/50 truncate">{profileLabel}</p>
             </div>
             <svg className="w-4 h-4 text-charcoal/40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -753,7 +755,7 @@ export function AdminPanel({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className="font-serif text-lg text-charcoal">Administration</span>
+            <span className="font-serif text-lg text-charcoal">{t(lang, 'admin.administration')}</span>
             <div className="w-10 h-10 rounded-full bg-white border border-charcoal/10 flex items-center justify-center text-xs text-charcoal/50">
               {initials}
             </div>
@@ -767,7 +769,7 @@ export function AdminPanel({
         <div className="fixed inset-0 z-50 md:hidden bg-black/30" onClick={() => setMobileNavOpen(false)}>
           <div className="h-full w-72 bg-white shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <span className="font-serif text-lg text-charcoal">Navigation</span>
+              <span className="font-serif text-lg text-charcoal">{t(lang, 'admin.navigation')}</span>
               <button
                 onClick={() => setMobileNavOpen(false)}
                 className="w-8 h-8 rounded-full border border-charcoal/10 flex items-center justify-center text-charcoal/60"

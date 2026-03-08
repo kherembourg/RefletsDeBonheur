@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { UploadForm } from './UploadForm';
+import { UploadForm, MAX_FILE_SIZE } from './UploadForm';
 
 // Mock DataService
 const mockUploadMediaBatch = vi.fn();
@@ -16,17 +16,16 @@ const mockDataService = {
   uploadMediaBatch: mockUploadMediaBatch,
 };
 
+// Mock URL.createObjectURL and revokeObjectURL for jsdom
+const mockCreateObjectURL = vi.fn((file: File) => `blob:mock/${file.name}`);
+const mockRevokeObjectURL = vi.fn();
+globalThis.URL.createObjectURL = mockCreateObjectURL;
+globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
+
 // Mock auth module
 vi.mock('../../lib/auth', () => ({
   getUsername: vi.fn(() => 'Sophie'),
   setUsername: vi.fn(),
-}));
-
-// Mock API
-vi.mock('../../lib/api', () => ({
-  mockAPI: {
-    generateCaption: vi.fn().mockResolvedValue('Beautiful moment captured'),
-  },
 }));
 
 describe('UploadForm Component', () => {
@@ -253,54 +252,6 @@ describe('UploadForm Component', () => {
       expect(captionInput).toHaveValue('Beautiful sunset');
     });
 
-    it('should show AI caption generation button for images', async () => {
-      const user = userEvent.setup();
-      render(
-        <UploadForm
-          onUploadComplete={mockOnUploadComplete}
-          onClose={mockOnClose}
-          dataService={mockDataService as any}
-        />
-      );
-
-      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
-      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
-
-      await user.upload(input, file);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/générer une légende avec l'ia/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should generate AI caption when button clicked', async () => {
-      const user = userEvent.setup();
-      const { mockAPI } = await import('../../lib/api');
-      
-      render(
-        <UploadForm
-          onUploadComplete={mockOnUploadComplete}
-          onClose={mockOnClose}
-          dataService={mockDataService as any}
-        />
-      );
-
-      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
-      const fileInput = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
-
-      await user.upload(fileInput, file);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/générer une légende avec l'ia/i)).toBeInTheDocument();
-      });
-
-      const aiButton = screen.getByLabelText(/générer une légende avec l'ia/i);
-      await user.click(aiButton);
-
-      await waitFor(() => {
-        expect(mockAPI.generateCaption).toHaveBeenCalled();
-      });
-    });
   });
 
   describe('File Removal', () => {
@@ -352,6 +303,10 @@ describe('UploadForm Component', () => {
         expect(screen.getByText('test.jpg')).toBeInTheDocument();
       });
 
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
 
@@ -387,6 +342,10 @@ describe('UploadForm Component', () => {
         expect(screen.getByText('test.jpg')).toBeInTheDocument();
       });
 
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
 
@@ -420,6 +379,10 @@ describe('UploadForm Component', () => {
       await waitFor(() => {
         expect(screen.getByText('test.jpg')).toBeInTheDocument();
       });
+
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
 
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
@@ -458,6 +421,10 @@ describe('UploadForm Component', () => {
         expect(screen.getByText('test1.jpg')).toBeInTheDocument();
       });
 
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
       const uploadButton = screen.getByRole('button', { name: /envoyer 2 souvenirs/i });
       await user.click(uploadButton);
 
@@ -485,6 +452,10 @@ describe('UploadForm Component', () => {
         expect(screen.getByText('test.jpg')).toBeInTheDocument();
       });
 
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
 
@@ -511,6 +482,10 @@ describe('UploadForm Component', () => {
       await waitFor(() => {
         expect(screen.getByText('test.jpg')).toBeInTheDocument();
       });
+
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
 
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
@@ -542,6 +517,10 @@ describe('UploadForm Component', () => {
         expect(screen.getByText('test.jpg')).toBeInTheDocument();
       });
 
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
 
@@ -550,6 +529,72 @@ describe('UploadForm Component', () => {
       });
 
       alertSpy.mockRestore();
+    });
+  });
+
+  describe('GDPR Consent', () => {
+    it('should show consent checkbox when files are queued', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+      await user.upload(input, file);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/consentement/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should disable upload button when consent is not given', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+      await user.upload(input, file);
+
+      await waitFor(() => {
+        const uploadButton = screen.getByRole('button', { name: /envoyer/i });
+        expect(uploadButton).toBeDisabled();
+      });
+    });
+
+    it('should enable upload button when consent is given', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+      await user.upload(input, file);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/consentement/i)).toBeInTheDocument();
+      });
+
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
+      const uploadButton = screen.getByRole('button', { name: /envoyer/i });
+      expect(uploadButton).not.toBeDisabled();
     });
   });
 
@@ -575,11 +620,17 @@ describe('UploadForm Component', () => {
         expect(screen.getByText('test.jpg')).toBeInTheDocument();
       });
 
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
 
+      // During upload, the upload button is replaced by a disabled "Envoi en cours" button
       await waitFor(() => {
-        expect(uploadButton).toBeDisabled();
+        const inProgressButton = screen.getByText(/envoi en cours/i).closest('button');
+        expect(inProgressButton).toBeDisabled();
       });
     });
 
@@ -624,6 +675,261 @@ describe('UploadForm Component', () => {
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /envoyer 2 souvenirs/i })).toBeInTheDocument();
       });
+    });
+
+    it('should disable upload button when consent is not given', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(input, file);
+
+      await waitFor(() => {
+        expect(screen.getByText('test.jpg')).toBeInTheDocument();
+      });
+
+      const uploadButton = screen.getByRole('button', { name: /envoyer/i });
+      expect(uploadButton).toBeDisabled();
+    });
+  });
+
+  describe('File Size Validation', () => {
+    it('should show error for oversized files', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      // Create a file that exceeds MAX_FILE_SIZE
+      const largeContent = new ArrayBuffer(MAX_FILE_SIZE + 1);
+      const file = new File([largeContent], 'huge.jpg', { type: 'image/jpeg' });
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(input, file);
+
+      await waitFor(() => {
+        expect(screen.getByText('huge.jpg')).toBeInTheDocument();
+        expect(screen.getByText(/trop volumineux/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should not show error for files within size limit', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['small'], 'small.jpg', { type: 'image/jpeg' });
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(input, file);
+
+      await waitFor(() => {
+        expect(screen.getByText('small.jpg')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText(/trop volumineux/i)).not.toBeInTheDocument();
+    });
+
+    it('should exclude oversized files from upload count', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const largeContent = new ArrayBuffer(MAX_FILE_SIZE + 1);
+      const files = [
+        new File(['small'], 'small.jpg', { type: 'image/jpeg' }),
+        new File([largeContent], 'huge.jpg', { type: 'image/jpeg' }),
+      ];
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(input, files);
+
+      await waitFor(() => {
+        expect(screen.getByText('small.jpg')).toBeInTheDocument();
+        expect(screen.getByText('huge.jpg')).toBeInTheDocument();
+      });
+
+      // Button should show count of only valid files
+      expect(screen.getByRole('button', { name: /envoyer 1 souvenir$/i })).toBeInTheDocument();
+    });
+
+    it('should not upload oversized files', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const largeContent = new ArrayBuffer(MAX_FILE_SIZE + 1);
+      const files = [
+        new File(['small'], 'small.jpg', { type: 'image/jpeg' }),
+        new File([largeContent], 'huge.jpg', { type: 'image/jpeg' }),
+      ];
+      const fileInput = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(fileInput, files);
+
+      await waitFor(() => {
+        expect(screen.getByText('small.jpg')).toBeInTheDocument();
+      });
+
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
+      const uploadButton = screen.getByRole('button', { name: /envoyer/i });
+      await user.click(uploadButton);
+
+      await waitFor(() => {
+        expect(mockUploadMediaBatch).toHaveBeenCalled();
+      });
+
+      // Only the small file should have been uploaded
+      const uploadedFiles = mockUploadMediaBatch.mock.calls[0][0];
+      expect(uploadedFiles).toHaveLength(1);
+      expect(uploadedFiles[0].file.name).toBe('small.jpg');
+    });
+
+    it('should disable upload button when all files are oversized', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const largeContent = new ArrayBuffer(MAX_FILE_SIZE + 1);
+      const file = new File([largeContent], 'huge.jpg', { type: 'image/jpeg' });
+      const input = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(input, file);
+
+      await waitFor(() => {
+        expect(screen.getByText('huge.jpg')).toBeInTheDocument();
+      });
+
+      const uploadButton = screen.getByRole('button', { name: /envoyer/i });
+      expect(uploadButton).toBeDisabled();
+    });
+  });
+
+  describe('Upload Cancellation', () => {
+    it('should show cancel button during upload', async () => {
+      const user = userEvent.setup();
+      mockUploadMediaBatch.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
+      const fileInput = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(fileInput, file);
+
+      await waitFor(() => {
+        expect(screen.getByText('test.jpg')).toBeInTheDocument();
+      });
+
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
+      const uploadButton = screen.getByRole('button', { name: /envoyer/i });
+      await user.click(uploadButton);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/annuler l'envoi/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should pass abortSignal to dataService', async () => {
+      const user = userEvent.setup();
+      mockUploadMediaBatch.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
+      const fileInput = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(fileInput, file);
+
+      await waitFor(() => {
+        expect(screen.getByText('test.jpg')).toBeInTheDocument();
+      });
+
+      // Check consent checkbox before uploading
+      const consentCheckbox = screen.getByLabelText(/consentement/i);
+      await user.click(consentCheckbox);
+
+      const uploadButton = screen.getByRole('button', { name: /envoyer/i });
+      await user.click(uploadButton);
+
+      await waitFor(() => {
+        expect(mockUploadMediaBatch).toHaveBeenCalled();
+      });
+
+      const options = mockUploadMediaBatch.mock.calls[0][1];
+      expect(options.abortSignal).toBeInstanceOf(AbortSignal);
+    });
+
+    it('should not show cancel button when not uploading', async () => {
+      const user = userEvent.setup();
+      render(
+        <UploadForm
+          onUploadComplete={mockOnUploadComplete}
+          onClose={mockOnClose}
+          dataService={mockDataService as any}
+        />
+      );
+
+      const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
+      const fileInput = screen.getByLabelText(/ajouter des photos ou vidéos/i) as HTMLInputElement;
+
+      await user.upload(fileInput, file);
+
+      await waitFor(() => {
+        expect(screen.getByText('test.jpg')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByLabelText(/annuler l'envoi/i)).not.toBeInTheDocument();
     });
   });
 });

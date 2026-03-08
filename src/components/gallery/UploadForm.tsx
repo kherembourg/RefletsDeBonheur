@@ -1,8 +1,19 @@
-import { useState, useEffect, type ChangeEvent } from 'react';
-import { Upload, Plus, Trash2, Sparkles, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { useState, useEffect, useRef, type ChangeEvent } from 'react';
+import { Upload, Plus, Trash2, Loader2, CheckCircle2, XCircle, Ban } from 'lucide-react';
 import { getUsername, setUsername as saveUsername } from '../../lib/auth';
-import { mockAPI } from '../../lib/api';
 import type { DataService, MediaItem } from '../../lib/services/dataService';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
+
+/** Maximum file size allowed: 50 MB */
+export const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+/** Format bytes into a human-readable string */
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
 
 interface UploadItem {
   id: string;
@@ -13,19 +24,23 @@ interface UploadItem {
   originalName: string;
   uploadProgress?: number;
   uploadStatus?: 'pending' | 'uploading' | 'complete' | 'error';
+  sizeError?: boolean;
 }
 
 interface UploadFormProps {
   onUploadComplete: (items: MediaItem[]) => void;
   onClose: () => void;
   dataService: DataService;
+  lang?: Language;
 }
 
-export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFormProps) {
+export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr' }: UploadFormProps) {
   const [authorName, setAuthorName] = useState(getUsername());
   const [queue, setQueue] = useState<UploadItem[]>([]);
-  const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
+  const uploadingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Save username to localStorage when it changes
   useEffect(() => {
@@ -34,32 +49,45 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
     }
   }, [authorName]);
 
+  // Revoke all object URLs on unmount to prevent memory leaks
+  const queueRef = useRef(queue);
+  queueRef.current = queue;
+  useEffect(() => {
+    return () => {
+      queueRef.current.forEach(item => URL.revokeObjectURL(item.preview));
+    };
+  }, []);
+
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const newItem: UploadItem = {
-          id: Math.random().toString(36).substr(2, 9),
-          file,
-          preview: event.target?.result as string,
-          type: file.type.startsWith('video') ? 'video' : 'image',
-          caption: '',
-          originalName: file.name
-        };
-        setQueue(prev => [...prev, newItem]);
+    const newItems: UploadItem[] = Array.from(files).map(file => {
+      const oversized = file.size > MAX_FILE_SIZE;
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+        preview: URL.createObjectURL(file),
+        type: file.type.startsWith('video') ? 'video' as const : 'image' as const,
+        caption: '',
+        originalName: file.name,
+        sizeError: oversized,
       };
-      reader.readAsDataURL(file);
     });
+    setQueue(prev => [...prev, ...newItems]);
 
     // Reset input
     e.target.value = '';
   };
 
   const removeFile = (id: string) => {
-    setQueue(prev => prev.filter(item => item.id !== id));
+    setQueue(prev => {
+      const item = prev.find(item => item.id === id);
+      if (item) {
+        URL.revokeObjectURL(item.preview);
+      }
+      return prev.filter(item => item.id !== id);
+    });
   };
 
   const updateCaption = (id: string, text: string) => {
@@ -68,46 +96,60 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
     ));
   };
 
-  const generateAICaption = async (id: string) => {
-    const item = queue.find(q => q.id === id);
-    if (!item || item.type === 'video') return;
-
-    setGeneratingFor(id);
-    try {
-      const caption = await mockAPI.generateCaption(item.preview);
-      updateCaption(id, caption);
-    } catch (error) {
-      console.error('Caption generation failed:', error);
-    } finally {
-      setGeneratingFor(null);
-    }
-  };
-
   const handleUploadAll = async () => {
+    if (uploadingRef.current) return;
     if (queue.length === 0) return;
     if (!authorName.trim()) {
-      alert('Veuillez entrer votre prénom');
+      alert(t(lang, 'gallery.authorRequired'));
+      return;
+    }
+    if (!consentGiven) {
+      alert(t(lang, 'gallery.consentRequired'));
       return;
     }
 
+    // Filter out oversized files
+    const uploadableItems = queue.filter(item => !item.sizeError);
+    if (uploadableItems.length === 0) {
+      alert(t(lang, 'gallery.noValidFiles'));
+      return;
+    }
+
+    uploadingRef.current = true;
     setUploading(true);
 
-    // Mark all as pending
-    setQueue(prev => prev.map(item => ({ ...item, uploadStatus: 'pending' as const, uploadProgress: 0 })));
+    // Create an AbortController for this upload session
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    // Mark uploadable items as pending, keep size errors as-is
+    setQueue(prev => prev.map(item =>
+      item.sizeError
+        ? item
+        : { ...item, uploadStatus: 'pending' as const, uploadProgress: 0 }
+    ));
 
     try {
+      // Build a mapping from uploadable index to queue index
+      const uploadableIndices = queue.reduce<number[]>((acc, item, index) => {
+        if (!item.sizeError) acc.push(index);
+        return acc;
+      }, []);
+
       // Use DataService for uploads (handles both demo and R2 production modes)
       const items = await dataService.uploadMediaBatch(
-        queue.map(item => ({
+        uploadableItems.map(item => ({
           file: item.file,
           caption: item.caption,
         })),
         {
           author: authorName,
+          abortSignal: abortController.signal,
           onFileProgress: (fileIndex, progress) => {
-            // Update progress for specific file
+            // Map fileIndex back to queue index
+            const queueIndex = uploadableIndices[fileIndex];
             setQueue(prev => prev.map((item, index) => {
-              if (index === fileIndex) {
+              if (index === queueIndex) {
                 return {
                   ...item,
                   uploadProgress: progress.percentage,
@@ -129,13 +171,32 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
       setQueue([]);
       onClose();
     } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Erreur lors de l\'envoi. Veuillez réessayer.');
-      // Mark all as error
-      setQueue(prev => prev.map(item => ({ ...item, uploadStatus: 'error' as const })));
+      if (abortController.signal.aborted) {
+        // User cancelled - mark non-complete items as error
+        setQueue(prev => prev.map(item =>
+          item.uploadStatus === 'complete' || item.sizeError
+            ? item
+            : { ...item, uploadStatus: 'error' as const }
+        ));
+      } else {
+        console.error('Upload failed:', error);
+        alert(t(lang, 'gallery.uploadError'));
+        // Mark all non-complete as error
+        setQueue(prev => prev.map(item =>
+          item.uploadStatus === 'complete' || item.sizeError
+            ? item
+            : { ...item, uploadStatus: 'error' as const }
+        ));
+      }
     } finally {
+      abortControllerRef.current = null;
+      uploadingRef.current = false;
       setUploading(false);
     }
+  };
+
+  const handleCancelUpload = () => {
+    abortControllerRef.current?.abort();
   };
 
   return (
@@ -143,7 +204,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
       {/* Author Name Input */}
       <div>
         <label className="block text-sm font-medium text-deep-charcoal mb-1">
-          Votre Prénom
+          {t(lang, 'gallery.authorLabel')}
         </label>
         <input
           type="text"
@@ -151,11 +212,11 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
           autoComplete="given-name"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
-          placeholder="Ex: Sophie"
+          placeholder={t(lang, 'gallery.authorPlaceholder')}
           className="w-full px-3 py-2 border-2 border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old focus:outline-hidden bg-pearl-white transition-colors"
         />
         <p className="text-xs text-warm-taupe mt-1">
-          Sera mémorisé pour vos prochains envois.
+          {t(lang, 'gallery.authorHint')}
         </p>
       </div>
 
@@ -167,11 +228,11 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
           multiple
           onChange={handleFileSelect}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          aria-label="Ajouter des photos ou vidéos"
+          aria-label={t(lang, 'gallery.addFilesAriaLabel')}
         />
         <div className="flex items-center justify-center gap-2 text-warm-taupe" aria-hidden="true">
           <Plus size={20} />
-          <span className="font-medium text-sm">Ajouter des photos/vidéos</span>
+          <span className="font-medium text-sm">{t(lang, 'gallery.addFiles')}</span>
         </div>
       </div>
 
@@ -188,7 +249,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
                 {item.type === 'video' ? (
                   <video src={item.preview} className="w-full h-full object-cover" width={80} height={80} />
                 ) : (
-                  <img src={item.preview} alt={`Aperçu de ${item.originalName}`} className="w-full h-full object-cover" width={80} height={80} />
+                  <img src={item.preview} alt={`${t(lang, 'gallery.previewOf')} ${item.originalName}`} className="w-full h-full object-cover" width={80} height={80} />
                 )}
               </div>
 
@@ -209,12 +270,17 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
                     {item.uploadStatus === 'error' && (
                       <XCircle size={14} className="text-red-500" />
                     )}
+                    {item.sizeError && (
+                      <span className="text-xs text-red-500 font-medium" role="alert">
+                        {t(lang, 'gallery.tooLarge')} ({formatFileSize(item.file.size)} / {formatFileSize(MAX_FILE_SIZE)} max)
+                      </span>
+                    )}
                   </div>
                   {!uploading && (
                     <button
                       onClick={() => removeFile(item.id)}
                       className="text-warm-taupe hover:text-red-500 transition-colors"
-                      aria-label="Retirer"
+                      aria-label={t(lang, 'gallery.remove')}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -239,47 +305,50 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
 
                 {/* Caption Input (Images Only) */}
                 {item.type === 'image' && !uploading && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      name={`caption-${item.id}`}
-                      value={item.caption}
-                      onChange={(e) => updateCaption(item.id, e.target.value)}
-                      placeholder="Légende..."
-                      className="flex-1 px-2 py-1 text-sm border border-silver-mist rounded-sm focus:outline-hidden focus:ring-1 focus:ring-burgundy-old bg-ivory"
-                      aria-label={`Légende pour ${item.originalName}`}
-                    />
-                    <button
-                      onClick={() => generateAICaption(item.id)}
-                      disabled={generatingFor === item.id}
-                      className="bg-violet-100 text-violet-600 p-1.5 rounded-sm hover:bg-violet-200 transition-colors disabled:opacity-50"
-                      aria-label="Générer une légende avec l'IA"
-                    >
-                      {generatingFor === item.id ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <Sparkles size={16} />
-                      )}
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    name={`caption-${item.id}`}
+                    value={item.caption}
+                    onChange={(e) => updateCaption(item.id, e.target.value)}
+                    placeholder={t(lang, 'gallery.captionPlaceholder')}
+                    className="flex-1 px-2 py-1 text-sm border border-silver-mist rounded-sm focus:outline-hidden focus:ring-1 focus:ring-burgundy-old bg-ivory"
+                    aria-label={`${t(lang, 'gallery.captionFor')} ${item.originalName}`}
+                  />
                 )}
               </div>
             </div>
           ))}
 
+          {/* GDPR Consent Checkbox */}
+          {!uploading && (
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consentGiven}
+                onChange={(e) => setConsentGiven(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-silver-mist text-burgundy-old focus:ring-burgundy-old"
+                aria-label={t(lang, 'gallery.consentAria')}
+              />
+              <span className="text-xs text-warm-taupe">
+                {t(lang, 'gallery.consentText')}
+              </span>
+            </label>
+          )}
+
           {/* Upload Button */}
           <div className="pt-2 border-t border-silver-mist space-y-3">
             {/* Overall Progress */}
             {uploading && (() => {
-              const totalProgress = queue.reduce((sum, item) => sum + (item.uploadProgress || 0), 0);
-              const overallProgress = Math.round(totalProgress / queue.length);
+              const uploadableCount = queue.filter(item => !item.sizeError).length;
+              const totalProgress = queue.filter(item => !item.sizeError).reduce((sum, item) => sum + (item.uploadProgress || 0), 0);
+              const overallProgress = uploadableCount > 0 ? Math.round(totalProgress / uploadableCount) : 0;
               const completedCount = queue.filter(item => item.uploadStatus === 'complete').length;
 
               return (
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs text-warm-taupe">
-                    <span>Progression globale</span>
-                    <span className="font-semibold">{completedCount}/{queue.length} - {overallProgress}%</span>
+                    <span>{t(lang, 'gallery.overallProgress')}</span>
+                    <span className="font-semibold">{completedCount}/{uploadableCount} - {overallProgress}%</span>
                   </div>
                   <div className="w-full bg-silver-mist/30 rounded-full h-2.5 overflow-hidden">
                     <div
@@ -291,24 +360,35 @@ export function UploadForm({ onUploadComplete, onClose, dataService }: UploadFor
               );
             })()}
 
-            {/* Upload Button */}
-            <button
-              onClick={handleUploadAll}
-              disabled={uploading}
-              className="w-full btn-primary flex justify-center items-center gap-2"
-            >
-              {uploading ? (
-                <>
+            {/* Upload / Cancel Buttons */}
+            {uploading ? (
+              <div className="flex gap-2">
+                <button
+                  disabled
+                  className="flex-1 btn-primary flex justify-center items-center gap-2 opacity-80"
+                >
                   <Loader2 className="animate-spin" size={18} />
-                  <span>Envoi en cours...</span>
-                </>
-              ) : (
-                <>
-                  <Upload size={18} />
-                  <span>Envoyer {queue.length} souvenir{queue.length > 1 ? 's' : ''}</span>
-                </>
-              )}
-            </button>
+                  <span>{t(lang, 'gallery.sendingInProgress')}</span>
+                </button>
+                <button
+                  onClick={handleCancelUpload}
+                  className="px-4 py-2 border-2 border-red-400 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+                  aria-label={t(lang, 'gallery.cancelAriaLabel')}
+                >
+                  <Ban size={18} />
+                  <span>{t(lang, 'gallery.cancelUpload')}</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleUploadAll}
+                disabled={!consentGiven || queue.filter(i => !i.sizeError).length === 0}
+                className="w-full btn-primary flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Upload size={18} />
+                <span>{t(lang, 'gallery.sendMemories')} {queue.filter(i => !i.sizeError).length} {queue.filter(i => !i.sizeError).length > 1 ? t(lang, 'gallery.sendMemorySuffixPlural') : t(lang, 'gallery.sendMemorySuffix')}</span>
+              </button>
+            )}
           </div>
         </div>
       )}

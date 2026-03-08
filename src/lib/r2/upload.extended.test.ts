@@ -265,35 +265,39 @@ describe('uploadMultipleToR2', () => {
   });
 
   it('uploads multiple files and returns array of MediaItems', async () => {
-    const makePresignResponse = () => ({
-      ok: true,
-      json: () => Promise.resolve({
-        uploadUrl: 'https://r2.example.com/presigned',
-        key: 'uploads/test.jpg',
-        publicUrl: 'https://cdn.example.com/test.jpg',
-      }),
+    // With batched parallel uploads, fetch calls may interleave.
+    // Use mockImplementation to handle presign/confirm based on URL.
+    let confirmCallCount = 0;
+    mockFetch.mockImplementation((_url: string, options: any) => {
+      const body = JSON.parse(options.body);
+      if (_url.includes('/presign')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            uploadUrl: 'https://r2.example.com/presigned',
+            key: `uploads/${body.fileName}`,
+            publicUrl: `https://cdn.example.com/${body.fileName}`,
+          }),
+        });
+      }
+      // confirm endpoint
+      confirmCallCount++;
+      const id = `media-${confirmCallCount}`;
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          media: {
+            id,
+            original_url: `https://cdn.example.com/${id}.jpg`,
+            thumbnail_url: null,
+            type: 'image',
+            caption: null,
+            guest_name: null,
+            created_at: '2024-06-15T10:00:00Z',
+          },
+        }),
+      });
     });
-
-    const makeConfirmResponse = (id: string) => ({
-      ok: true,
-      json: () => Promise.resolve({
-        media: {
-          id,
-          original_url: `https://cdn.example.com/${id}.jpg`,
-          thumbnail_url: null,
-          type: 'image',
-          caption: null,
-          guest_name: null,
-          created_at: '2024-06-15T10:00:00Z',
-        },
-      }),
-    });
-
-    mockFetch
-      .mockResolvedValueOnce(makePresignResponse())
-      .mockResolvedValueOnce(makeConfirmResponse('media-1'))
-      .mockResolvedValueOnce(makePresignResponse())
-      .mockResolvedValueOnce(makeConfirmResponse('media-2'));
 
     const file1 = new File(['content1'], 'file1.jpg', { type: 'image/jpeg' });
     const file2 = new File(['content2'], 'file2.jpg', { type: 'image/jpeg' });
@@ -310,8 +314,9 @@ describe('uploadMultipleToR2', () => {
     });
 
     expect(results).toHaveLength(2);
-    expect(results[0].id).toBe('media-1');
-    expect(results[1].id).toBe('media-2');
+    // Both results should have valid IDs (order may vary with parallel uploads)
+    expect(results[0].id).toBeTruthy();
+    expect(results[1].id).toBeTruthy();
     expect(onOverallProgress).toHaveBeenCalledWith(1, 2);
     expect(onOverallProgress).toHaveBeenCalledWith(2, 2);
   });

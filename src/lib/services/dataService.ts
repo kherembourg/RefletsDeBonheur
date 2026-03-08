@@ -222,6 +222,11 @@ export class DataService {
   private getOrCreateGuestIdentifier(): string {
     if (typeof window === 'undefined') return 'server';
 
+    // Prefer session_token from guest login (used by presign endpoint for auth)
+    const sessionToken = localStorage.getItem('reflets_guest_token');
+    if (sessionToken) return sessionToken;
+
+    // Fallback to browser UUID for demo mode / unauthenticated browsing
     const key = 'reflets_guest_id';
     let id = localStorage.getItem(key);
     if (!id) {
@@ -235,9 +240,15 @@ export class DataService {
   // Media Methods
   // ============================================
 
-  async getMedia(): Promise<MediaItem[]> {
+  async getMedia(options?: { limit?: number; offset?: number }): Promise<MediaItem[]> {
     if (this.demoMode) {
-      return mockMedia.map(mockMediaToItem);
+      const items = mockMedia.map(mockMediaToItem);
+      if (options?.offset || options?.limit) {
+        const start = options.offset || 0;
+        const end = options.limit ? start + options.limit : undefined;
+        return items.slice(start, end);
+      }
+      return items;
     }
 
     if (!this.weddingId) {
@@ -246,8 +257,10 @@ export class DataService {
     }
 
     const media = await mediaApi.getByWeddingId(this.weddingId, {
-      status: 'ready',
+      status: 'all',
       moderation: 'approved',
+      limit: options?.limit,
+      offset: options?.offset,
     });
 
     return media.map(mediaToItem);
@@ -298,7 +311,26 @@ export class DataService {
       return;
     }
 
-    await mediaApi.delete(id);
+    // Use the server-side API endpoint to delete both the DB record and R2 objects
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Pass guest identifier for authorization
+    if (this.guestIdentifier && this.guestIdentifier !== 'server') {
+      headers['X-Guest-Identifier'] = this.guestIdentifier;
+    }
+
+    const response = await fetch('/api/upload/delete', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ mediaId: id }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to delete media' }));
+      throw new Error(error.message || 'Failed to delete media');
+    }
   }
 
   /**
@@ -369,6 +401,7 @@ export class DataService {
       author?: string;
       onFileProgress?: (fileIndex: number, progress: { loaded: number; total: number; percentage: number }) => void;
       onOverallProgress?: (completed: number, total: number) => void;
+      abortSignal?: AbortSignal;
     } = {}
   ): Promise<MediaItem[]> {
     if (this.demoMode) {
@@ -401,6 +434,7 @@ export class DataService {
         guestIdentifier: this.guestIdentifier,
         onFileProgress: options.onFileProgress,
         onOverallProgress: options.onOverallProgress,
+        abortSignal: options.abortSignal,
       });
     } catch (error) {
       // If trial mode, fall back to local upload with warning
@@ -588,6 +622,51 @@ export class DataService {
       allowComments: true,
       moderationEnabled: false,
     };
+  }
+
+  /**
+   * Update gallery settings (e.g., toggle uploads)
+   * In production, updates the wedding config in Supabase.
+   * In demo mode, updates local mock state.
+   */
+  async updateSettings(updates: Partial<GallerySettings>): Promise<void> {
+    if (this.demoMode) {
+      // Update local mock settings
+      if (updates.allowUploads !== undefined) {
+        mockSettings.allowUploads = updates.allowUploads;
+      }
+      return;
+    }
+
+    if (!this.weddingId) {
+      throw new Error('No wedding ID set for production mode');
+    }
+
+    // Fetch current wedding config, then merge the update
+    const wedding = await weddingsApi.getById(this.weddingId);
+    if (!wedding) {
+      throw new Error('Wedding not found');
+    }
+
+    const updatedConfig = { ...wedding.config };
+
+    if (updates.allowUploads !== undefined) {
+      updatedConfig.features = {
+        ...updatedConfig.features,
+        gallery: updates.allowUploads,
+      };
+    }
+
+    if (updates.moderationEnabled !== undefined) {
+      updatedConfig.moderation = {
+        ...updatedConfig.moderation,
+        enabled: updates.moderationEnabled,
+      };
+    }
+
+    await weddingsApi.update(this.weddingId, {
+      config: updatedConfig,
+    });
   }
 
   // ============================================

@@ -1,6 +1,8 @@
 import { useState, memo, useCallback } from 'react';
 import { Trash2, Video, Heart, CheckCircle, Circle, Download } from 'lucide-react';
 import type { MediaItem, DataService } from '../../lib/services/dataService';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 
 // Default placeholder gradient for items without a pre-generated placeholder
 const DEFAULT_PLACEHOLDER = 'linear-gradient(135deg, #f5f0e8 0%, #e8d5d3 50%, #f0e6e4 100%)';
@@ -29,6 +31,7 @@ interface MediaCardProps {
   onToggleFavorite?: (id: string) => void;
   dataService?: DataService;
   variant?: 'public' | 'admin';
+  lang?: Language;
 }
 
 export const MediaCard = memo(function MediaCard({
@@ -42,7 +45,8 @@ export const MediaCard = memo(function MediaCard({
   isFavorited: isFavoritedProp = false,
   onToggleFavorite,
   dataService,
-  variant = 'public'
+  variant = 'public',
+  lang = 'fr'
 }: MediaCardProps) {
   const isPublicView = variant === 'public';
   const isAdminView = variant === 'admin';
@@ -125,7 +129,7 @@ export const MediaCard = memo(function MediaCard({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      aria-label={item.caption || `Photo par ${item.author || 'Anonyme'}`}
+      aria-label={item.caption || `${t(lang, 'media.photoBy')} ${item.author || t(lang, 'media.anonymous')}`}
     >
       <div
         className={`relative overflow-hidden ${
@@ -170,7 +174,7 @@ export const MediaCard = memo(function MediaCard({
               src={item.thumbnailUrl || item.url}
               srcSet={generateSrcSet(item.thumbnailUrl || item.url)}
               sizes="(max-width: 640px) 320px, (max-width: 1024px) 480px, 400px"
-              alt={item.caption || `Photo par ${item.author}`}
+              alt={item.caption || `${t(lang, 'media.photoBy')} ${item.author}`}
               className={`w-full object-cover transition-opacity duration-300 ${isAdminView ? 'aspect-[4/3]' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
@@ -210,7 +214,7 @@ export const MediaCard = memo(function MediaCard({
               className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors ${
                 favorited ? 'bg-burgundy-old text-white' : 'bg-white text-charcoal/60 hover:text-charcoal'
               }`}
-              aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              aria-label={favorited ? t(lang, 'media.removeFavorite') : t(lang, 'media.addFavorite')}
             >
               <Heart size={16} fill={favorited ? 'currentColor' : 'none'} strokeWidth={1.5} />
             </button>
@@ -218,7 +222,7 @@ export const MediaCard = memo(function MediaCard({
               <button
                 onClick={handleDownload}
                 className="w-9 h-9 rounded-full flex items-center justify-center bg-white text-charcoal/60 hover:text-charcoal shadow-sm"
-                aria-label="Télécharger"
+                aria-label={t(lang, 'gallery.download')}
               >
                 <Download size={16} />
               </button>
@@ -231,7 +235,7 @@ export const MediaCard = memo(function MediaCard({
           <button
             onClick={handleSelection}
             className="absolute top-3 left-3 p-1.5 bg-white/90 backdrop-blur-xs shadow-xs rounded-full transition-all duration-200 hover:bg-white"
-            aria-label={isSelected ? 'Désélectionner' : 'Sélectionner'}
+            aria-label={isSelected ? t(lang, 'media.deselect') : t(lang, 'media.select')}
           >
             {isSelected ? (
               <CheckCircle size={20} className="text-burgundy-old" fill="currentColor" />
@@ -248,7 +252,7 @@ export const MediaCard = memo(function MediaCard({
             className={`absolute top-3 right-3 bg-white/90 backdrop-blur-xs text-charcoal/60 p-2 rounded-full transition-all duration-300 hover:bg-burgundy-old hover:text-white shadow-xs ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
-            aria-label="Supprimer"
+            aria-label={t(lang, 'common.delete')}
           >
             <Trash2 size={14} />
           </button>

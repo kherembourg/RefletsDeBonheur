@@ -18,6 +18,32 @@ const CLIENT_SESSION_HOURS = 24 * 7; // 7 days
 const GUEST_SESSION_HOURS = 24; // 1 day
 const REFRESH_TOKEN_DAYS = 30;
 
+// Cookie name for server-side auth verification.
+// Must match AUTH_SESSION_COOKIE in src/lib/supabase/server.ts.
+const SESSION_COOKIE_NAME = 'reflets_session_token';
+
+/**
+ * Set the session token as an HTTP cookie for server-side verification.
+ * Uses SameSite=Lax for CSRF protection.
+ *
+ * NOTE: This cookie is NOT HttpOnly because it's set from client-side JS.
+ * The token is already in localStorage (same XSS exposure). Moving to
+ * HttpOnly would require server-set Set-Cookie headers from login endpoints.
+ */
+function setSessionCookie(token: string, maxAgeHours: number): void {
+  if (typeof document === 'undefined') return;
+  const maxAge = maxAgeHours * 60 * 60;
+  document.cookie = `${SESSION_COOKIE_NAME}=${token}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
+}
+
+/**
+ * Clear the session cookie.
+ */
+function clearSessionCookie(): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${SESSION_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
+}
+
 /**
  * Generate a secure random token
  */
@@ -168,6 +194,8 @@ export async function clientLogin(username: string, password: string): Promise<{
         wedding_slug: client.wedding_slug,
         is_admin: true,
       } as ClientSession));
+      // Also set cookie for server-side auth verification
+      setSessionCookie(token, CLIENT_SESSION_HOURS);
     }
 
     return {
@@ -193,86 +221,34 @@ export async function guestLogin(code: string, guestName?: string): Promise<{
   token?: string;
 }> {
   try {
-    const upperCode = code.toUpperCase().trim();
-
-    const { data: weddings, error: fetchError } = await supabase
-      .from('weddings')
-      .select('*')
-      .or(`pin_code.eq.${upperCode},magic_token.eq.${upperCode}`);
-
-    if (fetchError || !weddings || weddings.length === 0) {
-      return { success: false, error: 'Invalid access code' };
-    }
-
-    const wedding = weddings[0];
-    const isAdminCode = wedding.magic_token === upperCode;
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', wedding.owner_id)
-      .single();
-
-    if (profileError || !profile) {
-      return { success: false, error: 'Profile not found' };
-    }
-
-    if (profile.subscription_status !== 'active' && profile.subscription_status !== 'trial') {
-      return { success: false, error: 'This wedding space is not available' };
-    }
-
-    const client = profileToClient(profile, wedding);
-
-    // Generate token
-    const token = generateToken();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + GUEST_SESSION_HOURS);
-
-    const guestIdentifier = typeof window !== 'undefined' ? (localStorage.getItem('reflets_guest_id') || crypto.randomUUID()) : generateToken(12);
-
-    if (typeof window !== 'undefined' && !localStorage.getItem('reflets_guest_id')) {
-      localStorage.setItem('reflets_guest_id', guestIdentifier);
-    }
-
-    // Create guest session
-    const { error: sessionError } = await supabase
-      .from('guest_sessions')
-      .insert({
-        wedding_id: wedding.id,
-        session_token: token,
-        guest_identifier: guestIdentifier,
-        guest_name: guestName || null,
-        auth_method: isAdminCode ? 'magic_token' : 'pin',
-        expires_at: expiresAt.toISOString(),
-        last_active_at: new Date().toISOString(),
-      });
-
-    if (sessionError) {
-      console.error('Failed to create guest session:', sessionError);
-      return { success: false, error: 'Failed to create session' };
-    }
-
-    await logAuditEvent('guest_login', 'guest', null, {
-      wedding_id: wedding.id,
-      access_type: isAdminCode ? 'admin' : 'guest',
-      guest_name: guestName,
+    const response = await fetch('/api/auth/guest-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, guestName }),
     });
 
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Invalid access code' };
+    }
+
+    const { session_token, wedding_id, wedding_slug, access_type, guest_name } = data;
+
     if (typeof window !== 'undefined') {
-      localStorage.setItem(GUEST_TOKEN_KEY, token);
+      localStorage.setItem(GUEST_TOKEN_KEY, session_token);
       localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify({
-        client_id: wedding.owner_id,
-        wedding_slug: wedding.slug,
-        access_type: isAdminCode ? 'admin' : 'guest',
-        guest_name: guestName,
+        client_id: wedding_id,
+        wedding_slug,
+        access_type,
+        guest_name,
       } as GuestSession));
     }
 
     return {
       success: true,
-      client,
-      accessType: isAdminCode ? 'admin' : 'guest',
-      token,
+      accessType: access_type,
+      token: session_token,
     };
   } catch (error) {
     console.error('Guest login error:', error);
@@ -479,9 +455,10 @@ export async function refreshClientToken(refreshToken: string): Promise<{
       return { success: false, error: 'Failed to refresh token' };
     }
 
-    // Update localStorage
+    // Update localStorage and cookie
     if (typeof window !== 'undefined') {
       localStorage.setItem(CLIENT_TOKEN_KEY, newToken);
+      setSessionCookie(newToken, CLIENT_SESSION_HOURS);
     }
 
     return { success: true, token: newToken };
@@ -511,6 +488,7 @@ export async function clientLogout(): Promise<void> {
 
     localStorage.removeItem(CLIENT_TOKEN_KEY);
     localStorage.removeItem(CLIENT_SESSION_KEY);
+    clearSessionCookie();
   } catch (error) {
     console.error('Client logout error:', error);
   }

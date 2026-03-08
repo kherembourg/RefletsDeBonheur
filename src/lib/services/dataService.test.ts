@@ -718,13 +718,22 @@ describe('DataService - Production Mode', () => {
       expect(media.reactions).toEqual({});
     });
 
-    it('should call mediaApi.delete with correct ID', async () => {
-      vi.mocked(mediaApi.delete).mockResolvedValue(undefined);
-      
+    it('should call delete API endpoint with correct media ID', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       const service = new DataService({ weddingId: 'wedding-123' });
       await service.deleteMedia('media-to-delete');
-      
-      expect(mediaApi.delete).toHaveBeenCalledWith('media-to-delete');
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/upload/delete', expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ mediaId: 'media-to-delete' }),
+      }));
+
+      vi.unstubAllGlobals();
     });
 
     it('should handle video type correctly', async () => {

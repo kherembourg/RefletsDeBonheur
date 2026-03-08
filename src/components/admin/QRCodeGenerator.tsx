@@ -1,140 +1,173 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { QrCode, Download, Printer, Share2 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface QRCodeGeneratorProps {
-  galleryUrl?: string;
+  weddingSlug?: string;
 }
 
-export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/gallery' }: QRCodeGeneratorProps) {
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
   const [accessCode, setAccessCode] = useState('MARIAGE2026');
   const [size, setSize] = useState(300);
   const [includeCode, setIncludeCode] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // In mock mode, use current domain
-  const currentUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/gallery`
-    : galleryUrl;
+  const galleryUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/${weddingSlug ? `${weddingSlug}/photos?pin=${accessCode}` : 'demo_gallery'}`
+    : `/${weddingSlug ? `${weddingSlug}/photos?pin=${accessCode}` : 'demo_gallery'}`;
 
-  // Generate QR code URL using QR Server API
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(currentUrl)}&bgcolor=FFFFF0&color=2D2D2D`;
+  const getSvgElement = useCallback((): SVGSVGElement | null => {
+    return containerRef.current?.querySelector('svg') ?? null;
+  }, []);
 
-  const handleDownload = async () => {
+  const handleDownload = useCallback(async () => {
+    const svg = getSvgElement();
+    if (!svg) return;
+
     try {
-      const response = await fetch(qrCodeUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'reflets-de-bonheur-qrcode.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const img = new Image();
+      img.onload = () => {
+        ctx.fillStyle = '#FFFFF0';
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0, size, size);
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = 'reflets-de-bonheur-qrcode.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
     } catch (error) {
       console.error('Download failed:', error);
-      alert('Erreur lors du téléchargement. Faites un clic droit > Enregistrer l\'image.');
+      alert('Erreur lors du téléchargement.');
     }
-  };
+  }, [size, getSvgElement]);
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
+    const svg = getSvgElement();
+    if (!svg) return;
+    const svgString = new XMLSerializer().serializeToString(svg);
+    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+
     const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>QR Code - Reflets de Bonheur</title>
-            <style>
-              body {
-                margin: 0;
-                padding: 40px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-                font-family: 'Georgia', serif;
-                background: #FFFFF0;
-              }
-              .container {
-                text-align: center;
-                background: white;
-                padding: 40px;
-                border: 2px solid #D4AF37;
-                border-radius: 20px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-              }
-              h1 {
-                color: #2D2D2D;
-                font-size: 32px;
-                margin: 0 0 10px 0;
-              }
-              .subtitle {
-                color: #8B7355;
-                font-size: 18px;
-                margin: 0 0 30px 0;
-                font-style: italic;
-              }
-              img {
-                border: 4px solid #D4AF37;
-                border-radius: 10px;
-                margin: 20px 0;
-              }
-              .instructions {
-                color: #2D2D2D;
-                font-size: 16px;
-                margin: 20px 0 10px 0;
-                font-weight: bold;
-              }
-              .code {
-                background: #F5F5DC;
-                color: #2D2D2D;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-size: 24px;
-                font-weight: bold;
-                letter-spacing: 2px;
-                margin-top: 10px;
-                display: inline-block;
-                border: 2px dashed #D4AF37;
-              }
-              .footer {
-                color: #8B7355;
-                font-size: 14px;
-                margin-top: 30px;
-              }
-              @media print {
-                body { background: white; }
-                .container { box-shadow: none; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>Reflets de Bonheur</h1>
-              <p class="subtitle">Partagez vos souvenirs de notre mariage</p>
-              <img src="${qrCodeUrl}" alt="QR Code" />
-              <p class="instructions">Scannez ce code pour accéder à la galerie</p>
-              ${includeCode ? `
-                <p class="instructions">Ou utilisez le code :</p>
-                <div class="code">${accessCode}</div>
-              ` : ''}
-              <p class="footer">Merci de célébrer avec nous ! ✨</p>
-            </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
-    }
-  };
+    if (!printWindow) return;
 
-  const handleCopyUrl = () => {
-    navigator.clipboard.writeText(currentUrl);
+    const safeAccessCode = escapeHtml(accessCode);
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>QR Code - Reflets de Bonheur</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 40px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              font-family: 'Georgia', serif;
+              background: #FFFFF0;
+            }
+            .container {
+              text-align: center;
+              background: white;
+              padding: 40px;
+              border: 2px solid #D4AF37;
+              border-radius: 20px;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            }
+            h1 {
+              color: #2D2D2D;
+              font-size: 32px;
+              margin: 0 0 10px 0;
+            }
+            .subtitle {
+              color: #8B7355;
+              font-size: 18px;
+              margin: 0 0 30px 0;
+              font-style: italic;
+            }
+            img {
+              border: 4px solid #D4AF37;
+              border-radius: 10px;
+              margin: 20px 0;
+            }
+            .instructions {
+              color: #2D2D2D;
+              font-size: 16px;
+              margin: 20px 0 10px 0;
+              font-weight: bold;
+            }
+            .code {
+              background: #F5F5DC;
+              color: #2D2D2D;
+              padding: 10px 20px;
+              border-radius: 8px;
+              font-size: 24px;
+              font-weight: bold;
+              letter-spacing: 2px;
+              margin-top: 10px;
+              display: inline-block;
+              border: 2px dashed #D4AF37;
+            }
+            .footer {
+              color: #8B7355;
+              font-size: 14px;
+              margin-top: 30px;
+            }
+            @media print {
+              body { background: white; }
+              .container { box-shadow: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Reflets de Bonheur</h1>
+            <p class="subtitle">Partagez vos souvenirs de notre mariage</p>
+            <img src="${dataUrl}" alt="QR Code" width="${size}" height="${size}" />
+            <p class="instructions">Scannez ce code pour accéder à la galerie</p>
+            ${includeCode ? `
+              <p class="instructions">Ou utilisez le code :</p>
+              <div class="code">${safeAccessCode}</div>
+            ` : ''}
+            <p class="footer">Merci de célébrer avec nous !</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  }, [getSvgElement, accessCode, includeCode, size]);
+
+  const handleCopyUrl = useCallback(() => {
+    navigator.clipboard.writeText(galleryUrl);
     alert('URL copiée dans le presse-papiers !');
-  };
+  }, [galleryUrl]);
 
   return (
     <div className="bg-ivory rounded-xl border border-silver-mist p-6 shadow-xs">
@@ -154,17 +187,20 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
 
       {/* QR Code Preview */}
       <div className="bg-white rounded-xl p-6 mb-6 border-2 border-burgundy-old/30 text-center">
-        <img
-          src={qrCodeUrl}
-          alt="QR Code"
-          className="mx-auto rounded-lg shadow-md"
-          style={{ width: size, height: size }}
-        />
+        <div ref={containerRef} className="mx-auto rounded-lg shadow-md inline-block" style={{ width: size, height: size }}>
+          <QRCodeSVG
+            value={galleryUrl}
+            size={size}
+            bgColor="#FFFFF0"
+            fgColor="#2D2D2D"
+            level="M"
+          />
+        </div>
         <p className="text-warm-taupe text-sm mt-4">
           Scannez pour accéder à la galerie
         </p>
         <p className="text-silver-mist text-xs mt-1">
-          {currentUrl}
+          {galleryUrl}
         </p>
       </div>
 
@@ -252,13 +288,13 @@ export function QRCodeGenerator({ galleryUrl = 'https://votre-mariage.com/galler
       {/* Usage Tips */}
       <div className="mt-6 p-4 bg-soft-blush/30 rounded-lg border border-soft-blush/50">
         <h4 className="font-semibold text-deep-charcoal text-sm mb-2">
-          💡 Conseils d'utilisation
+          Conseils d'utilisation
         </h4>
         <ul className="text-warm-taupe text-xs space-y-1">
-          <li>• Imprimez le QR code sur les cartons de table</li>
-          <li>• Placez-le à l'entrée de la réception</li>
-          <li>• Incluez-le dans le programme de la cérémonie</li>
-          <li>• Partagez-le sur les réseaux sociaux avant l'événement</li>
+          <li>Imprimez le QR code sur les cartons de table</li>
+          <li>Placez-le à l'entrée de la réception</li>
+          <li>Incluez-le dans le programme de la cérémonie</li>
+          <li>Partagez-le sur les réseaux sociaux avant l'événement</li>
         </ul>
       </div>
     </div>

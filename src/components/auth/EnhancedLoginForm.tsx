@@ -46,8 +46,11 @@ export function EnhancedLoginForm() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const url = new URL(window.location.href);
-    url.searchParams.set('mode', mode);
-    window.history.replaceState({}, '', url);
+    // Only update if mode actually differs from what's in the URL
+    if (url.searchParams.get('mode') !== mode) {
+      url.searchParams.set('mode', mode);
+      window.history.replaceState({}, '', url);
+    }
   }, [mode]);
 
   useEffect(() => {

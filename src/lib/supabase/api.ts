@@ -208,7 +208,7 @@ export const mediaApi = {
   ): Promise<Media[]> {
     let query = supabase
       .from('media')
-      .select('*')
+      .select('id, wedding_id, type, original_url, optimized_url, thumbnail_url, caption, guest_name, guest_identifier, status, moderation_status, created_at')
       .eq('wedding_id', weddingId)
       .order('created_at', { ascending: false });
 

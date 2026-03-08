@@ -4,13 +4,36 @@ export const prerender = false;
 
 import MainLayout from '../../layouts/MainLayout.astro';
 import { AdminPanel } from '../../components/admin/AdminPanel';
-import { getWeddingBySlugAsync } from '../../lib/weddingData';
+import { getWeddingBySlugAsync, MOCK_WEDDINGS } from '../../lib/weddingData';
+import { isSupabaseServiceRoleConfigured, verifyServerSession, verifyWeddingOwnership } from '../../lib/supabase/server';
 
 const { slug } = Astro.params;
 const wedding = await getWeddingBySlugAsync(slug as string);
 
 if (!wedding) {
   return Astro.redirect('/404');
+}
+
+// Server-side auth check: verify the user owns this wedding
+// Only enforce when Supabase is configured (skip for demo/mock data mode)
+const isDemoWedding = MOCK_WEDDINGS.some(w => w.slug === slug);
+
+if (isSupabaseServiceRoleConfigured() && !isDemoWedding) {
+  const session = await verifyServerSession(Astro.cookies);
+
+  if (!session) {
+    // No valid server session — redirect to login with expired flag
+    // to prevent redirect loop (localStorage may still have stale tokens)
+    return Astro.redirect('/connexion?expired=1');
+  }
+
+  // Verify the authenticated user owns this wedding
+  const isOwner = await verifyWeddingOwnership(session.userId, wedding.id);
+
+  if (!isOwner) {
+    // User is authenticated but doesn't own this wedding
+    return Astro.redirect('/connexion?expired=1');
+  }
 }
 ---
 
@@ -62,7 +85,9 @@ if (!wedding) {
     }
 
     if (!hasAccess) {
-      // Redirect to login
+      // Clear stale tokens to prevent redirect loop, then redirect to login
+      localStorage.removeItem('reflets_client_token');
+      localStorage.removeItem('reflets_client_session');
       window.location.href = '/connexion';
     }
   }

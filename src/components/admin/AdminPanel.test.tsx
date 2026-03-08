@@ -21,6 +21,10 @@ vi.mock('./QRCodeGenerator', () => ({
   QRCodeGenerator: () => <div data-testid="qr-generator">QRCodeGenerator</div>,
 }));
 
+vi.mock('qrcode.react', () => ({
+  QRCodeSVG: (props: any) => <svg data-testid="qr-svg" data-value={props.value} />,
+}));
+
 vi.mock('./EnhancedStatistics', () => ({
   EnhancedStatistics: () => <div data-testid="enhanced-stats">EnhancedStatistics</div>,
 }));
@@ -39,12 +43,8 @@ vi.mock('../../lib/auth', () => ({
   isAdmin: vi.fn(() => true),
 }));
 
-// Mock API module
+// Mock API module (only downloadBlob remains used by tests)
 vi.mock('../../lib/api', () => ({
-  mockAPI: {
-    toggleUploads: vi.fn().mockResolvedValue(undefined),
-    exportBackup: vi.fn().mockResolvedValue(new Blob(['test'])),
-  },
   downloadBlob: vi.fn(),
 }));
 
@@ -84,6 +84,7 @@ const {
   mockGetMessages,
   mockGetAlbums,
   mockGetSettings,
+  mockUpdateSettings,
   mockInitializeDemoStorage,
 } = vi.hoisted(() => ({
   mockGetStatistics: vi.fn().mockResolvedValue({
@@ -98,6 +99,7 @@ const {
   mockGetMessages: vi.fn().mockResolvedValue([]),
   mockGetAlbums: vi.fn().mockResolvedValue([]),
   mockGetSettings: vi.fn(() => ({ allowUploads: true })),
+  mockUpdateSettings: vi.fn().mockResolvedValue(undefined),
   mockInitializeDemoStorage: vi.fn(),
 }));
 
@@ -108,6 +110,7 @@ vi.mock('../../lib/services/dataService', () => ({
     getMessages = mockGetMessages;
     getAlbums = mockGetAlbums;
     getSettings = mockGetSettings;
+    updateSettings = mockUpdateSettings;
     initializeDemoStorage = mockInitializeDemoStorage;
   },
 }));
@@ -128,6 +131,7 @@ describe('AdminPanel Component', () => {
     mockGetMessages.mockResolvedValue([]);
     mockGetAlbums.mockResolvedValue([]);
     mockGetSettings.mockReturnValue({ allowUploads: true });
+    mockUpdateSettings.mockResolvedValue(undefined);
   });
 
   describe('Loading State', () => {
@@ -229,8 +233,6 @@ describe('AdminPanel Component', () => {
     });
 
     it('should toggle uploads when clicked', async () => {
-      const { mockAPI } = await import('../../lib/api');
-
       render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
@@ -240,7 +242,7 @@ describe('AdminPanel Component', () => {
       fireEvent.click(screen.getByTestId('settings-toggle'));
 
       await waitFor(() => {
-        expect(mockAPI.toggleUploads).toHaveBeenCalledWith(false);
+        expect(mockUpdateSettings).toHaveBeenCalledWith({ allowUploads: false });
       });
     });
   });
@@ -254,9 +256,7 @@ describe('AdminPanel Component', () => {
       });
     });
 
-    it('should trigger backup when clicked', async () => {
-      const { mockAPI, downloadBlob } = await import('../../lib/api');
-
+    it('should show "coming soon" toast when backup clicked', async () => {
       render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
@@ -265,40 +265,10 @@ describe('AdminPanel Component', () => {
 
       fireEvent.click(screen.getByText('Télécharger la sauvegarde'));
 
+      // Should show a toast indicating the feature is not yet available
       await waitFor(() => {
-        expect(mockAPI.exportBackup).toHaveBeenCalled();
-        expect(downloadBlob).toHaveBeenCalled();
+        expect(screen.getByText(/export bientôt disponible/i)).toBeInTheDocument();
       });
-    });
-
-    it('should show loading state during backup', async () => {
-      const { mockAPI } = await import('../../lib/api');
-      // Create a promise we can control
-      let resolveBackup: (value: Blob) => void;
-      const backupPromise = new Promise<Blob>((resolve) => {
-        resolveBackup = resolve;
-      });
-      (mockAPI.exportBackup as ReturnType<typeof vi.fn>).mockImplementation(
-        () => backupPromise
-      );
-
-      render(<AdminPanel demoMode={true} initialView="settings" />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Télécharger la sauvegarde')).toBeInTheDocument();
-      });
-
-      // Click the button to start the backup
-      fireEvent.click(screen.getByText('Télécharger la sauvegarde'));
-
-      // Loading state should appear immediately after click
-      // AdminButton shows "Chargement..." when loading={true}
-      await waitFor(() => {
-        expect(screen.getByText('Chargement...')).toBeInTheDocument();
-      });
-
-      // Resolve the backup promise to clean up
-      resolveBackup!(new Blob(['test']));
     });
   });
 
@@ -311,11 +281,11 @@ describe('AdminPanel Component', () => {
       });
     });
 
-    it('should render QRCodeGenerator component', async () => {
+    it('should render QR code SVG on dashboard', async () => {
       render(<AdminPanel demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByAltText('QR Code')).toBeInTheDocument();
+        expect(screen.getByTestId('qr-svg')).toBeInTheDocument();
       });
     });
   });
@@ -375,8 +345,7 @@ describe('AdminPanel Component', () => {
     });
 
     it('should handle settings toggle failure', async () => {
-      const { mockAPI } = await import('../../lib/api');
-      (mockAPI.toggleUploads as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Toggle failed'));
+      mockUpdateSettings.mockRejectedValueOnce(new Error('Toggle failed'));
 
       render(<AdminPanel demoMode={true} initialView="settings" />);
 
@@ -388,26 +357,7 @@ describe('AdminPanel Component', () => {
 
       await waitFor(() => {
         expect(window.alert).toHaveBeenCalledWith(
-          'Erreur lors de la mise à jour des paramètres'
-        );
-      });
-    });
-
-    it('should handle backup failure', async () => {
-      const { mockAPI } = await import('../../lib/api');
-      (mockAPI.exportBackup as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Backup failed'));
-
-      render(<AdminPanel demoMode={true} initialView="settings" />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Télécharger la sauvegarde')).toBeInTheDocument();
-      });
-
-      fireEvent.click(screen.getByText('Télécharger la sauvegarde'));
-
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith(
-          'Erreur lors de la création de la sauvegarde'
+          'Erreur lors de la mise à jour des paramètres.'
         );
       });
     });

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { X, Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize, Settings } from 'lucide-react';
 import type { MediaItem } from '../../lib/services/dataService';
 
@@ -18,6 +18,8 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
   const [showSettings, setShowSettings] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const currentItem = media[currentIndex];
   const isFirst = currentIndex === 0;
@@ -51,7 +53,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
-          onClose();
+          onCloseRef.current();
           break;
         case 'ArrowLeft':
           goToPrevious();
@@ -61,7 +63,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
           break;
         case ' ':
           e.preventDefault();
-          setIsPlaying(!isPlaying);
+          setIsPlaying(prev => !prev);
           break;
         case 'f':
           toggleFullscreen();
@@ -71,7 +73,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, isPlaying, onClose]);
+  }, []);
 
   // Prevent body scroll
   useEffect(() => {
@@ -255,7 +257,7 @@ export function Slideshow({ media, initialIndex = 0, onClose }: SlideshowProps) 
             </button>
 
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={() => setIsPlaying(prev => !prev)}
               className="p-4 bg-burgundy-old hover:bg-[#c92a38] text-white rounded-full transition-all duration-200 hover:scale-110 shadow-lg"
               aria-label={isPlaying ? 'Pause' : 'Lecture'}
             >

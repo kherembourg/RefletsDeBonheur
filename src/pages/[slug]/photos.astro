@@ -46,6 +46,7 @@ const weddingDate = new Date(config.weddingDate).toLocaleDateString('fr-FR', {
     <section class="px-4 pb-24">
       <GalleryGrid
         weddingId={weddingId}
+        weddingSlug={slug}
         client:load
         variant="public"
       />
@@ -80,7 +81,7 @@ const weddingDate = new Date(config.weddingDate).toLocaleDateString('fr-FR', {
             <a href={`/${wedding.slug}`} class="hover:text-charcoal transition-colors">
               Accueil
             </a>
-            {config.features.photoGallery && (
+            {config.features.gallery && (
               <a href={`/${wedding.slug}/photos`} class="text-charcoal border-b border-charcoal pb-1">
                 Galerie
               </a>

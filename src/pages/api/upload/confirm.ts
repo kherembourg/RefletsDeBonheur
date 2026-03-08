@@ -24,12 +24,24 @@
  */
 
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { supabase } from '../../../lib/supabase/client';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { checkRateLimit, checkWeddingRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { validateBody } from '../../../lib/api/validation';
 import { generateThumbnail } from '../../../lib/imageProcessing';
 import { extractKeyFromUrl, fetchFile, uploadFile, generateThumbnailKey } from '../../../lib/r2';
+
+const bodySchema = z.object({
+  weddingId: z.string().min(1),
+  key: z.string().min(1),
+  publicUrl: z.string().min(1),
+  contentType: z.string().min(1),
+  caption: z.string().optional(),
+  guestName: z.string().optional(),
+  guestIdentifier: z.string().optional(),
+});
 
 export const prerender = false;
 
@@ -175,6 +187,7 @@ async function validateUploadAuthorization(
       .select('id, wedding_id')
       .eq('session_token', guestIdentifier)
       .eq('wedding_id', weddingId)
+      .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 
     if (!error && guestSession) {
@@ -207,20 +220,9 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
 
     // Validate required fields
-    const { weddingId, key, publicUrl, contentType, caption, guestName, guestIdentifier } = body;
-
-    if (!weddingId || !key || !publicUrl || !contentType) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          message: 'weddingId, key, publicUrl, and contentType are required',
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const validation = validateBody(bodySchema, body);
+    if ('error' in validation) return validation.error;
+    const { weddingId, key, publicUrl, contentType, caption, guestName, guestIdentifier } = validation.data;
 
     // Per-wedding rate limit check - 50 uploads per wedding per minute
     // Protects against distributed abuse across multiple IPs
@@ -425,7 +427,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred.',
       }),
       {
         status: 500,

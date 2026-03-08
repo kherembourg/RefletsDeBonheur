@@ -37,7 +37,7 @@ export interface WeddingTheme {
 export interface WeddingFeatures {
   rsvp: boolean;
   guestbook: boolean;
-  photoGallery: boolean;
+  gallery: boolean;
   liveWall: boolean;
   geoFencing: boolean;
   countdown: boolean;
@@ -219,7 +219,7 @@ export const DEFAULT_WEDDING_CONFIG: WeddingConfig = {
   features: {
     rsvp: true,
     guestbook: true,
-    photoGallery: true,
+    gallery: true,
     liveWall: false,
     geoFencing: false,
     countdown: true,

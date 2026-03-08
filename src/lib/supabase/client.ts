@@ -16,15 +16,31 @@ if (!isConfigured) {
 // Create a single supabase client for the browser when configured.
 // Note: Using untyped client for flexibility with auth tables
 // Type safety is handled via explicit type assertions in queries
-export const supabase: SupabaseClient = isConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, {
+let _supabase: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
       },
-    })
-  : (null as unknown as SupabaseClient);
+    });
+  }
+  return _supabase;
+}
+
+export const supabase: SupabaseClient = isConfigured
+  ? getSupabase()
+  : new Proxy({} as SupabaseClient, {
+      get(_, prop) {
+        if (prop === 'then') return undefined;
+        throw new Error(
+          'Supabase is not configured. Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY.'
+        );
+      },
+    });
 
 // Check if Supabase is configured
 export function isSupabaseConfigured(): boolean {

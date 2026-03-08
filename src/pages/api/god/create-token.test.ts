@@ -575,7 +575,7 @@ describe('God Mode Create Token Endpoint', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to create access token');
-      expect(data.message).toBe('Database connection lost');
+      expect(data.message).toBe('An unexpected error occurred.');
     });
   });
 });
