@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import InstallPrompt from '../components/pwa/InstallPrompt';
+import { CookieConsent } from '../components/layout/CookieConsent';
 import LanguageDetector from '../components/layout/LanguageDetector.astro';
 import { getLangFromUrl, getHtmlLang } from '../i18n/utils';
 
@@ -126,5 +127,6 @@ const htmlLang = getHtmlLang(currentLang);
         console.log('[SW] Service Worker not supported');
       }
     </script>
+    <CookieConsent client:load />
   </body>
 </html>

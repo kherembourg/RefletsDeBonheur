@@ -267,7 +267,7 @@ describe('AdminPanel Component', () => {
 
       // Should show a toast indicating the feature is not yet available
       await waitFor(() => {
-        expect(screen.getByText(/fonctionnalité d'export/i)).toBeInTheDocument();
+        expect(screen.getByText(/export bientôt disponible/i)).toBeInTheDocument();
       });
     });
   });
@@ -357,7 +357,7 @@ describe('AdminPanel Component', () => {
 
       await waitFor(() => {
         expect(window.alert).toHaveBeenCalledWith(
-          'Erreur lors de la mise à jour des paramètres'
+          'Erreur lors de la mise à jour des paramètres.'
         );
       });
     });

@@ -2,13 +2,22 @@ import { useState, useRef } from 'react';
 import { Check, X, AlertCircle, Send, Heart } from 'lucide-react';
 import type { AttendanceStatus, WeddingConfig } from '../../lib/types';
 import { RSVPService } from '../../lib/rsvp/rsvpService';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
+
+const langToLocale: Record<Language, string> = {
+  fr: 'fr-FR',
+  en: 'en-US',
+  es: 'es-ES',
+};
 
 interface WeddingRSVPProps {
   weddingId: string;
   config: WeddingConfig;
+  lang?: Language;
 }
 
-export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
+export function WeddingRSVP({ weddingId, config, lang = 'fr' }: WeddingRSVPProps) {
   const [name, setName] = useState('');
   const [attendance, setAttendance] = useState<AttendanceStatus | null>(null);
   const [mealPreference, setMealPreference] = useState('');
@@ -29,12 +38,12 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
     setError('');
 
     if (!name.trim()) {
-      setError('Veuillez entrer votre nom');
+      setError(t(lang, 'rsvp.nameRequired'));
       return;
     }
 
     if (!attendance) {
-      setError('Veuillez indiquer si vous serez présent');
+      setError(t(lang, 'rsvp.attendanceRequired'));
       return;
     }
 
@@ -56,7 +65,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
       setIsSubmitted(true);
     } catch (err) {
       console.error('RSVP submission failed:', err);
-      setError('Une erreur est survenue lors de l\'envoi. Veuillez réessayer.');
+      setError(t(lang, 'rsvp.submitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -72,12 +81,12 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
           <Check className="w-10 h-10" style={{ color: primaryColor }} />
         </div>
         <h3 className="text-2xl font-serif text-charcoal mb-4">
-          Merci pour votre réponse !
+          {t(lang, 'rsvp.thankYou')}
         </h3>
         <p className="text-charcoal/60">
           {attendance === 'yes'
-            ? 'Nous avons hâte de vous voir !'
-            : 'Nous sommes désolés que vous ne puissiez pas être présent. Vous serez dans nos pensées.'}
+            ? t(lang, 'rsvp.seeYouSoon')
+            : t(lang, 'rsvp.sorryMissYou')}
         </p>
       </div>
     );
@@ -89,8 +98,8 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
         <div className="flex items-center justify-center mb-2 text-[#b08b8b]">
           <Heart className="w-5 h-5" />
         </div>
-        <p className="text-[10px] uppercase tracking-[0.35em] text-charcoal/40">Wedding Invitation</p>
-        <h2 className="font-serif text-3xl text-charcoal mt-3">RSVP</h2>
+        <p className="text-[10px] uppercase tracking-[0.35em] text-charcoal/40">{t(lang, 'rsvp.weddingInvitation')}</p>
+        <h2 className="font-serif text-3xl text-charcoal mt-3">{t(lang, 'rsvp.title')}</h2>
         <p className="text-sm text-charcoal/50 italic mt-1">
           {config.brideName} & {config.groomName}
         </p>
@@ -99,13 +108,13 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
       {/* Guest Name */}
       <div>
         <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
-          Guest name
+          {t(lang, 'rsvp.guestName')}
         </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your full name"
+          placeholder={t(lang, 'rsvp.guestNamePlaceholder')}
           className="w-full px-4 py-3 rounded-xl border border-charcoal/10 bg-white text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-[#b08b8b]/30"
           required
         />
@@ -114,7 +123,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
       {/* Attendance */}
       <div>
         <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
-          Will you attend?
+          {t(lang, 'rsvp.willYouAttend')}
         </label>
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -127,7 +136,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
             }`}
           >
             <Check className="w-4 h-4" />
-            Joyfully Accepts
+            {t(lang, 'rsvp.accepts')}
           </button>
           <button
             type="button"
@@ -139,7 +148,7 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
             }`}
           >
             <X className="w-4 h-4" />
-            Regretfully Declines
+            {t(lang, 'rsvp.declines')}
           </button>
         </div>
       </div>
@@ -147,17 +156,17 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
       {/* Meal Preference */}
       <div>
         <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
-          Meal preference
+          {t(lang, 'rsvp.mealPreference')}
         </label>
         <select
           value={mealPreference}
           onChange={(e) => setMealPreference(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-charcoal/10 bg-white text-sm text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-[#b08b8b]/30"
         >
-          <option value="">Please select an option...</option>
-          <option value="chicken">Chicken</option>
-          <option value="fish">Fish</option>
-          <option value="vegetarian">Vegetarian</option>
+          <option value="">{t(lang, 'rsvp.mealPlaceholder')}</option>
+          <option value="chicken">{t(lang, 'rsvp.mealChicken')}</option>
+          <option value="fish">{t(lang, 'rsvp.mealFish')}</option>
+          <option value="vegetarian">{t(lang, 'rsvp.mealVegetarian')}</option>
         </select>
       </div>
 
@@ -165,12 +174,12 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
       {config.askDietaryRestrictions && (
         <div>
           <label className="block text-xs font-semibold text-charcoal/60 uppercase tracking-widest mb-2">
-            Any dietary restrictions?
+            {t(lang, 'rsvp.dietaryRestrictions')}
           </label>
           <textarea
             value={dietaryRestrictions}
             onChange={(e) => setDietaryRestrictions(e.target.value)}
-            placeholder="Allergies, intolerances, etc."
+            placeholder={t(lang, 'rsvp.dietaryPlaceholder')}
             rows={3}
             className="w-full px-4 py-3 rounded-xl border border-charcoal/10 bg-white text-sm text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-[#b08b8b]/30 resize-none"
           />
@@ -194,21 +203,21 @@ export function WeddingRSVP({ weddingId, config }: WeddingRSVPProps) {
         {isSubmitting ? (
           <>
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>Envoi en cours...</span>
+            <span>{t(lang, 'rsvp.submitting')}</span>
           </>
         ) : (
           <>
             <Send className="w-5 h-5" />
-            <span>Confirm RSVP</span>
+            <span>{t(lang, 'rsvp.confirmRsvp')}</span>
           </>
         )}
       </button>
 
       {config.rsvpDeadline && (
         <p className="text-center text-xs text-charcoal/40">
-          Please respond by{' '}
+          {t(lang, 'rsvp.respondBy')}{' '}
           <span className="font-medium">
-            {new Date(config.rsvpDeadline).toLocaleDateString('fr-FR', {
+            {new Date(config.rsvpDeadline).toLocaleDateString(langToLocale[lang] || 'fr-FR', {
               day: 'numeric',
               month: 'long',
               year: 'numeric',

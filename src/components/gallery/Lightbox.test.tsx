@@ -125,7 +125,7 @@ describe('Lightbox Component', () => {
 
     it('should navigate to next media when next button clicked', () => {
       render(<Lightbox media={mockMedia} initialIndex={0} onClose={mockOnClose} />);
-      const nextButton = screen.getByLabelText(/photo suivante/i);
+      const nextButton = screen.getByLabelText(/next/i);
       fireEvent.click(nextButton);
       // Check if second image is now displayed
       const image = screen.getByRole('img');
@@ -134,7 +134,7 @@ describe('Lightbox Component', () => {
 
     it('should navigate to previous media when previous button clicked', () => {
       render(<Lightbox media={mockMedia} initialIndex={1} onClose={mockOnClose} />);
-      const prevButton = screen.getByLabelText(/photo précédente/i);
+      const prevButton = screen.getByLabelText(/previous/i);
       fireEvent.click(prevButton);
       // Check if first image is now displayed
       const image = screen.getByRole('img');
@@ -167,13 +167,13 @@ describe('Lightbox Component', () => {
   describe('Navigation Controls', () => {
     it('should hide previous button when at first item', () => {
       render(<Lightbox media={mockMedia} initialIndex={0} onClose={mockOnClose} />);
-      const prevButton = screen.queryByLabelText(/photo précédente/i);
+      const prevButton = screen.queryByLabelText(/previous/i);
       expect(prevButton).not.toBeInTheDocument();
     });
 
     it('should hide next button when at last item', () => {
       render(<Lightbox media={mockMedia} initialIndex={2} onClose={mockOnClose} />);
-      const nextButton = screen.queryByLabelText(/photo suivante/i);
+      const nextButton = screen.queryByLabelText(/next/i);
       expect(nextButton).not.toBeInTheDocument();
     });
 
@@ -185,7 +185,7 @@ describe('Lightbox Component', () => {
     it('should update position indicator when navigating', () => {
       render(<Lightbox media={mockMedia} initialIndex={0} onClose={mockOnClose} />);
       expect(screen.getByText(/1\s*\/\s*3/)).toBeInTheDocument();
-      const nextButton = screen.getByLabelText(/photo suivante/i);
+      const nextButton = screen.getByLabelText(/next/i);
       fireEvent.click(nextButton);
       expect(screen.getByText(/2\s*\/\s*3/)).toBeInTheDocument();
     });
@@ -215,7 +215,7 @@ describe('Lightbox Component', () => {
       render(<Lightbox media={mockMedia} initialIndex={0} onClose={mockOnClose} />);
       const image = screen.getByRole('img');
       fireEvent.click(image); // Zoom in
-      const nextButton = screen.getByLabelText(/photo suivante/i);
+      const nextButton = screen.getByLabelText(/next/i);
       fireEvent.click(nextButton);
       const newImage = screen.getByRole('img');
       expect(newImage).not.toHaveClass('scale-150');
@@ -258,7 +258,7 @@ describe('Lightbox Component', () => {
 
     it('should display keyboard shortcuts hint', () => {
       render(<Lightbox media={mockMedia} initialIndex={0} onClose={mockOnClose} />);
-      expect(screen.getByText(/esc pour fermer/i)).toBeInTheDocument();
+      expect(screen.getByText(/esc/i)).toBeInTheDocument();
     });
   });
 
@@ -268,8 +268,8 @@ describe('Lightbox Component', () => {
 
     it('should handle single media item', () => {
       render(<Lightbox media={[mockMedia[0]]} initialIndex={0} onClose={mockOnClose} />);
-      expect(screen.queryByLabelText(/photo précédente/i)).not.toBeInTheDocument();
-      expect(screen.queryByLabelText(/photo suivante/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/previous/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/next/i)).not.toBeInTheDocument();
       expect(screen.getByText(/1\s*\/\s*1/)).toBeInTheDocument();
     });
 

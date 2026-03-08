@@ -10,15 +10,18 @@ import { isAdmin as checkIsAdmin, isAuthenticated } from '../../lib/auth';
 import { guestLogin } from '../../lib/auth/clientAuth';
 import { extractAndSavePinFromUrl, getSavedPin } from '../../lib/auth/pinFromUrl';
 import { DataService, type MediaItem, type Album } from '../../lib/services/dataService';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 
 interface GalleryGridProps {
   weddingId?: string;
   weddingSlug?: string;
   demoMode?: boolean; // Skip auth check for demo page
   variant?: 'public' | 'admin';
+  lang?: Language;
 }
 
-export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant = 'public' }: GalleryGridProps) {
+export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant = 'public', lang = 'fr' }: GalleryGridProps) {
   // Create service once using ref
   const serviceRef = useRef<DataService | null>(null);
   if (!serviceRef.current) {
@@ -197,11 +200,11 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
       setShowPinModal(false);
       setShowUploadModal(true);
     } else {
-      setPinError(result.error || 'Code invalide');
+      setPinError(result.error || t(lang, 'gallery.pinInvalid'));
     }
 
     setPinLoading(false);
-  }, [pinInput, weddingSlug]);
+  }, [pinInput, weddingSlug, lang]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -232,13 +235,14 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
   const handleBulkDelete = useCallback(async () => {
     if (selectedItems.size === 0) return;
     const count = selectedItems.size;
-    if (!confirm(`Supprimer ${count} souvenir${count > 1 ? 's' : ''} ?`)) {
+    const suffix = count > 1 ? t(lang, 'gallery.deleteConfirmCountPlural') : t(lang, 'gallery.deleteConfirmCount');
+    if (!confirm(`${t(lang, 'gallery.deleteConfirm')} ${count} ${suffix} ?`)) {
       return;
     }
     await Promise.all([...selectedItems].map(id => dataService.deleteMedia(id)));
     await refresh();
     clearSelection();
-  }, [selectedItems, dataService, refresh, clearSelection]);
+  }, [selectedItems, dataService, refresh, clearSelection, lang]);
 
   // Memoized click handler for lightbox - looks up index from id
   const handleMediaClick = useCallback((id: string) => {
@@ -256,21 +260,21 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
     <ErrorBoundary>
     <div className="space-y-6">
       {/* Accessibility-only header */}
-      <h2 className="sr-only">Galerie Photos</h2>
+      <h2 className="sr-only">{t(lang, 'gallery.title')}</h2>
 
       {/* Public gallery toolbar */}
       {isPublicView && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-xs uppercase tracking-[0.35em] text-charcoal/40">Galerie</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-charcoal/40">{t(lang, 'gallery.label')}</p>
           {albums.length > 0 && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-charcoal/50 hidden sm:inline">Filtrer par album</span>
+              <span className="text-sm text-charcoal/50 hidden sm:inline">{t(lang, 'gallery.filterByAlbum')}</span>
               <select
                 value={selectedAlbumId || ''}
                 onChange={(e) => setSelectedAlbumId(e.target.value || null)}
                 className="px-4 py-2 rounded-full border border-charcoal/10 bg-white text-sm text-charcoal/70 shadow-sm focus:outline-none focus:ring-2 focus:ring-burgundy-old/20"
               >
-                <option value="">Tous les albums</option>
+                <option value="">{t(lang, 'gallery.allAlbums')}</option>
                 {albums.map(album => (
                   <option key={album.id} value={album.id}>
                     {album.name}
@@ -295,11 +299,11 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
               }`}
             >
               <CheckSquare size={16} />
-              Actions groupées
+              {t(lang, 'gallery.bulkActions')}
             </button>
             {selectionMode && (
               <span className="text-sm text-charcoal/50">
-                {selectedItems.size} sélectionnée{selectedItems.size > 1 ? 's' : ''}
+                {selectedItems.size} {selectedItems.size > 1 ? t(lang, 'gallery.selectedCountPlural') : t(lang, 'gallery.selectedCount')}
               </span>
             )}
           </div>
@@ -311,15 +315,15 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
               className="px-4 py-2 rounded-full border border-charcoal/10 text-sm text-charcoal/70 hover:text-charcoal disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trash2 size={16} className="inline-block mr-2" />
-              Supprimer
+              {t(lang, 'common.delete')}
             </button>
             <button
               disabled
               className="px-4 py-2 rounded-full border border-charcoal/10 text-sm text-charcoal/50 cursor-not-allowed"
-              title="Bientôt disponible"
+              title={t(lang, 'gallery.comingSoon')}
             >
               <FolderPlus size={16} className="inline-block mr-2" />
-              Ajouter à un album
+              {t(lang, 'gallery.addToAlbum')}
             </button>
 
             {settings.allowUploads ? (
@@ -328,12 +332,12 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
                 className="px-4 py-2 rounded-full bg-burgundy-old text-white text-sm font-medium hover:bg-[#c92a38] transition-colors"
               >
                 <Upload size={16} className="inline-block mr-2" />
-                Ajouter des photos
+                {t(lang, 'gallery.upload')}
               </button>
             ) : (
               <div className="flex items-center gap-2 text-charcoal/50 bg-cream px-4 py-2 rounded-full text-sm">
                 <Lock size={14} />
-                <span>Uploads fermés</span>
+                <span>{t(lang, 'gallery.uploadsClosed')}</span>
               </div>
             )}
           </div>
@@ -346,7 +350,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
           <div className="w-8 h-8 mx-auto mb-4 animate-spin">
             <Loader2 className="w-full h-full text-burgundy-old" />
           </div>
-          <p className="text-charcoal/60 font-light">Chargement des photos...</p>
+          <p className="text-charcoal/60 font-light">{t(lang, 'gallery.loadingPhotos')}</p>
         </div>
       ) : media.length === 0 ? (
         /* Empty State - No media at all */
@@ -359,11 +363,10 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
           </div>
 
           <h3 className="font-serif text-2xl sm:text-3xl text-charcoal mb-3">
-            Votre galerie vous attend
+            {t(lang, 'gallery.emptyTitle')}
           </h3>
           <p className="text-charcoal/50 font-light max-w-md mx-auto mb-8 leading-relaxed">
-            Immortalisez les moments précieux de cette journée.
-            Partagez vos photos et vidéos pour créer ensemble un album de souvenirs inoubliables.
+            {t(lang, 'gallery.emptyDescription')}
           </p>
 
           {settings.allowUploads ? (
@@ -372,12 +375,12 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
               className="inline-flex items-center gap-3 px-8 py-4 bg-burgundy-old text-white rounded-full hover:bg-[#c92a38] transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <Upload size={20} />
-              <span className="font-medium tracking-wide">Contribuer à la galerie</span>
+              <span className="font-medium tracking-wide">{t(lang, 'gallery.contribute')}</span>
             </button>
           ) : (
             <div className="inline-flex items-center gap-2 px-6 py-3 bg-cream text-charcoal/60 rounded-full">
               <Lock size={16} />
-              <span className="font-light">Les uploads seront bientôt disponibles</span>
+              <span className="font-light">{t(lang, 'gallery.uploadsComingSoon')}</span>
             </div>
           )}
         </div>
@@ -387,8 +390,8 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
           <div className="w-16 h-16 mx-auto mb-6 border border-charcoal/10 flex items-center justify-center">
             <ImageIcon className="text-charcoal/30" size={28} />
           </div>
-          <p className="font-serif text-xl text-charcoal/60 mb-2">Aucun résultat trouvé</p>
-          <p className="text-charcoal/40 font-light text-sm">Essayez de modifier vos filtres</p>
+          <p className="font-serif text-xl text-charcoal/60 mb-2">{t(lang, 'gallery.noResults')}</p>
+          <p className="text-charcoal/40 font-light text-sm">{t(lang, 'gallery.noResultsHint')}</p>
         </div>
       ) : (
         /* Gallery Grid */
@@ -412,6 +415,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
                 onToggleFavorite={handleToggleFavorite}
                 dataService={dataService}
                 variant={variant}
+                lang={lang}
               />
             </div>
           ))}
@@ -425,7 +429,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
             onClick={handleUploadClick}
             className="px-8 py-3 rounded-full bg-burgundy-old text-white text-sm font-medium tracking-wide hover:bg-[#c92a38] transition-colors shadow-md"
           >
-            Contribuer à la galerie
+            {t(lang, 'gallery.contribute')}
           </button>
         </div>
       )}
@@ -436,6 +440,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
         onClose={() => setShowUploadModal(false)}
         onUploadComplete={handleUploadComplete}
         dataService={dataService}
+        lang={lang}
       />
 
       {/* PIN Modal */}
@@ -453,9 +458,9 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
               <div className="w-12 h-12 mx-auto mb-3 bg-burgundy-old/10 rounded-full flex items-center justify-center">
                 <KeyRound className="text-burgundy-old" size={24} />
               </div>
-              <h3 className="font-serif text-xl text-charcoal">Code d'accès</h3>
+              <h3 className="font-serif text-xl text-charcoal">{t(lang, 'gallery.pinTitle')}</h3>
               <p className="text-sm text-charcoal/50 mt-1">
-                Entrez le code pour contribuer à la galerie
+                {t(lang, 'gallery.pinDescription')}
               </p>
             </div>
 
@@ -479,7 +484,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
                 {pinLoading ? (
                   <Loader2 className="animate-spin" size={18} />
                 ) : (
-                  'Valider'
+                  t(lang, 'gallery.pinSubmit')
                 )}
               </button>
             </form>
@@ -500,6 +505,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
             media={filteredMedia}
             initialIndex={lightboxIndex}
             onClose={() => setLightboxIndex(null)}
+            lang={lang}
           />
         </Suspense>
       )}

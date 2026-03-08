@@ -19,6 +19,7 @@ export interface UploadOptions {
   guestName?: string;
   guestIdentifier?: string;
   onProgress?: (progress: UploadProgress) => void;
+  abortSignal?: AbortSignal;
 }
 
 export interface UploadError {
@@ -47,7 +48,7 @@ export class TrialModeError extends Error {
  * 3. Confirm upload and create database record
  */
 export async function uploadToR2(options: UploadOptions): Promise<MediaItem> {
-  const { weddingId, file, caption, guestName, guestIdentifier, onProgress } = options;
+  const { weddingId, file, caption, guestName, guestIdentifier, onProgress, abortSignal } = options;
 
   // Step 1: Get presigned URL
   const presignResponse = await fetch('/api/upload/presign', {
@@ -59,6 +60,7 @@ export async function uploadToR2(options: UploadOptions): Promise<MediaItem> {
       contentType: file.type,
       guestIdentifier,
     }),
+    signal: abortSignal,
   });
 
   if (!presignResponse.ok) {
@@ -73,7 +75,7 @@ export async function uploadToR2(options: UploadOptions): Promise<MediaItem> {
   const { uploadUrl, key, publicUrl } = await presignResponse.json();
 
   // Step 2: Upload file to R2
-  await uploadFileWithProgress(uploadUrl, file, onProgress);
+  await uploadFileWithProgress(uploadUrl, file, onProgress, abortSignal);
 
   // Step 3: Confirm upload and create database record
   const confirmResponse = await fetch('/api/upload/confirm', {
@@ -88,6 +90,7 @@ export async function uploadToR2(options: UploadOptions): Promise<MediaItem> {
       guestName,
       guestIdentifier,
     }),
+    signal: abortSignal,
   });
 
   if (!confirmResponse.ok) {
@@ -117,10 +120,25 @@ export async function uploadToR2(options: UploadOptions): Promise<MediaItem> {
 function uploadFileWithProgress(
   url: string,
   file: File,
-  onProgress?: (progress: UploadProgress) => void
+  onProgress?: (progress: UploadProgress) => void,
+  abortSignal?: AbortSignal
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+
+    // Wire up AbortSignal to XHR
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        reject(new Error('Upload aborted'));
+        return;
+      }
+      const onAbort = () => xhr.abort();
+      abortSignal.addEventListener('abort', onAbort, { once: true });
+      // Clean up listener when XHR completes
+      xhr.addEventListener('loadend', () => {
+        abortSignal.removeEventListener('abort', onAbort);
+      });
+    }
 
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable && onProgress) {
@@ -154,8 +172,11 @@ function uploadFileWithProgress(
   });
 }
 
+/** Default number of concurrent uploads */
+export const UPLOAD_BATCH_SIZE = 3;
+
 /**
- * Upload multiple files with overall progress tracking
+ * Upload multiple files with batched parallelism and overall progress tracking
  */
 export async function uploadMultipleToR2(
   options: {
@@ -168,33 +189,54 @@ export async function uploadMultipleToR2(
     guestIdentifier?: string;
     onFileProgress?: (fileIndex: number, progress: UploadProgress) => void;
     onOverallProgress?: (completed: number, total: number) => void;
+    abortSignal?: AbortSignal;
+    batchSize?: number;
   }
 ): Promise<MediaItem[]> {
-  const { weddingId, files, guestName, guestIdentifier, onFileProgress, onOverallProgress } = options;
+  const {
+    weddingId, files, guestName, guestIdentifier,
+    onFileProgress, onOverallProgress,
+    abortSignal, batchSize = UPLOAD_BATCH_SIZE,
+  } = options;
 
-  const results: MediaItem[] = [];
+  const results: MediaItem[] = new Array(files.length);
+  let completed = 0;
 
-  for (let i = 0; i < files.length; i++) {
-    const { file, caption } = files[i];
+  // Process files in batches of `batchSize`
+  for (let batchStart = 0; batchStart < files.length; batchStart += batchSize) {
+    // Check abort before starting a new batch
+    if (abortSignal?.aborted) {
+      throw new Error('Upload aborted');
+    }
 
-    try {
-      const mediaItem = await uploadToR2({
+    const batchEnd = Math.min(batchStart + batchSize, files.length);
+    const batch = files.slice(batchStart, batchEnd);
+
+    const batchPromises = batch.map((item, batchIndex) => {
+      const fileIndex = batchStart + batchIndex;
+      return uploadToR2({
         weddingId,
-        file,
-        caption,
+        file: item.file,
+        caption: item.caption,
         guestName,
         guestIdentifier,
         onProgress: (progress) => {
-          onFileProgress?.(i, progress);
+          onFileProgress?.(fileIndex, progress);
         },
+        abortSignal,
+      }).then((mediaItem) => {
+        results[fileIndex] = mediaItem;
+        completed++;
+        onOverallProgress?.(completed, files.length);
+        return mediaItem;
       });
+    });
 
-      results.push(mediaItem);
-      onOverallProgress?.(i + 1, files.length);
+    try {
+      await Promise.all(batchPromises);
     } catch (error) {
-      // Log error but continue with other files
-      console.error(`Failed to upload file ${file.name}:`, error);
-      // Re-throw to let caller handle
+      const fileName = batch.find((_, i) => !results[batchStart + i])?.file.name ?? 'unknown';
+      console.error(`Failed to upload file ${fileName}:`, error);
       throw error;
     }
   }

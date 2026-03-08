@@ -2,15 +2,18 @@ import { XCircle } from 'lucide-react';
 import { UploadForm } from './UploadForm';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import type { DataService, MediaItem } from '../../lib/services/dataService';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUploadComplete: (items: MediaItem[]) => void;
   dataService: DataService;
+  lang?: Language;
 }
 
-export function UploadModal({ isOpen, onClose, onUploadComplete, dataService }: UploadModalProps) {
+export function UploadModal({ isOpen, onClose, onUploadComplete, dataService, lang = 'fr' }: UploadModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -25,12 +28,12 @@ export function UploadModal({ isOpen, onClose, onUploadComplete, dataService }: 
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-silver-mist bg-ivory z-10">
           <h3 className="font-bold text-lg text-deep-charcoal">
-            Ajouter des souvenirs
+            {t(lang, 'gallery.addMemories')}
           </h3>
           <button
             onClick={onClose}
             className="text-warm-taupe hover:text-deep-charcoal transition-colors"
-            aria-label="Fermer"
+            aria-label={t(lang, 'common.close')}
           >
             <XCircle size={24} />
           </button>
@@ -43,6 +46,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete, dataService }: 
               onUploadComplete={onUploadComplete}
               onClose={onClose}
               dataService={dataService}
+              lang={lang}
             />
           </ErrorBoundary>
         </div>

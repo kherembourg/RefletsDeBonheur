@@ -2,14 +2,17 @@ import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import type { MediaItem } from '../../lib/services/dataService';
 import ReactionsPanel from './ReactionsPanel';
+import { t } from '../../i18n/utils';
+import type { Language } from '../../i18n/translations';
 
 interface LightboxProps {
   media: MediaItem[];
   initialIndex: number;
   onClose: () => void;
+  lang?: Language;
 }
 
-export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
+export function Lightbox({ media, initialIndex, onClose, lang = 'fr' }: LightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -149,7 +152,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
       <button
         onClick={onClose}
         className="absolute top-4 right-4 z-10 p-2 bg-deep-charcoal/80 hover:bg-deep-charcoal text-ivory rounded-full transition-all duration-200 hover:scale-110"
-        aria-label="Fermer"
+        aria-label={t(lang, 'common.close')}
       >
         <X className="w-6 h-6" />
       </button>
@@ -162,7 +165,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
             goToPrevious();
           }}
           className="absolute left-4 z-10 p-3 bg-deep-charcoal/80 hover:bg-deep-charcoal text-ivory rounded-full transition-all duration-200 hover:scale-110"
-          aria-label="Photo précédente"
+          aria-label="Previous"
         >
           <ChevronLeft className="w-8 h-8" />
         </button>
@@ -175,7 +178,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
             goToNext();
           }}
           className="absolute right-4 z-10 p-3 bg-deep-charcoal/80 hover:bg-deep-charcoal text-ivory rounded-full transition-all duration-200 hover:scale-110"
-          aria-label="Photo suivante"
+          aria-label="Next"
         >
           <ChevronRight className="w-8 h-8" />
         </button>
@@ -199,7 +202,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
         ) : (
           <img
             src={currentItem.url}
-            alt={currentItem.caption || `Photo par ${currentItem.author}`}
+            alt={currentItem.caption || `${t(lang, 'media.photoBy')} ${currentItem.author}`}
             className={`max-w-full max-h-[80vh] rounded-lg shadow-2xl transition-transform duration-300 ${
               isZoomed ? 'cursor-zoom-out scale-150' : 'cursor-zoom-in'
             }`}
@@ -225,8 +228,8 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
                   <button
                     onClick={() => setIsZoomed(!isZoomed)}
                     className="p-2 bg-deep-charcoal/80 hover:bg-burgundy-old hover:text-white rounded-lg transition-all duration-200"
-                    aria-label={isZoomed ? 'Dézoomer' : 'Zoomer'}
-                    title={isZoomed ? 'Dézoomer' : 'Zoomer'}
+                    aria-label={isZoomed ? t(lang, 'lightbox.zoomOut') : t(lang, 'lightbox.zoomIn')}
+                    title={isZoomed ? t(lang, 'lightbox.zoomOut') : t(lang, 'lightbox.zoomIn')}
                   >
                     {isZoomed ? <ZoomOut className="w-5 h-5" /> : <ZoomIn className="w-5 h-5" />}
                   </button>
@@ -235,8 +238,8 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
               <button
                 onClick={handleDownload}
                 className="p-2 bg-deep-charcoal/80 hover:bg-burgundy-old hover:text-white rounded-lg transition-all duration-200"
-                aria-label="Télécharger"
-                title="Télécharger"
+                aria-label={t(lang, 'gallery.download')}
+                title={t(lang, 'gallery.download')}
               >
                 <Download className="w-5 h-5" />
               </button>
@@ -258,7 +261,7 @@ export function Lightbox({ media, initialIndex, onClose }: LightboxProps) {
       {/* Keyboard shortcuts hint */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-ivory/40 text-xs hidden md:block">
         <span className="bg-deep-charcoal/60 px-3 py-1 rounded-full">
-          ESC pour fermer • ← → pour naviguer
+          ESC &bull; &larr; &rarr;
         </span>
       </div>
     </div>

@@ -97,7 +97,7 @@ describe('GalleryGrid Component', () => {
       render(<GalleryGrid demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Galerie Photos')).toBeInTheDocument();
+        expect(screen.getByText('Galerie')).toBeInTheDocument();
       });
     });
 
@@ -114,7 +114,7 @@ describe('GalleryGrid Component', () => {
       render(<GalleryGrid demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /contribuer à la galerie/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /partager un souvenir/i })).toBeInTheDocument();
       });
     });
   });
@@ -134,7 +134,7 @@ describe('GalleryGrid Component', () => {
       render(<GalleryGrid demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Votre galerie vous attend')).toBeInTheDocument();
+        expect(screen.getByText('Aucun souvenir pour l\'instant')).toBeInTheDocument();
       });
     });
 
@@ -144,7 +144,7 @@ describe('GalleryGrid Component', () => {
       render(<GalleryGrid demoMode={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText(/contribuer à la galerie/i)).toBeInTheDocument();
+        expect(screen.getByText(/partager un souvenir/i)).toBeInTheDocument();
       });
     });
   });
@@ -164,7 +164,7 @@ describe('GalleryGrid Component', () => {
       render(<GalleryGrid demoMode={true} variant="admin" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Actions groupées')).toBeInTheDocument();
+        expect(screen.getByText('Sélection multiple')).toBeInTheDocument();
       });
     });
   });

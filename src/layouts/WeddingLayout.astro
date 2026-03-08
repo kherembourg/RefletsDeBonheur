@@ -1,6 +1,7 @@
 ---
 import type { Wedding } from '../lib/types';
 import '../styles/global.css';
+import { CookieConsent } from '../components/layout/CookieConsent';
 
 interface Props {
   wedding: Wedding;
@@ -232,5 +233,6 @@ const secondaryColor = config.theme.secondaryColor || '#c92a38';
         });
       }
     </script>
+    <CookieConsent client:load />
   </body>
 </html>

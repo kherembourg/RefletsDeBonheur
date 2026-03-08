@@ -401,6 +401,7 @@ export class DataService {
       author?: string;
       onFileProgress?: (fileIndex: number, progress: { loaded: number; total: number; percentage: number }) => void;
       onOverallProgress?: (completed: number, total: number) => void;
+      abortSignal?: AbortSignal;
     } = {}
   ): Promise<MediaItem[]> {
     if (this.demoMode) {
@@ -433,6 +434,7 @@ export class DataService {
         guestIdentifier: this.guestIdentifier,
         onFileProgress: options.onFileProgress,
         onOverallProgress: options.onOverallProgress,
+        abortSignal: options.abortSignal,
       });
     } catch (error) {
       // If trial mode, fall back to local upload with warning
