@@ -1,5 +1,6 @@
 import { XCircle } from 'lucide-react';
 import { UploadForm } from './UploadForm';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 import type { DataService, MediaItem } from '../../lib/services/dataService';
 
 interface UploadModalProps {
@@ -37,11 +38,13 @@ export function UploadModal({ isOpen, onClose, onUploadComplete, dataService }: 
 
         {/* Content */}
         <div className="p-6 overflow-y-auto">
-          <UploadForm
-            onUploadComplete={onUploadComplete}
-            onClose={onClose}
-            dataService={dataService}
-          />
+          <ErrorBoundary>
+            <UploadForm
+              onUploadComplete={onUploadComplete}
+              onClose={onClose}
+              dataService={dataService}
+            />
+          </ErrorBoundary>
         </div>
       </div>
     </div>

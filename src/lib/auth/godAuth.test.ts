@@ -543,7 +543,11 @@ describe('God Auth Module', () => {
   // createClient Tests
   // ==========================================
   describe('createClient', () => {
-    it('should create client via API', async () => {
+    beforeEach(() => {
+      localStorage.setItem('reflets_god_token', 'test-god-token');
+    });
+
+    it('should create client via API with session token header', async () => {
       const mockClient = {
         id: 'new-client-id',
         wedding_name: 'Test Wedding',
@@ -565,6 +569,30 @@ describe('God Auth Module', () => {
 
       expect(result.success).toBe(true);
       expect(result.client).toBeDefined();
+      // Verify session token header is sent
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-God-Session-Token': 'test-god-token',
+          }),
+        })
+      );
+    });
+
+    it('should fail without active session', async () => {
+      localStorage.removeItem('reflets_god_token');
+
+      const result = await createClient({
+        wedding_name: 'Test Wedding',
+        couple_names: 'Test Couple',
+        wedding_slug: 'test-wedding',
+        password: 'password123',
+        email: 'test@test.com',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('No active god admin session');
     });
 
     it('should handle API error', async () => {

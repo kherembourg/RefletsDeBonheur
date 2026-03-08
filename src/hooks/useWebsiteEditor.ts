@@ -97,6 +97,7 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
   const blobUrlsRef = useRef<Set<string>>(new Set());
   const saveInProgressRef = useRef(false);
   const pendingSaveRef = useRef(false);
+  const statusResetTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -233,12 +234,14 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
       setSaveStatus('saved');
 
       // Reset to idle after 2 seconds
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      if (statusResetTimerRef.current) clearTimeout(statusResetTimerRef.current);
+      statusResetTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error('Failed to save customization:', error);
       setSaveStatus('error');
       // Reset to idle after 3 seconds on error
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      if (statusResetTimerRef.current) clearTimeout(statusResetTimerRef.current);
+      statusResetTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
     } finally {
       saveInProgressRef.current = false;
 
@@ -340,11 +343,12 @@ export function useWebsiteEditor(options: UseWebsiteEditorOptions): UseWebsiteEd
     setIsPreviewLoading(false);
   }, []);
 
-  // Cleanup blob URLs on unmount
+  // Cleanup blob URLs and status reset timer on unmount
   useEffect(() => {
     return () => {
       blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       blobUrlsRef.current.clear();
+      if (statusResetTimerRef.current) clearTimeout(statusResetTimerRef.current);
     };
   }, []);
 

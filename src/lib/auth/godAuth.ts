@@ -375,10 +375,19 @@ export async function createClient(clientData: {
   email: string;
 }): Promise<{ success: boolean; client?: Client; error?: string }> {
   try {
+    const sessionToken = typeof window !== 'undefined'
+      ? localStorage.getItem(GOD_TOKEN_KEY)
+      : null;
+
+    if (!sessionToken) {
+      return { success: false, error: 'No active god admin session' };
+    }
+
     const response = await fetch(CLIENT_CREATE_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-God-Session-Token': sessionToken,
       },
       body: JSON.stringify(clientData),
     });

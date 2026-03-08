@@ -137,6 +137,6 @@ describe('GET /api/weddings/by-slug', () => {
 
     expect(response.status).toBe(500);
     expect(data.error).toBe('Internal server error');
-    expect(data.message).toBe('Database connection failed');
+    expect(data.message).toBe('An unexpected error occurred.');
   });
 });

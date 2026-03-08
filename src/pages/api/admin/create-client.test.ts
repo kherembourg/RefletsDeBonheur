@@ -23,6 +23,13 @@ vi.mock('../../../lib/supabase/server', () => ({
   isSupabaseServiceRoleConfigured: vi.fn().mockReturnValue(true),
 }));
 
+vi.mock('../../../lib/rateLimit', () => ({
+  checkRateLimit: vi.fn().mockReturnValue({ allowed: true }),
+  getClientIP: vi.fn().mockReturnValue('127.0.0.1'),
+  createRateLimitResponse: vi.fn(),
+  RATE_LIMITS: { api: { limit: 100, windowMs: 60000 } },
+}));
+
 vi.mock('../../../lib/api/middleware', () => ({
   apiGuards: {
     requireSupabase: vi.fn().mockReturnValue(null),
@@ -33,8 +40,63 @@ vi.mock('../../../lib/api/middleware', () => ({
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     }),
+    error: (error: string, message: string, status: number, field?: string) => {
+      const payload: { error: string; message: string; field?: string } = { error, message };
+      if (field) payload.field = field;
+      return new Response(JSON.stringify(payload), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
   },
 }));
+
+// Helper: mock chain for auth_sessions query (god admin session verification)
+function mockAuthSessionsChain(valid = true) {
+  const future = new Date(Date.now() + 3600000).toISOString();
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          is: vi.fn().mockReturnValue({
+            gt: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue(valid ? {
+                data: { user_id: 'god-admin-1', user_type: 'god', expires_at: future },
+                error: null,
+              } : { data: null, error: { code: 'PGRST116' } }),
+            }),
+          }),
+        }),
+      }),
+    }),
+  };
+}
+
+// Helper: mock chain for god_admins query
+function mockGodAdminsChain(valid = true) {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue(valid ? {
+          data: { id: 'god-admin-1' },
+          error: null,
+        } : { data: null, error: { code: 'PGRST116' } }),
+      }),
+    }),
+  };
+}
+
+// Helper: create request with god admin auth header
+function createAuthRequest(body: Record<string, unknown>) {
+  return new Request('http://localhost:4321/api/admin/create-client', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-God-Session-Token': 'valid-god-token',
+    },
+    body: JSON.stringify(body),
+  });
+}
 
 describe('Admin Create Client Endpoint', () => {
   beforeEach(() => {
@@ -59,6 +121,8 @@ describe('Admin Create Client Endpoint', () => {
           },
         },
         from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
           if (table === 'profiles') {
             return {
               upsert: vi.fn().mockReturnValue({
@@ -107,18 +171,14 @@ describe('Admin Create Client Endpoint', () => {
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wedding_name: 'Alice & Bob Wedding',
-          couple_names: 'Alice & Bob',
-          wedding_date: '2026-06-15',
-          wedding_slug: 'alice-bob-2026',
-          email: 'test@example.com',
-          password: 'SecurePassword123!',
-          username: 'alice-bob',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Alice & Bob Wedding',
+        couple_names: 'Alice & Bob',
+        wedding_date: '2026-06-15',
+        wedding_slug: 'alice-bob-2026',
+        email: 'test@example.com',
+        password: 'SecurePassword123!',
+        username: 'alice-bob',
       });
 
       const response = await POST({ request } as any);
@@ -148,6 +208,8 @@ describe('Admin Create Client Endpoint', () => {
           },
         },
         from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
           if (table === 'profiles') {
             return {
               upsert: vi.fn().mockReturnValue({
@@ -192,17 +254,13 @@ describe('Admin Create Client Endpoint', () => {
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wedding_name: 'Test Wedding',
-          couple_names: 'Alice & Bob',
-          wedding_slug: 'alice-bob',
-          email: 'test@example.com',
-          password: 'SecurePassword123!',
-          username: 'alice-bob',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test Wedding',
+        couple_names: 'Alice & Bob',
+        wedding_slug: 'alice-bob',
+        email: 'test@example.com',
+        password: 'SecurePassword123!',
+        username: 'alice-bob',
       });
 
       await POST({ request } as any);
@@ -243,6 +301,8 @@ describe('Admin Create Client Endpoint', () => {
           },
         },
         from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
           if (table === 'profiles') {
             return { upsert: mockUpsert };
           }
@@ -265,15 +325,12 @@ describe('Admin Create Client Endpoint', () => {
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Test',
-          couple_names: 'Test & Test',
-          wedding_slug: 'test',
-          email: 'test@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test',
+        couple_names: 'Test & Test',
+        wedding_slug: 'test',
+        email: 'test@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -324,6 +381,8 @@ describe('Admin Create Client Endpoint', () => {
           },
         },
         from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
           if (table === 'profiles') {
             return {
               upsert: vi.fn().mockReturnValue({
@@ -346,15 +405,12 @@ describe('Admin Create Client Endpoint', () => {
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Alice & Bob Wedding',
-          couple_names: 'Alice & Bob',
-          wedding_slug: 'alice-bob-2026',
-          email: 'test@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Alice & Bob Wedding',
+        couple_names: 'Alice & Bob',
+        wedding_slug: 'alice-bob-2026',
+        email: 'test@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -390,6 +446,8 @@ describe('Admin Create Client Endpoint', () => {
           },
         },
         from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
           if (table === 'profiles') {
             return {
               upsert: vi.fn().mockReturnValue({
@@ -436,16 +494,13 @@ describe('Admin Create Client Endpoint', () => {
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Test Wedding',
-          couple_names: 'Alice & Bob',
-          wedding_slug: 'alice-bob',
-          wedding_date: '2026-06-15',
-          email: 'test@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test Wedding',
+        couple_names: 'Alice & Bob',
+        wedding_slug: 'alice-bob',
+        wedding_date: '2026-06-15',
+        email: 'test@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -467,13 +522,21 @@ describe('Admin Create Client Endpoint', () => {
   // ===== VALIDATION =====
   describe('Validation', () => {
     it('should validate required fields', async () => {
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wedding_name: 'Test Wedding',
-          // Missing couple_names, wedding_slug, email, password
+      const mockClient = {
+        auth: { admin: { createUser: vi.fn() } },
+        from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
+          return {};
         }),
+      };
+
+      const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
+      (getSupabaseAdminClient as any).mockReturnValue(mockClient);
+
+      const request = createAuthRequest({
+        wedding_name: 'Test Wedding',
+        // Missing couple_names, wedding_slug, email, password
       });
 
       const response = await POST({ request } as any);
@@ -498,21 +561,22 @@ describe('Admin Create Client Endpoint', () => {
             }),
           },
         },
-        from: vi.fn(),
+        from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
+          return {};
+        }),
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Test',
-          couple_names: 'Test & Test',
-          wedding_slug: 'test',
-          email: 'duplicate@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test',
+        couple_names: 'Test & Test',
+        wedding_slug: 'test',
+        email: 'duplicate@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -520,12 +584,12 @@ describe('Admin Create Client Endpoint', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to create user');
-      expect(data.message).toContain('User already registered');
+      expect(data.message).toBe('An unexpected error occurred.');
     });
 
     it('should handle slug conflicts', async () => {
       const mockUserId = 'user-303';
-      
+
       const mockClient = {
         auth: {
           admin: {
@@ -536,6 +600,8 @@ describe('Admin Create Client Endpoint', () => {
           },
         },
         from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
           if (table === 'profiles') {
             return {
               upsert: vi.fn().mockReturnValue({
@@ -567,15 +633,12 @@ describe('Admin Create Client Endpoint', () => {
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Test',
-          couple_names: 'Test & Test',
-          wedding_slug: 'duplicate-slug',
-          email: 'test@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test',
+        couple_names: 'Test & Test',
+        wedding_slug: 'duplicate-slug',
+        email: 'test@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -625,21 +688,22 @@ describe('Admin Create Client Endpoint', () => {
             }),
           },
         },
-        from: vi.fn(),
+        from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
+          return {};
+        }),
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Test',
-          couple_names: 'Test & Test',
-          wedding_slug: 'test',
-          email: 'test@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test',
+        couple_names: 'Test & Test',
+        wedding_slug: 'test',
+        email: 'test@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -647,12 +711,12 @@ describe('Admin Create Client Endpoint', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to create user');
-      expect(data.message).toBe('Database connection failed');
+      expect(data.message).toBe('An unexpected error occurred.');
     });
 
     it('should handle profile creation failures', async () => {
       const mockUserId = 'user-404';
-      
+
       const mockClient = {
         auth: {
           admin: {
@@ -663,6 +727,8 @@ describe('Admin Create Client Endpoint', () => {
           },
         },
         from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
           if (table === 'profiles') {
             return {
               upsert: vi.fn().mockReturnValue({
@@ -682,15 +748,12 @@ describe('Admin Create Client Endpoint', () => {
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Test',
-          couple_names: 'Test & Test',
-          wedding_slug: 'test',
-          email: 'test@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test',
+        couple_names: 'Test & Test',
+        wedding_slug: 'test',
+        email: 'test@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -698,7 +761,7 @@ describe('Admin Create Client Endpoint', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Profile creation failed');
-      expect(data.message).toBe('Profile insert failed');
+      expect(data.message).toBe('An unexpected error occurred.');
     });
 
     it('should handle database errors', async () => {
@@ -708,21 +771,22 @@ describe('Admin Create Client Endpoint', () => {
             createUser: vi.fn().mockRejectedValue(new Error('Network timeout')),
           },
         },
-        from: vi.fn(),
+        from: vi.fn((table: string) => {
+          if (table === 'auth_sessions') return mockAuthSessionsChain();
+          if (table === 'god_admins') return mockGodAdminsChain();
+          return {};
+        }),
       };
 
       const { getSupabaseAdminClient } = await import('../../../lib/supabase/server');
       (getSupabaseAdminClient as any).mockReturnValue(mockClient);
 
-      const request = new Request('http://localhost:4321/api/admin/create-client', {
-        method: 'POST',
-        body: JSON.stringify({
-          wedding_name: 'Test',
-          couple_names: 'Test & Test',
-          wedding_slug: 'test',
-          email: 'test@example.com',
-          password: 'password',
-        }),
+      const request = createAuthRequest({
+        wedding_name: 'Test',
+        couple_names: 'Test & Test',
+        wedding_slug: 'test',
+        email: 'test@example.com',
+        password: 'password',
       });
 
       const response = await POST({ request } as any);
@@ -730,7 +794,7 @@ describe('Admin Create Client Endpoint', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Internal server error');
-      expect(data.message).toBe('Network timeout');
+      expect(data.message).toBe('An unexpected error occurred.');
     });
   });
 });

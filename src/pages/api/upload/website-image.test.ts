@@ -467,7 +467,7 @@ describe('POST /api/upload/website-image', () => {
       expect(response.status).toBe(500);
       const data = await response.json();
       expect(data.error).toBe('Internal server error');
-      expect(data.message).toBe('R2 error');
+      expect(data.message).toBe('An unexpected error occurred.');
     });
 
     it('should handle JSON parse errors', async () => {

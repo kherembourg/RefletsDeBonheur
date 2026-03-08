@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getSupabaseAdminClient } from '../../../lib/supabase/server';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
+import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 
 export const prerender = false;
 
@@ -14,6 +15,13 @@ function generateShortCode(length: number = 6): string {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limit
+  const clientIP = getClientIP(request);
+  const rateLimitResult = checkRateLimit(clientIP, RATE_LIMITS.api);
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   const supabaseGuard = apiGuards.requireSupabase();
   if (supabaseGuard) return supabaseGuard;
 
@@ -21,6 +29,37 @@ export const POST: APIRoute = async ({ request }) => {
   if (serviceRoleGuard) return serviceRoleGuard;
 
   try {
+    const adminClient = getSupabaseAdminClient();
+
+    // Verify god admin session
+    const sessionToken = request.headers.get('X-God-Session-Token');
+    if (!sessionToken) {
+      return apiResponse.error('Unauthorized', 'God admin session token required', 401);
+    }
+
+    const { data: session, error: sessionError } = await adminClient
+      .from('auth_sessions')
+      .select('user_id, user_type, expires_at')
+      .eq('token', sessionToken)
+      .eq('user_type', 'god')
+      .is('revoked_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      return apiResponse.error('Unauthorized', 'Invalid or expired god admin session', 401);
+    }
+
+    const { data: godAdmin, error: godError } = await adminClient
+      .from('god_admins')
+      .select('id')
+      .eq('id', session.user_id)
+      .single();
+
+    if (godError || !godAdmin) {
+      return apiResponse.error('Forbidden', 'God admin not found', 403);
+    }
+
     const body = await request.json();
     const { wedding_name, couple_names, wedding_date, wedding_slug, username, password, email } = body;
 
@@ -37,8 +76,6 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const adminClient = getSupabaseAdminClient();
-
     const authResult = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -50,10 +87,11 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     if (authResult.error || !authResult.data.user) {
+      console.error('[API] Failed to create auth user:', authResult.error);
       return new Response(
         JSON.stringify({
           error: 'Failed to create user',
-          message: authResult.error?.message || 'Unknown error',
+          message: 'An unexpected error occurred.',
         }),
         {
           status: 500,
@@ -84,10 +122,11 @@ export const POST: APIRoute = async ({ request }) => {
       .single();
 
     if (profileError || !profile) {
+      console.error('[API] Profile creation failed:', profileError);
       return new Response(
         JSON.stringify({
           error: 'Profile creation failed',
-          message: profileError?.message || 'Unknown error',
+          message: 'An unexpected error occurred.',
         }),
         {
           status: 500,
@@ -141,10 +180,11 @@ export const POST: APIRoute = async ({ request }) => {
       .single();
 
     if (weddingError || !wedding) {
+      console.error('[API] Wedding creation failed:', weddingError);
       return new Response(
         JSON.stringify({
           error: 'Wedding creation failed',
-          message: weddingError?.message || 'Unknown error',
+          message: 'An unexpected error occurred.',
         }),
         {
           status: 500,
@@ -185,7 +225,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred.',
       }),
       {
         status: 500,

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, lazy, Suspense, useCallback } fro
 import { Upload, Lock, ImageIcon, Loader2, CheckSquare, Trash2, FolderPlus, KeyRound, X } from 'lucide-react';
 import { MediaCard } from './MediaCard';
 import { UploadModal } from './UploadModal';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 // Lazy load heavy components that are conditionally rendered
 const Lightbox = lazy(() => import('./Lightbox').then(m => ({ default: m.Lightbox })));
@@ -38,6 +39,8 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
 
   // Effect to load data after hydration (client-side only)
   useEffect(() => {
+    let cancelled = false;
+
     // Initialize demo storage if needed
     if (demoMode) {
       dataService.initializeDemoStorage();
@@ -50,16 +53,26 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
           dataService.getMedia(),
           dataService.getAlbums()
         ]);
-        setMedia(mediaData);
-        setAlbums(albumsData);
+        if (!cancelled) {
+          setMedia(mediaData);
+          setAlbums(albumsData);
+        }
       } catch (err) {
-        console.error('[GalleryGrid] Error loading data:', err);
+        if (!cancelled) {
+          console.error('[GalleryGrid] Error loading data:', err);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [demoMode, dataService]);
 
   const refresh = useCallback(async () => {
@@ -240,6 +253,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
     : 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6';
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       {/* Accessibility-only header */}
       <h2 className="sr-only">Galerie Photos</h2>
@@ -490,5 +504,6 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
         </Suspense>
       )}
     </div>
+    </ErrorBoundary>
   );
 }
