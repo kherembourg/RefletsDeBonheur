@@ -1,0 +1,14 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { PrivateGalleryQA } from '../components/qa/PrivateGalleryQA';
+---
+
+<MainLayout
+  title="QA Galerie Privee"
+  description="Espace prive pour valider la galerie photo et l'upload avant release."
+  showHeader={false}
+>
+  <section class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(174,23,37,0.12),_transparent_45%),linear-gradient(180deg,_#fcf7f7_0%,_#f5eff1_52%,_#efe6ea_100%)] px-4 py-10 sm:px-6 lg:px-10">
+    <PrivateGalleryQA client:load />
+  </section>
+</MainLayout>
