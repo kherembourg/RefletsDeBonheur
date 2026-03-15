@@ -27,6 +27,8 @@ import {
 import { godLogout, getAllClients, getDashboardStats, createImpersonationToken, updateClientStatus, deleteClient } from '../../lib/auth/godAuth';
 import type { Client, GodAdmin } from '../../lib/auth/godAuth';
 import { CreateClientModal } from './CreateClientModal';
+import { useToast } from '../ui/Toast';
+import { AdminModal } from '../admin/ui/AdminModal';
 
 interface GodDashboardProps {
   admin: GodAdmin;
@@ -54,6 +56,8 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [clientPendingDelete, setClientPendingDelete] = useState<Client | null>(null);
+  const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
     loadData();
@@ -88,11 +92,11 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
         // Open client interface with impersonation token
         window.open(`/god/impersonate?token=${result.token}`, '_blank');
       } else {
-        alert(result.error || 'Failed to create access token');
+        showToast('error', result.error || 'Failed to create access token');
       }
     } catch (error) {
       console.error('Impersonation error:', error);
-      alert('Failed to create access token');
+      showToast('error', 'Failed to create access token');
     } finally {
       setActionLoading(null);
     }
@@ -103,35 +107,37 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
     try {
       const success = await updateClientStatus(clientId, newStatus);
       if (success) {
-        setClients(clients.map(c =>
+        setClients((currentClients) => currentClients.map(c =>
           c.id === clientId ? { ...c, status: newStatus } : c
         ));
+        showToast('success', 'Client status updated.');
       } else {
-        alert('Failed to update status');
+        showToast('error', 'Failed to update status');
       }
     } catch (error) {
       console.error('Status update error:', error);
+      showToast('error', 'Failed to update status');
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDelete = async (clientId: string) => {
-    if (!confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
-      return;
-    }
     setActionLoading(clientId);
     try {
       const success = await deleteClient(clientId);
       if (success) {
-        setClients(clients.filter(c => c.id !== clientId));
+        setClients((currentClients) => currentClients.filter(c => c.id !== clientId));
+        showToast('success', 'Client deleted.');
       } else {
-        alert('Failed to delete client');
+        showToast('error', 'Failed to delete client');
       }
     } catch (error) {
       console.error('Delete error:', error);
+      showToast('error', 'Failed to delete client');
     } finally {
       setActionLoading(null);
+      setClientPendingDelete(null);
     }
   };
 
@@ -192,6 +198,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      <ToastContainer />
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -413,6 +420,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
                             disabled={actionLoading === client.id}
                             className="p-2 text-gray-400 hover:text-amber-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
                             title="Accéder à l'interface client"
+                            aria-label={`Accéder à ${client.wedding_name}`}
                           >
                             {actionLoading === client.id ? (
                               <RefreshCw size={16} className="animate-spin" />
@@ -426,6 +434,7 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
                             <button
                               className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded-lg transition-colors"
                               title="Modifier le statut"
+                              aria-label={`Modifier le statut de ${client.wedding_name}`}
                             >
                               <Settings size={16} />
                             </button>
@@ -454,16 +463,18 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
                             rel="noopener noreferrer"
                             className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded-lg transition-colors"
                             title="Voir le site public"
+                            aria-label={`Voir le site public de ${client.wedding_name}`}
                           >
                             <ExternalLink size={16} />
                           </a>
 
                           {/* Delete */}
                           <button
-                            onClick={() => handleDelete(client.id)}
+                            onClick={() => setClientPendingDelete(client)}
                             disabled={actionLoading === client.id}
                             className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
                             title="Supprimer"
+                            aria-label={`Supprimer ${client.wedding_name}`}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -553,6 +564,38 @@ export function GodDashboard({ admin, onLogout }: GodDashboardProps) {
           }}
         />
       )}
+      <AdminModal
+        isOpen={clientPendingDelete !== null}
+        onClose={() => setClientPendingDelete(null)}
+        title="Delete this client?"
+        size="sm"
+        footer={
+          <>
+            <button
+              onClick={() => setClientPendingDelete(null)}
+              className="px-4 py-2 text-sm font-medium text-charcoal/70 hover:text-charcoal"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (clientPendingDelete) {
+                  void handleDelete(clientPendingDelete.id);
+                }
+              }}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-charcoal/70">
+          {clientPendingDelete
+            ? `Delete ${clientPendingDelete.wedding_name} and all related access data? This action cannot be undone.`
+            : 'This action cannot be undone.'}
+        </p>
+      </AdminModal>
     </div>
   );
 }

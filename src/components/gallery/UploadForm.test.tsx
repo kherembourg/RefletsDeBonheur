@@ -319,7 +319,6 @@ describe('UploadForm Component', () => {
   describe('Upload Submission', () => {
     it('should require author name before upload', async () => {
       const user = userEvent.setup();
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
       render(
         <UploadForm
@@ -349,8 +348,7 @@ describe('UploadForm Component', () => {
       const uploadButton = screen.getByRole('button', { name: /envoyer/i });
       await user.click(uploadButton);
 
-      expect(alertSpy).toHaveBeenCalledWith('Veuillez entrer votre prénom');
-      alertSpy.mockRestore();
+      expect(screen.getByRole('alert')).toHaveTextContent('Veuillez entrer votre prénom');
     });
 
     it('should show upload progress', async () => {
@@ -497,7 +495,6 @@ describe('UploadForm Component', () => {
 
     it('should handle upload errors', async () => {
       const user = userEvent.setup();
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockUploadMediaBatch.mockRejectedValue(new Error('Upload failed'));
 
       render(
@@ -525,10 +522,8 @@ describe('UploadForm Component', () => {
       await user.click(uploadButton);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith("Erreur lors de l'envoi. Veuillez réessayer.");
+        expect(screen.getByRole('alert')).toHaveTextContent("Erreur lors de l'envoi. Veuillez réessayer.");
       });
-
-      alertSpy.mockRestore();
     });
   });
 

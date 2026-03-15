@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { Send, Sparkles, PenLine } from 'lucide-react';
 import { getUsername, setUsername as saveUsername } from '../../lib/auth';
 import { AIAssistant } from './AIAssistant';
+import { useToast } from '../ui/Toast';
 
 interface GuestbookFormProps {
   onSubmit: (author: string, message: string) => void;
@@ -11,6 +12,7 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
   const [authorName, setAuthorName] = useState(getUsername());
   const [message, setMessage] = useState('');
   const [showAIHelp, setShowAIHelp] = useState(false);
+  const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
     if (authorName) {
@@ -22,7 +24,7 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
     e.preventDefault();
 
     if (!message.trim() || !authorName.trim()) {
-      alert('Veuillez remplir tous les champs');
+      showToast('error', 'Veuillez remplir tous les champs');
       return;
     }
 
@@ -37,6 +39,7 @@ export function GuestbookForm({ onSubmit }: GuestbookFormProps) {
 
   return (
     <div className="relative">
+      <ToastContainer />
       {/* Decorative frame */}
       <div className="absolute inset-0 bg-linear-to-br from-burgundy-old/5 to-burgundy-old/10 -m-2 sm:-m-3"></div>
 

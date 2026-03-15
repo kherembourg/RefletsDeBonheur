@@ -3,6 +3,7 @@ import { Camera, Copy, KeyRound, QrCode, RotateCcw, ShieldCheck } from 'lucide-r
 import { QRCodeSVG } from 'qrcode.react';
 import { GalleryGrid } from '../gallery/GalleryGrid';
 import { resetDemo } from '../../lib/demoStorage';
+import { AdminModal } from '../admin/ui/AdminModal';
 
 const QA_PASSWORD = '1412';
 const QA_ACCESS_KEY = 'reflets_qa_private_gallery_access';
@@ -53,6 +54,7 @@ export function PrivateGalleryQA() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const shareUrl = useMemo(() => {
     if (typeof window === 'undefined') return `${QA_ROUTE}?pin=${QA_PASSWORD}`;
@@ -92,10 +94,6 @@ export function PrivateGalleryQA() {
   };
 
   const handleReset = () => {
-    if (!window.confirm('Réinitialiser toutes les photos et données de QA sur ce navigateur ?')) {
-      return;
-    }
-
     setResetting(true);
     resetDemo();
     QA_RESET_KEYS.forEach((key) => localStorage.removeItem(key));
@@ -235,7 +233,7 @@ export function PrivateGalleryQA() {
             </button>
             <button
               type="button"
-              onClick={handleReset}
+              onClick={() => setShowResetModal(true)}
               disabled={resetting}
               className="flex items-center justify-center gap-2 rounded-2xl bg-charcoal px-5 py-3 text-sm font-medium text-white transition hover:bg-[#1f1f1f] disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -259,6 +257,35 @@ export function PrivateGalleryQA() {
       </section>
 
       <GalleryGrid demoMode={true} variant="public" />
+      <AdminModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        title="Réinitialiser la QA ?"
+        size="sm"
+        footer={
+          <>
+            <button
+              onClick={() => setShowResetModal(false)}
+              className="px-4 py-2 text-sm font-medium text-charcoal/70 hover:text-charcoal"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={() => {
+                setShowResetModal(false);
+                handleReset();
+              }}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Réinitialiser
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-charcoal/70">
+          Toutes les photos et données QA stockées dans ce navigateur seront supprimées.
+        </p>
+      </AdminModal>
     </div>
   );
 }

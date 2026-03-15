@@ -4,6 +4,7 @@ import { getUsername, setUsername as saveUsername } from '../../lib/auth';
 import type { DataService, MediaItem } from '../../lib/services/dataService';
 import { t } from '../../i18n/utils';
 import type { Language } from '../../i18n/translations';
+import { useToast } from '../ui/Toast';
 
 /** Maximum file size allowed: 50 MB */
 export const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -41,6 +42,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr'
   const [consentGiven, setConsentGiven] = useState(false);
   const uploadingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { showToast, ToastContainer } = useToast();
 
   // Save username to localStorage when it changes
   useEffect(() => {
@@ -100,18 +102,18 @@ export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr'
     if (uploadingRef.current) return;
     if (queue.length === 0) return;
     if (!authorName.trim()) {
-      alert(t(lang, 'gallery.authorRequired'));
+      showToast('error', t(lang, 'gallery.authorRequired'));
       return;
     }
     if (!consentGiven) {
-      alert(t(lang, 'gallery.consentRequired'));
+      showToast('error', t(lang, 'gallery.consentRequired'));
       return;
     }
 
     // Filter out oversized files
     const uploadableItems = queue.filter(item => !item.sizeError);
     if (uploadableItems.length === 0) {
-      alert(t(lang, 'gallery.noValidFiles'));
+      showToast('error', t(lang, 'gallery.noValidFiles'));
       return;
     }
 
@@ -180,7 +182,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr'
         ));
       } else {
         console.error('Upload failed:', error);
-        alert(t(lang, 'gallery.uploadError'));
+        showToast('error', t(lang, 'gallery.uploadError'));
         // Mark all non-complete as error
         setQueue(prev => prev.map(item =>
           item.uploadStatus === 'complete' || item.sizeError
@@ -201,6 +203,7 @@ export function UploadForm({ onUploadComplete, onClose, dataService, lang = 'fr'
 
   return (
     <div className="space-y-6">
+      <ToastContainer />
       {/* Author Name Input */}
       <div>
         <label className="block text-sm font-medium text-deep-charcoal mb-1">

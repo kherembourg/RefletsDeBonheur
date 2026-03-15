@@ -1,6 +1,7 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { MessageSquare, Trash2 } from 'lucide-react';
 import type { GuestbookEntry } from '../../lib/services/dataService';
+import { AdminModal } from '../admin/ui/AdminModal';
 
 // Re-export as GuestbookMessage for backwards compatibility
 type GuestbookMessage = GuestbookEntry;
@@ -85,7 +86,7 @@ interface MessageCardProps {
   cornerDecor: string;
   animationDelay: string | undefined;
   isAdmin: boolean;
-  onDelete: (id: string) => void;
+  onDeleteRequest: (message: GuestbookMessage) => void;
 }
 
 const MessageCard = memo(function MessageCard({
@@ -94,12 +95,10 @@ const MessageCard = memo(function MessageCard({
   cornerDecor,
   animationDelay,
   isAdmin,
-  onDelete
+  onDeleteRequest
 }: MessageCardProps) {
   const handleDeleteClick = () => {
-    if (confirm('Supprimer ce message ?')) {
-      onDelete(msg.id);
-    }
+    onDeleteRequest(msg);
   };
 
   return (
@@ -183,6 +182,7 @@ const MessageCard = memo(function MessageCard({
 });
 
 export const MessageList = memo(function MessageList({ messages, isAdmin, onDelete }: MessageListProps) {
+  const [pendingDelete, setPendingDelete] = useState<GuestbookMessage | null>(null);
   // Memoized delete handler
   const handleDelete = useCallback((id: string) => {
     onDelete(id);
@@ -221,19 +221,52 @@ export const MessageList = memo(function MessageList({ messages, isAdmin, onDele
   }
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {messages.map((msg, index) => (
-        <MessageCard
-          key={msg.id}
-          msg={msg}
-          colorClass={cardColors[index % cardColors.length]}
-          cornerDecor={cornerDecorations[index % cornerDecorations.length]}
-          // Only animate first 9 items (visible on initial load)
-          animationDelay={index < 9 ? `${index * 0.1}s` : undefined}
-          isAdmin={isAdmin}
-          onDelete={handleDelete}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {messages.map((msg, index) => (
+          <MessageCard
+            key={msg.id}
+            msg={msg}
+            colorClass={cardColors[index % cardColors.length]}
+            cornerDecor={cornerDecorations[index % cornerDecorations.length]}
+            // Only animate first 9 items (visible on initial load)
+            animationDelay={index < 9 ? `${index * 0.1}s` : undefined}
+            isAdmin={isAdmin}
+            onDeleteRequest={setPendingDelete}
+          />
+        ))}
+      </div>
+      <AdminModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title="Supprimer ce message ?"
+        size="sm"
+        footer={
+          <>
+            <button
+              onClick={() => setPendingDelete(null)}
+              className="px-4 py-2 text-sm font-medium text-charcoal/70 hover:text-charcoal"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={() => {
+                if (pendingDelete) {
+                  handleDelete(pendingDelete.id);
+                }
+                setPendingDelete(null);
+              }}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Supprimer
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-charcoal/70">
+          Ce message sera retiré du livre d&apos;or.
+        </p>
+      </AdminModal>
+    </>
   );
 });

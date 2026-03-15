@@ -34,8 +34,6 @@ describe('MediaCard Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock window.confirm
-    global.confirm = vi.fn(() => true);
   });
 
   describe('Rendering', () => {
@@ -189,26 +187,26 @@ describe('MediaCard Component', () => {
       expect(screen.queryByLabelText(/supprimer/i)).not.toBeInTheDocument();
     });
 
-    it('should confirm before deleting', () => {
+    it('should open a confirmation modal before deleting', () => {
       render(<MediaCard {...defaultProps} variant="admin" isAdmin={true} />);
       const deleteButton = screen.getByLabelText(/supprimer/i);
       fireEvent.click(deleteButton);
-      expect(global.confirm).toHaveBeenCalled();
+      expect(screen.getByText('Supprimer ce souvenir ?')).toBeInTheDocument();
     });
 
     it('should call onDelete when confirmed', () => {
-      global.confirm = vi.fn(() => true);
       render(<MediaCard {...defaultProps} variant="admin" isAdmin={true} />);
       const deleteButton = screen.getByLabelText(/supprimer/i);
       fireEvent.click(deleteButton);
+      fireEvent.click(screen.getAllByRole('button', { name: /^supprimer$/i }).at(-1)!);
       expect(mockOnDelete).toHaveBeenCalledWith(mockMedia.id);
     });
 
     it('should not call onDelete when cancelled', () => {
-      global.confirm = vi.fn(() => false);
       render(<MediaCard {...defaultProps} variant="admin" isAdmin={true} />);
       const deleteButton = screen.getByLabelText(/supprimer/i);
       fireEvent.click(deleteButton);
+      fireEvent.click(screen.getByRole('button', { name: /annuler/i }));
       expect(mockOnDelete).not.toHaveBeenCalled();
     });
 

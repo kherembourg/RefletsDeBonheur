@@ -3,6 +3,7 @@ import { Trash2, Video, Heart, CheckCircle, Circle, Download } from 'lucide-reac
 import type { MediaItem, DataService } from '../../lib/services/dataService';
 import { t } from '../../i18n/utils';
 import type { Language } from '../../i18n/translations';
+import { AdminModal } from '../admin/ui/AdminModal';
 
 // Default placeholder gradient for items without a pre-generated placeholder
 const DEFAULT_PLACEHOLDER = 'linear-gradient(135deg, #f5f0e8 0%, #e8d5d3 50%, #f0e6e4 100%)';
@@ -55,6 +56,7 @@ export const MediaCard = memo(function MediaCard({
   const [localFavorited, setLocalFavorited] = useState(isFavoritedProp);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
@@ -69,9 +71,7 @@ export const MediaCard = memo(function MediaCard({
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Supprimer définitivement ce souvenir ?')) {
-      onDelete(item.id);
-    }
+    setIsDeleteModalOpen(true);
   };
 
   const handleFavorite = (e: React.MouseEvent) => {
@@ -114,7 +114,8 @@ export const MediaCard = memo(function MediaCard({
   };
 
   return (
-    <div
+    <>
+      <div
       role="button"
       tabIndex={0}
       className={`media-card relative group cursor-pointer ${
@@ -258,6 +259,36 @@ export const MediaCard = memo(function MediaCard({
           </button>
         )}
       </div>
-    </div>
+      </div>
+      <AdminModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Supprimer ce souvenir ?"
+        size="sm"
+        footer={
+          <>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-charcoal/70 hover:text-charcoal"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={() => {
+                onDelete(item.id);
+                setIsDeleteModalOpen(false);
+              }}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Supprimer
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-charcoal/70">
+          Cette suppression est définitive.
+        </p>
+      </AdminModal>
+    </>
   );
 });

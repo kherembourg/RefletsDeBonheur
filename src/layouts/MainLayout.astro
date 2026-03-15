@@ -83,6 +83,48 @@ const htmlLang = getHtmlLang(currentLang);
     <!-- Service Worker Registration -->
     <script is:inline>
       if ('serviceWorker' in navigator) {
+        let updatePromptVisible = false;
+
+        const showUpdatePrompt = (newWorker) => {
+          if (updatePromptVisible) return;
+          updatePromptVisible = true;
+
+          const existingPrompt = document.getElementById('sw-update-prompt');
+          if (existingPrompt) {
+            existingPrompt.remove();
+          }
+
+          const prompt = document.createElement('div');
+          prompt.id = 'sw-update-prompt';
+          prompt.setAttribute('role', 'status');
+          prompt.className = 'fixed bottom-4 left-4 right-4 z-[100] mx-auto max-w-md rounded-2xl border border-charcoal/10 bg-white px-4 py-4 shadow-2xl';
+          prompt.innerHTML = `
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full bg-burgundy-old"></div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-charcoal">Nouvelle version disponible</p>
+                <p class="mt-1 text-sm text-charcoal/65">Rafraîchir maintenant pour activer la dernière version.</p>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center justify-end gap-2">
+              <button type="button" data-action="dismiss" class="rounded-full px-3 py-2 text-sm font-medium text-charcoal/70 transition hover:bg-charcoal/5 hover:text-charcoal">Plus tard</button>
+              <button type="button" data-action="refresh" class="rounded-full bg-burgundy-old px-4 py-2 text-sm font-medium text-white transition hover:bg-[#c92a38]">Rafraîchir</button>
+            </div>
+          `;
+
+          prompt.querySelector('[data-action="dismiss"]')?.addEventListener('click', () => {
+            updatePromptVisible = false;
+            prompt.remove();
+          });
+
+          prompt.querySelector('[data-action="refresh"]')?.addEventListener('click', () => {
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+          });
+
+          document.body.appendChild(prompt);
+        };
+
         window.addEventListener('load', () => {
           navigator.serviceWorker
             .register('/sw.js')
@@ -102,12 +144,7 @@ const htmlLang = getHtmlLang(currentLang);
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                       // New version available
                       console.log('[SW] New version available');
-
-                      // Optionally notify user about update
-                      if (confirm('A new version is available. Refresh now?')) {
-                        newWorker.postMessage({ type: 'SKIP_WAITING' });
-                        window.location.reload();
-                      }
+                      showUpdatePrompt(newWorker);
                     }
                   });
                 }

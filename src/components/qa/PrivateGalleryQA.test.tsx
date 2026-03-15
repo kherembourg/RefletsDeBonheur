@@ -31,7 +31,6 @@ describe('PrivateGalleryQA', () => {
       configurable: true,
     });
 
-    window.confirm = vi.fn(() => true);
     Object.defineProperty(window.location, 'reload', {
       value: vi.fn(),
       configurable: true,
@@ -74,6 +73,7 @@ describe('PrivateGalleryQA', () => {
     render(<PrivateGalleryQA />);
 
     fireEvent.click(await screen.findByText('Reset QA'));
+    fireEvent.click(screen.getByRole('button', { name: 'Réinitialiser' }));
 
     await waitFor(() => {
       expect(resetDemoMock).toHaveBeenCalled();

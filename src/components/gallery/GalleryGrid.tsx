@@ -3,6 +3,7 @@ import { Upload, Lock, ImageIcon, Loader2, CheckSquare, Trash2, FolderPlus, KeyR
 import { MediaCard } from './MediaCard';
 import { UploadModal } from './UploadModal';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
+import { AdminModal } from '../admin/ui/AdminModal';
 
 // Lazy load heavy components that are conditionally rendered
 const Lightbox = lazy(() => import('./Lightbox').then(m => ({ default: m.Lightbox })));
@@ -94,6 +95,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
   // Bulk selection state (admin view)
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   // PIN modal state
   const [showPinModal, setShowPinModal] = useState(false);
@@ -234,15 +236,10 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
 
   const handleBulkDelete = useCallback(async () => {
     if (selectedItems.size === 0) return;
-    const count = selectedItems.size;
-    const suffix = count > 1 ? t(lang, 'gallery.deleteConfirmCountPlural') : t(lang, 'gallery.deleteConfirmCount');
-    if (!confirm(`${t(lang, 'gallery.deleteConfirm')} ${count} ${suffix} ?`)) {
-      return;
-    }
     await Promise.all([...selectedItems].map(id => dataService.deleteMedia(id)));
     await refresh();
     clearSelection();
-  }, [selectedItems, dataService, refresh, clearSelection, lang]);
+  }, [selectedItems, dataService, refresh, clearSelection]);
 
   // Memoized click handler for lightbox - looks up index from id
   const handleMediaClick = useCallback((id: string) => {
@@ -310,7 +307,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
 
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={handleBulkDelete}
+              onClick={() => setShowBulkDeleteModal(true)}
               disabled={!selectionMode || selectedItems.size === 0}
               className="px-4 py-2 rounded-full border border-charcoal/10 text-sm text-charcoal/70 hover:text-charcoal disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -509,6 +506,36 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
           />
         </Suspense>
       )}
+      <AdminModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        title="Supprimer la sélection ?"
+        size="sm"
+        footer={
+          <>
+            <button
+              onClick={() => setShowBulkDeleteModal(false)}
+              className="px-4 py-2 text-sm font-medium text-charcoal/70 hover:text-charcoal"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={async () => {
+                await handleBulkDelete();
+                setShowBulkDeleteModal(false);
+              }}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Supprimer
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-charcoal/70">
+          {t(lang, 'gallery.deleteConfirm')} {selectedItems.size}{' '}
+          {selectedItems.size > 1 ? t(lang, 'gallery.deleteConfirmCountPlural') : t(lang, 'gallery.deleteConfirmCount')} ?
+        </p>
+      </AdminModal>
     </div>
     </ErrorBoundary>
   );

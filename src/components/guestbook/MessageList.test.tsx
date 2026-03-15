@@ -121,9 +121,6 @@ describe('MessageList Component', () => {
     });
 
     it('should call onDelete with message id when delete button clicked', () => {
-      // Mock confirm to return true
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-
       render(
         <MessageList
           messages={mockMessages}
@@ -134,15 +131,12 @@ describe('MessageList Component', () => {
 
       const deleteButtons = screen.getAllByRole('button', { name: /supprimer/i });
       fireEvent.click(deleteButtons[0]);
+      fireEvent.click(screen.getAllByRole('button', { name: /^supprimer$/i }).at(-1)!);
 
-      expect(window.confirm).toHaveBeenCalledWith('Supprimer ce message ?');
       expect(mockOnDelete).toHaveBeenCalledWith('1');
     });
 
     it('should not call onDelete when delete is cancelled', () => {
-      // Mock confirm to return false
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
-
       render(
         <MessageList
           messages={mockMessages}
@@ -153,8 +147,8 @@ describe('MessageList Component', () => {
 
       const deleteButtons = screen.getAllByRole('button', { name: /supprimer/i });
       fireEvent.click(deleteButtons[0]);
+      fireEvent.click(screen.getByRole('button', { name: /annuler/i }));
 
-      expect(window.confirm).toHaveBeenCalled();
       expect(mockOnDelete).not.toHaveBeenCalled();
     });
   });
