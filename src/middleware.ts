@@ -20,7 +20,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      "script-src 'self'",
       "script-src-attr 'none'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "style-src-attr 'unsafe-inline'",

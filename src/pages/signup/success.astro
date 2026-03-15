@@ -62,7 +62,18 @@ if (!sessionId) {
     </div>
   </div>
 
-  <script define:vars={{ sessionId, lang }}>
+  <div
+    id="signup-success-config"
+    data-session-id={sessionId}
+    data-lang={lang}
+    class="hidden"
+    aria-hidden="true"
+  ></div>
+
+  <script>
+    const configElement = document.getElementById('signup-success-config');
+    const sessionId = configElement?.getAttribute('data-session-id');
+
     async function verifyPayment() {
       const loadingState = document.getElementById('loading-state');
       const errorState = document.getElementById('error-state');
@@ -115,6 +126,8 @@ if (!sessionId) {
     }
 
     // Start verification when page loads
-    verifyPayment();
+    if (sessionId) {
+      verifyPayment();
+    }
   </script>
 </MainLayout>
