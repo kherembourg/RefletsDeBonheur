@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Image, Upload, X, Check, AlertCircle, Link as LinkIcon, Info } from 'lucide-react';
 import type { CustomImages } from '../../lib/customization';
 import { useToast } from '../ui/Toast';
+import { AdminModal } from './ui/AdminModal';
 
 interface ImageManagerProps {
   customImages?: CustomImages;
@@ -69,6 +70,7 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
   const [uploadingKey, setUploadingKey] = useState<keyof CustomImages | null>(null);
   const [urlInputMode, setUrlInputMode] = useState<keyof CustomImages | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Sync with prop changes (e.g., when parent resets)
@@ -167,11 +169,14 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
 
   // Reset all images
   const handleResetAll = () => {
-    if (confirm('Réinitialiser toutes les images personnalisées ?')) {
-      setEditingImages({});
-      onChange(undefined);
-      setErrors({});
-    }
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetAll = () => {
+    setEditingImages({});
+    onChange(undefined);
+    setErrors({});
+    setShowResetConfirm(false);
   };
 
   const hasCustomImages = Object.keys(editingImages).length > 0;
@@ -376,6 +381,34 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
         })}
       </div>
       </div>
+      <AdminModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        title="Réinitialiser les images"
+        size="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(false)}
+              className="rounded-lg border border-charcoal/10 px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={confirmResetAll}
+              className="rounded-lg bg-burgundy-old px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-burgundy-dark"
+            >
+              Réinitialiser
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-charcoal/70">
+          Toutes les images personnalisées seront supprimées et les visuels par défaut seront réappliqués.
+        </p>
+      </AdminModal>
     </>
   );
 }
