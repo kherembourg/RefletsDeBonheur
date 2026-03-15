@@ -35,12 +35,16 @@ CREATE INDEX IF NOT EXISTS idx_god_admins_username ON god_admins(username);
 --
 -- Then copy the result and paste it below as YOUR_PASSWORD_HASH
 
-INSERT INTO god_admins (username, password_hash, email)
-VALUES (
-  'kevin',           -- Change this to your username
-  '$2a$12$iW4DA/8AuXAk4MrBVYP5O.MvPYU60aHETmJWV9kMc.G2wypMFVYX6',      -- Change this to the hash from the crypt() function
-  'kevin@herembourg.fr'           -- Change this to your email (optional)
-);
+-- SECURITY: never commit a real bootstrap admin account or password hash.
+-- Create the initial god admin manually in a secure environment after deploy,
+-- for example:
+--
+-- INSERT INTO god_admins (username, password_hash, email)
+-- VALUES (
+--   'replace-me',
+--   'replace-with-generated-hash',
+--   'replace@example.com'
+-- );
 
 -- =============================================
 -- 2. CLIENTS TABLE
@@ -404,11 +408,4 @@ INSERT INTO clients (
   CREATE POLICY "Allow all for guest_sessions" ON guest_sessions FOR ALL USING (true);
   CREATE POLICY "Allow all for audit_log" ON audit_log FOR ALL USING (true);
 
-  -- INSERT YOUR GOD ADMIN ACCOUNT
-  -- Replace 'your_password' with your actual password
-  INSERT INTO god_admins (username, password_hash, email)
-  VALUES (
-    'kevin',
-    '$2a$12$iW4DA/8AuXAk4MrBVYP5O.MvPYU60aHETmJWV9kMc.G2wypMFVYX6',
-    'kevin@herembourg.fr'
-  );
+  -- SECURITY: create bootstrap admin credentials manually outside of source control.
