@@ -24,7 +24,7 @@ const lang = 'es';
         <h1 class="font-serif text-4xl sm:text-5xl font-light text-charcoal dark:text-cream mt-4 mb-6">
           Precios premium, sin sorpresas
         </h1>
-        <div class="w-16 h-px mx-auto mb-6" style="background-color: #ae1725;"></div>
+        <div class="w-16 h-px mx-auto mb-6 burgundy-divider"></div>
         <p class="text-charcoal-light dark:text-cream/70 font-light">
           Un espacio privado y elegante para cada recuerdo.
         </p>
@@ -32,10 +32,10 @@ const lang = 'es';
 
       <!-- Pricing Card -->
       <div class="max-w-3xl mx-auto">
-        <div class="bg-white dark:bg-[#141414] border p-8 sm:p-12 relative" style="border-color: rgba(174, 23, 37, 0.2);">
+        <div class="bg-white dark:bg-[#141414] border p-8 sm:p-12 relative pricing-card-border">
           <!-- Badge -->
           <div class="absolute -top-4 left-1/2 -translate-x-1/2">
-            <span class="text-white text-xs font-sans font-medium tracking-wider uppercase px-4 py-2" style="background-color: #ae1725;">
+            <span class="text-white text-xs font-sans font-medium tracking-wider uppercase px-4 py-2 burgundy-divider">
               Colección limitada
             </span>
           </div>
@@ -55,7 +55,7 @@ const lang = 'es';
               por <strong class="text-charcoal dark:text-cream">2 años</strong>
               <span class="ml-2 font-medium text-burgundy-old">(Ahorra 50€)</span>
             </p>
-            <div class="inline-flex items-center gap-2 px-4 py-2 mt-2" style="background-color: rgba(174, 23, 37, 0.05);">
+            <div class="inline-flex items-center gap-2 px-4 py-2 mt-2 pricing-soft-bg">
               <span class="text-sm text-charcoal-light dark:text-cream/70">
                 Luego <strong class="text-burgundy-old">19,99€/año</strong> para conservar el acceso
               </span>
@@ -64,9 +64,9 @@ const lang = 'es';
 
           <!-- Divider -->
           <div class="flex items-center gap-4 my-8">
-            <div class="flex-1 h-px" style="background-color: rgba(174, 23, 37, 0.1);"></div>
-            <span class="text-sm" style="color: rgba(174, 23, 37, 0.4);">✦</span>
-            <div class="flex-1 h-px" style="background-color: rgba(174, 23, 37, 0.1);"></div>
+            <div class="flex-1 h-px pricing-soft-line"></div>
+            <span class="text-sm pricing-soft-text">✦</span>
+            <div class="flex-1 h-px pricing-soft-line"></div>
           </div>
 
           <!-- Three Services -->
@@ -81,7 +81,7 @@ const lang = 'es';
               </ul>
             </div>
 
-            <div class="text-center p-4 border-x" style="border-color: rgba(174, 23, 37, 0.1);">
+            <div class="text-center p-4 border-x pricing-soft-border">
               <BookHeart class="w-6 h-6 mx-auto mb-3 text-burgundy-old" />
               <h4 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Libro de Visitas</h4>
               <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
@@ -106,8 +106,7 @@ const lang = 'es';
           <div class="text-center">
             <a
               href="/connexion"
-              class="inline-flex items-center px-10 py-4 text-white font-sans font-medium text-sm tracking-wider uppercase transition-all hover:opacity-90"
-              style="background-color: #ae1725;"
+              class="inline-flex items-center px-10 py-4 text-white font-sans font-medium text-sm tracking-wider uppercase transition-all hover:opacity-90 burgundy-divider"
             >
               Comenzar ahora
               <ArrowRight class="ml-2 w-4 h-4" />
@@ -122,7 +121,7 @@ const lang = 'es';
   </section>
 
   <!-- Features List -->
-  <section class="py-24 dark:bg-[#141414]" style="background-color: rgba(174, 23, 37, 0.03);">
+  <section class="py-24 dark:bg-[#141414] pricing-soft-section">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
         <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
@@ -149,7 +148,7 @@ const lang = 'es';
           "Soporte por email"
         ].map(feature => (
           <div class="flex items-center gap-3 p-3 bg-white dark:bg-[#1b1b1b] border border-white/10">
-            <div class="w-5 h-5 flex items-center justify-center shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
+            <div class="w-5 h-5 flex items-center justify-center shrink-0 pricing-checkmark">
               <Check class="w-3 h-3" />
             </div>
             <span class="text-charcoal dark:text-cream font-light text-sm">{feature}</span>
@@ -173,7 +172,7 @@ const lang = 'es';
 
       <div class="max-w-3xl mx-auto space-y-4">
         <!-- FAQ Item 1 -->
-        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6 pricing-soft-border">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>
@@ -189,7 +188,7 @@ const lang = 'es';
         </div>
 
         <!-- FAQ Item 2 -->
-        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6 pricing-soft-border">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>
@@ -205,7 +204,7 @@ const lang = 'es';
         </div>
 
         <!-- FAQ Item 3 -->
-        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6 pricing-soft-border">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" />
             <div>

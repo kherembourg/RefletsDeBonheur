@@ -55,7 +55,7 @@ const features = [
         <h1 class="font-serif text-4xl sm:text-5xl font-light text-charcoal dark:text-cream mt-4 mb-6">
           Premium Pricing, No Surprises
         </h1>
-        <div class="w-16 h-px mx-auto mb-6" style="background-color: #ae1725;"></div>
+        <div class="w-16 h-px mx-auto mb-6 burgundy-divider"></div>
         <p class="text-charcoal-light dark:text-cream/70 font-light">
           A complete luxury experience with private hosting and curated design.
         </p>
@@ -63,10 +63,10 @@ const features = [
 
       <!-- Pricing Card -->
       <div class="max-w-3xl mx-auto">
-        <div class="bg-white dark:bg-[#141414] border p-8 sm:p-12 relative" style="border-color: rgba(174, 23, 37, 0.2);">
+        <div class="bg-white dark:bg-[#141414] border p-8 sm:p-12 relative pricing-card-border">
           <!-- Badge -->
           <div class="absolute -top-4 left-1/2 -translate-x-1/2">
-            <span class="text-white text-xs font-sans font-medium tracking-wider uppercase px-4 py-2" style="background-color: #ae1725;">
+            <span class="text-white text-xs font-sans font-medium tracking-wider uppercase px-4 py-2 burgundy-divider">
               Launch Offer
             </span>
           </div>
@@ -86,7 +86,7 @@ const features = [
               for <strong class="text-charcoal dark:text-cream">{durationLabel}&nbsp;years</strong>
               <span class="ml-2 font-medium text-burgundy-old">(Save {discountLabel})</span>
             </p>
-            <div class="inline-flex items-center gap-2 px-4 py-2 mt-2" style="background-color: rgba(174, 23, 37, 0.05);">
+            <div class="inline-flex items-center gap-2 px-4 py-2 mt-2 pricing-soft-bg">
               <span class="text-sm text-charcoal-light dark:text-cream/70">
                 Then <strong class="text-burgundy-old">{renewalAnnualLabel}/year</strong> to keep your gallery online
               </span>
@@ -95,9 +95,9 @@ const features = [
 
           <!-- Divider -->
           <div class="flex items-center gap-4 my-8">
-            <div class="flex-1 h-px" style="background-color: rgba(174, 23, 37, 0.1);"></div>
-            <span class="text-sm" style="color: rgba(174, 23, 37, 0.4);">✦</span>
-            <div class="flex-1 h-px" style="background-color: rgba(174, 23, 37, 0.1);"></div>
+            <div class="flex-1 h-px pricing-soft-line"></div>
+            <span class="text-sm pricing-soft-text">✦</span>
+            <div class="flex-1 h-px pricing-soft-line"></div>
           </div>
 
           <!-- Three Services -->
@@ -112,7 +112,7 @@ const features = [
               </ul>
             </div>
 
-            <div class="text-center p-4 border-x" style="border-color: rgba(174, 23, 37, 0.1);">
+            <div class="text-center p-4 border-x pricing-soft-border">
               <BookHeart class="w-6 h-6 mx-auto mb-3 text-burgundy-old" aria-hidden="true" />
               <h3 class="font-medium text-charcoal dark:text-cream text-sm mb-2">Guestbook</h3>
               <ul class="text-xs text-charcoal-light dark:text-cream/70 space-y-1 font-light">
@@ -137,8 +137,7 @@ const features = [
           <div class="text-center">
             <a
               href="/signup"
-              class="inline-flex items-center px-10 py-4 text-white font-sans font-medium text-sm tracking-wider uppercase transition-opacity hover:opacity-90"
-              style="background-color: #ae1725;"
+              class="inline-flex items-center px-10 py-4 text-white font-sans font-medium text-sm tracking-wider uppercase transition-opacity hover:opacity-90 burgundy-divider"
             >
               Get Started Now
               <ArrowRight class="ml-2 w-4 h-4" aria-hidden="true" />
@@ -153,7 +152,7 @@ const features = [
   </section>
 
   <!-- Features List -->
-  <section class="py-24 dark:bg-[#141414]" style="background-color: rgba(174, 23, 37, 0.03);">
+  <section class="py-24 dark:bg-[#141414] pricing-soft-section">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
         <span class="tracking-[0.3em] uppercase text-xs font-sans font-medium text-burgundy-old">
@@ -168,7 +167,7 @@ const features = [
         <div class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-4">
           {features.map(feature => (
             <div class="flex items-center gap-3 p-3 bg-white dark:bg-[#1b1b1b] border border-white/10">
-              <div class="w-5 h-5 flex items-center justify-center shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
+              <div class="w-5 h-5 flex items-center justify-center shrink-0 pricing-checkmark">
                 <Check class="w-3 h-3" aria-hidden="true" />
               </div>
               <span class="text-charcoal dark:text-cream font-light text-sm break-words min-w-0">{feature}</span>
@@ -195,7 +194,7 @@ const features = [
 
       <div class="max-w-3xl mx-auto space-y-4">
         <!-- FAQ Item 1 -->
-        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6 pricing-soft-border">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
             <div class="min-w-0">
@@ -211,7 +210,7 @@ const features = [
         </div>
 
         <!-- FAQ Item 2 -->
-        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6 pricing-soft-border">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
             <div class="min-w-0">
@@ -227,7 +226,7 @@ const features = [
         </div>
 
         <!-- FAQ Item 3 -->
-        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6 pricing-soft-border">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
             <div class="min-w-0">
@@ -243,7 +242,7 @@ const features = [
         </div>
 
         <!-- FAQ Item 4 -->
-        <div class="bg-white dark:bg-[#141414] border p-6" style="border-color: rgba(174, 23, 37, 0.1);">
+        <div class="bg-white dark:bg-[#141414] border p-6 pricing-soft-border">
           <div class="flex items-start gap-3">
             <HelpCircle class="w-5 h-5 shrink-0 mt-0.5 text-burgundy-old" aria-hidden="true" />
             <div class="min-w-0">

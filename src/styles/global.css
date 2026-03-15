@@ -110,6 +110,39 @@
   @apply bg-burgundy text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-colors transition-shadow transition-transform duration-200 hover:bg-burgundy-light hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-old focus-visible:ring-offset-2 focus-visible:ring-offset-cream dark:focus-visible:ring-offset-[#141414];
 }
 
+@utility burgundy-divider {
+  background-color: #ae1725;
+}
+
+@utility pricing-card-border {
+  border-color: rgba(174, 23, 37, 0.2);
+}
+
+@utility pricing-soft-bg {
+  background-color: rgba(174, 23, 37, 0.05);
+}
+
+@utility pricing-soft-border {
+  border-color: rgba(174, 23, 37, 0.1);
+}
+
+@utility pricing-soft-line {
+  background-color: rgba(174, 23, 37, 0.1);
+}
+
+@utility pricing-soft-text {
+  color: rgba(174, 23, 37, 0.4);
+}
+
+@utility pricing-soft-section {
+  background-color: rgba(174, 23, 37, 0.03);
+}
+
+@utility pricing-checkmark {
+  border: 1px solid #ae1725;
+  color: #ae1725;
+}
+
 @utility card {
   @apply bg-ivory border border-silver-mist rounded-xl p-6 shadow-xs transition-transform transition-shadow transition-colors duration-200 hover:shadow-md hover:-translate-y-0.5;
 }
