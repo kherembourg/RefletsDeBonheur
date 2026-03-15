@@ -317,6 +317,10 @@ export const translations = {
         loginCta: 'Aller à la connexion',
         publicSiteCta: 'Voir le site public',
         help: 'Vous n’avez pas reçu l’email ? Vérifiez vos spams, puis réessayez depuis la page de connexion.',
+        resendCta: 'Renvoyer l’email',
+        resending: 'Envoi en cours…',
+        resendSuccess: 'Un nouvel email d’accès vient d’être envoyé.',
+        resendError: 'Impossible de renvoyer l’email pour le moment. Essayez depuis la page de connexion.',
       },
       paymentStatus: {
         cancelledTitle: 'Paiement annulé',
@@ -968,6 +972,10 @@ export const translations = {
         loginCta: 'Go to login',
         publicSiteCta: 'View public site',
         help: 'Didn’t receive the email? Check spam, then try again from the login page.',
+        resendCta: 'Resend email',
+        resending: 'Sending…',
+        resendSuccess: 'A new access email has just been sent.',
+        resendError: 'Unable to resend the email right now. Try again from the login page.',
       },
       paymentStatus: {
         cancelledTitle: 'Payment cancelled',
@@ -1620,6 +1628,10 @@ export const translations = {
         loginCta: 'Ir al acceso',
         publicSiteCta: 'Ver sitio público',
         help: '¿No recibiste el correo? Revisa spam y luego inténtalo de nuevo desde la página de acceso.',
+        resendCta: 'Reenviar correo',
+        resending: 'Enviando…',
+        resendSuccess: 'Se acaba de enviar un nuevo correo de acceso.',
+        resendError: 'No se pudo reenviar el correo en este momento. Inténtalo desde la página de acceso.',
       },
       paymentStatus: {
         cancelledTitle: 'Pago cancelado',

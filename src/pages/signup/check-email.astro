@@ -52,9 +52,78 @@ const slug = Astro.url.searchParams.get('slug') || '';
         </a>
       </div>
 
+      <div class="mt-4 flex justify-center">
+        <button
+          id="resend-access-email"
+          type="button"
+          class="inline-flex items-center justify-center rounded-lg border border-charcoal/10 px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!email || !slug}
+        >
+          {t(lang, 'signup.checkEmail.resendCta')}
+        </button>
+      </div>
+
+      <p id="resend-access-email-status" class="mt-3 text-center text-xs text-charcoal/55" aria-live="polite"></p>
+
       <p class="mt-6 text-center text-xs text-charcoal/50">
         {t(lang, 'signup.checkEmail.help')}
       </p>
     </div>
   </section>
 </MainLayout>
+
+<script define:vars={{ email, slug, lang }}>
+  const resendButton = document.getElementById('resend-access-email');
+  const resendStatus = document.getElementById('resend-access-email-status');
+
+  if (resendButton && resendStatus) {
+    const messages = {
+      fr: {
+        idle: 'Renvoyer l’email',
+        loading: 'Envoi en cours…',
+        success: 'Un nouvel email d’accès vient d’être envoyé.',
+        error: 'Impossible de renvoyer l’email pour le moment. Essayez depuis la page de connexion.',
+      },
+      en: {
+        idle: 'Resend email',
+        loading: 'Sending…',
+        success: 'A new access email has just been sent.',
+        error: 'Unable to resend the email right now. Try again from the login page.',
+      },
+      es: {
+        idle: 'Reenviar correo',
+        loading: 'Enviando…',
+        success: 'Se acaba de enviar un nuevo correo de acceso.',
+        error: 'No se pudo reenviar el correo en este momento. Inténtalo desde la página de acceso.',
+      },
+    };
+
+    const copy = messages[lang] || messages.en;
+
+    resendButton.addEventListener('click', async () => {
+      resendButton.setAttribute('disabled', 'true');
+      resendButton.textContent = copy.loading;
+      resendStatus.textContent = '';
+
+      try {
+        const response = await fetch('/api/signup/resend-access-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, slug }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Resend failed');
+        }
+
+        resendStatus.textContent = copy.success;
+      } catch (error) {
+        console.error('[Check Email] Resend access email failed:', error);
+        resendStatus.textContent = copy.error;
+      } finally {
+        resendButton.removeAttribute('disabled');
+        resendButton.textContent = copy.idle;
+      }
+    });
+  }
+</script>
