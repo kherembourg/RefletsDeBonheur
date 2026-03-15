@@ -211,6 +211,33 @@ export class DataService {
 
   }
 
+  private getWeddingIdOrThrow(): string {
+    if (!this.weddingId) {
+      throw new Error('No wedding ID set for production mode');
+    }
+
+    return this.weddingId;
+  }
+
+  private hasWeddingId(): this is DataService & { weddingId: string } {
+    return Boolean(this.weddingId);
+  }
+
+  private warnMissingWeddingId(methodName: string): void {
+    console.warn(`[DataService] ${methodName} called without wedding ID in production mode`);
+  }
+
+  private getEmptyStatistics(): WeddingStatistics {
+    return {
+      mediaCount: 0,
+      photoCount: 0,
+      videoCount: 0,
+      messageCount: 0,
+      favoriteCount: 0,
+      albumCount: 0,
+    };
+  }
+
   // Initialize demo storage - call this in a useEffect to avoid hydration mismatch
   initializeDemoStorage(): void {
     if (this.demoMode && !this.initialized) {
@@ -251,8 +278,8 @@ export class DataService {
       return items;
     }
 
-    if (!this.weddingId) {
-      console.warn('No wedding ID set for production mode');
+    if (!this.hasWeddingId()) {
+      this.warnMissingWeddingId('getMedia');
       return [];
     }
 
@@ -286,12 +313,10 @@ export class DataService {
       return mockMediaToItem(newItem);
     }
 
-    if (!this.weddingId) {
-      throw new Error('No wedding ID set for production mode');
-    }
+    const weddingId = this.getWeddingIdOrThrow();
 
     const media = await mediaApi.create({
-      wedding_id: this.weddingId,
+      wedding_id: weddingId,
       original_url: item.url,
       thumbnail_url: item.thumbnailUrl || null,
       type: item.type,
@@ -360,16 +385,14 @@ export class DataService {
     }
 
     // Production mode: use R2 upload
-    if (!this.weddingId) {
-      throw new Error('No wedding ID set for production mode');
-    }
+    const weddingId = this.getWeddingIdOrThrow();
 
     // Dynamic import to avoid loading R2 client on client-side unnecessarily
     const { uploadToR2, TrialModeError } = await import('../r2/upload');
 
     try {
       return await uploadToR2({
-        weddingId: this.weddingId,
+        weddingId,
         file,
         caption: options.caption,
         guestName: options.author,
@@ -420,15 +443,13 @@ export class DataService {
     }
 
     // Production mode: use R2 batch upload
-    if (!this.weddingId) {
-      throw new Error('No wedding ID set for production mode');
-    }
+    const weddingId = this.getWeddingIdOrThrow();
 
     const { uploadMultipleToR2, TrialModeError } = await import('../r2/upload');
 
     try {
       return await uploadMultipleToR2({
-        weddingId: this.weddingId,
+        weddingId,
         files,
         guestName: options.author,
         guestIdentifier: this.guestIdentifier,
@@ -481,8 +502,8 @@ export class DataService {
       return mockMessages.map(mockMessageToEntry);
     }
 
-    if (!this.weddingId) {
-      console.warn('No wedding ID set for production mode');
+    if (!this.hasWeddingId()) {
+      this.warnMissingWeddingId('getMessages');
       return [];
     }
 
@@ -507,12 +528,10 @@ export class DataService {
       return mockMessageToEntry(newMessage);
     }
 
-    if (!this.weddingId) {
-      throw new Error('No wedding ID set for production mode');
-    }
+    const weddingId = this.getWeddingIdOrThrow();
 
     const message = await guestbookApi.create({
-      wedding_id: this.weddingId,
+      wedding_id: weddingId,
       author_name: entry.author,
       message: entry.text,
       author_relation: entry.relation || null,
@@ -638,12 +657,10 @@ export class DataService {
       return;
     }
 
-    if (!this.weddingId) {
-      throw new Error('No wedding ID set for production mode');
-    }
+    const weddingId = this.getWeddingIdOrThrow();
 
     // Fetch current wedding config, then merge the update
-    const wedding = await weddingsApi.getById(this.weddingId);
+    const wedding = await weddingsApi.getById(weddingId);
     if (!wedding) {
       throw new Error('Wedding not found');
     }
@@ -664,7 +681,7 @@ export class DataService {
       };
     }
 
-    await weddingsApi.update(this.weddingId, {
+    await weddingsApi.update(weddingId, {
       config: updatedConfig,
     });
   }
@@ -678,8 +695,8 @@ export class DataService {
       return getMockAlbums().map(mockAlbumToAlbum);
     }
 
-    if (!this.weddingId) {
-      console.warn('No wedding ID set for production mode');
+    if (!this.hasWeddingId()) {
+      this.warnMissingWeddingId('getAlbums');
       return [];
     }
 
@@ -697,12 +714,10 @@ export class DataService {
       return mockAlbumToAlbum(newAlbum);
     }
 
-    if (!this.weddingId) {
-      throw new Error('No wedding ID set for production mode');
-    }
+    const weddingId = this.getWeddingIdOrThrow();
 
     const created = await albumsApi.create({
-      wedding_id: this.weddingId,
+      wedding_id: weddingId,
       name: album.name,
       description: album.description || null,
       sort_order: 0,
@@ -765,15 +780,9 @@ export class DataService {
       };
     }
 
-    if (!this.weddingId) {
-      return {
-        mediaCount: 0,
-        photoCount: 0,
-        videoCount: 0,
-        messageCount: 0,
-        favoriteCount: 0,
-        albumCount: 0,
-      };
+    if (!this.hasWeddingId()) {
+      this.warnMissingWeddingId('getStatistics');
+      return this.getEmptyStatistics();
     }
 
     const stats = await weddingsApi.getStats(this.weddingId);
@@ -892,8 +901,14 @@ export function useDataService(options?: {
   weddingId?: string;
   weddingSlug?: string;
 }) {
-  // Create service once using lazy initialization
   const [service] = useState(() => new DataService(options));
+
+  useEffect(() => {
+    if (options?.weddingId) {
+      service.setWeddingId(options.weddingId);
+    }
+  }, [options?.weddingId, service]);
+
   return service;
 }
 
