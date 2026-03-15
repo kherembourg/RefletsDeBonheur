@@ -1,15 +1,9 @@
-/**
- * Client Auth Module Tests
- * Comprehensive tests for client/guest authentication and session management
- */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock crypto
 const mockCrypto = {
   getRandomValues: (arr: Uint8Array) => {
-    for (let i = 0; i < arr.length; i++) {
-      arr[i] = Math.floor(Math.random() * 256);
+    for (let index = 0; index < arr.length; index += 1) {
+      arr[index] = index;
     }
     return arr;
   },
@@ -21,7 +15,6 @@ Object.defineProperty(global, 'crypto', {
   writable: true,
 });
 
-// Mock Supabase
 vi.mock('../supabase/client', () => {
   const mockFrom = vi.fn();
   const mockAuth = {
@@ -38,7 +31,6 @@ vi.mock('../supabase/client', () => {
   };
 });
 
-// Import after mocking
 import { supabase } from '../supabase/client';
 import {
   clientLogin,
@@ -59,103 +51,117 @@ const mockAuth = supabase.auth as unknown as {
   signOut: ReturnType<typeof vi.fn>;
 };
 
-// Helper to create mock chain
-function createMockChain(returnData: unknown, error: Error | null = null) {
-  const mockResolvedValue = { data: returnData, error };
-
+function createMockChain<T>(returnData: T, error: Error | null = null) {
+  const resolvedValue = { data: returnData, error };
   const chain: Record<string, ReturnType<typeof vi.fn>> = {};
 
   chain.select = vi.fn().mockReturnValue(chain);
-  chain.insert = vi.fn().mockReturnValue(chain);
   chain.update = vi.fn().mockReturnValue(chain);
-  chain.delete = vi.fn().mockReturnValue(chain);
   chain.eq = vi.fn().mockReturnValue(chain);
-  chain.neq = vi.fn().mockReturnValue(chain);
-  chain.gt = vi.fn().mockReturnValue(chain);
-  chain.lt = vi.fn().mockReturnValue(chain);
-  chain.is = vi.fn().mockReturnValue(chain);
-  chain.or = vi.fn().mockReturnValue(chain);
-  chain.order = vi.fn().mockReturnValue(chain);
-  chain.single = vi.fn().mockResolvedValue(mockResolvedValue);
+  chain.single = vi.fn().mockResolvedValue(resolvedValue);
 
   return chain;
 }
 
-describe('Client Auth Module', () => {
+describe('clientAuth', () => {
+  const mockUser = { id: 'user-id-123' };
+  const mockProfile = {
+    id: 'user-id-123',
+    email: 'client@test.com',
+    subscription_status: 'active',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    subscription_end_date: null,
+  };
+  const mockWedding = {
+    id: 'wedding-id',
+    owner_id: 'user-id-123',
+    slug: 'marie-thomas',
+    bride_name: 'Marie',
+    groom_name: 'Thomas',
+    wedding_date: '2026-06-20',
+    name: null,
+    pin_code: 'ABC123',
+    magic_token: 'ADMIN99',
+    config: {
+      theme: { name: 'classic' },
+      features: { gallery: true, guestbook: true },
+    },
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
     localStorage.clear();
+    mockAuth.signOut.mockResolvedValue({ error: null });
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
-  // ==========================================
-  // clientLogin Tests
-  // ==========================================
   describe('clientLogin', () => {
-    const mockUser = { id: 'user-id-123' };
-    const mockProfile = {
-      id: 'user-id-123',
-      email: 'client@test.com',
-      subscription_status: 'active',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      subscription_end_date: null,
-    };
-    const mockWedding = {
-      id: 'wedding-id',
-      owner_id: 'user-id-123',
-      slug: 'marie-thomas',
-      bride_name: 'Marie',
-      groom_name: 'Thomas',
-      wedding_date: '2026-06-20',
-      name: null,
-      pin_code: 'ABC123',
-      magic_token: 'magic-token',
-      config: {
-        theme: { name: 'classic' },
-        features: { gallery: true, guestbook: true },
-      },
-    };
-
-    it('should successfully login with valid credentials', async () => {
+    it('stores only session metadata after a successful login', async () => {
       mockAuth.signInWithPassword.mockResolvedValue({
-        data: { user: mockUser },
+        data: { user: mockUser, session: { access_token: 'supabase-access-token' } },
         error: null,
       });
 
       const profileChain = createMockChain(mockProfile);
       const weddingChain = createMockChain(mockWedding);
-      const sessionChain = { insert: vi.fn().mockResolvedValue({ data: null, error: null }) };
-      const auditChain = createMockChain(null);
+      const auditChain = { insert: vi.fn().mockResolvedValue({ data: null, error: null }) };
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'profiles') return profileChain;
         if (table === 'weddings') return weddingChain;
-        if (table === 'auth_sessions') return sessionChain;
         if (table === 'audit_log') return auditChain;
         return profileChain;
       });
 
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          success: true,
+          session: {
+            client_id: mockProfile.id,
+            wedding_name: 'Mariage de Marie & Thomas',
+            couple_names: 'Marie & Thomas',
+            wedding_slug: mockWedding.slug,
+            is_admin: true,
+          },
+        }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       const result = await clientLogin('client@test.com', 'password123');
 
       expect(result.success).toBe(true);
-      expect(result.client).toBeDefined();
       expect(result.client?.email).toBe('client@test.com');
-      expect(result.token).toBeDefined();
-      expect(localStorage.getItem('reflets_client_token')).toBeTruthy();
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/auth/client-session',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer supabase-access-token',
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+      expect(localStorage.getItem('reflets_client_token')).toBeNull();
+      expect(localStorage.getItem('reflets_client_session')).toContain('"wedding_slug":"marie-thomas"');
     });
 
-    it('should fail login with invalid credentials', async () => {
+    it('fails for invalid credentials', async () => {
       mockAuth.signInWithPassword.mockResolvedValue({
         data: { user: null },
         error: new Error('Invalid credentials'),
       });
 
-      const auditChain = createMockChain(null);
-      mockFrom.mockReturnValue(auditChain);
+      const auditChain = { insert: vi.fn().mockResolvedValue({ data: null, error: null }) };
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'audit_log') return auditChain;
+        return createMockChain(null);
+      });
 
       const result = await clientLogin('invalid@test.com', 'wrongpassword');
 
@@ -163,14 +169,12 @@ describe('Client Auth Module', () => {
       expect(result.error).toBe('Invalid username or password');
     });
 
-    it('should fail when profile not found', async () => {
+    it('fails when profile is missing', async () => {
       mockAuth.signInWithPassword.mockResolvedValue({
-        data: { user: mockUser },
+        data: { user: mockUser, session: { access_token: 'supabase-access-token' } },
         error: null,
       });
-
-      const profileChain = createMockChain(null, new Error('Not found'));
-      mockFrom.mockReturnValue(profileChain);
+      mockFrom.mockReturnValue(createMockChain(null, new Error('Not found')));
 
       const result = await clientLogin('client@test.com', 'password123');
 
@@ -178,16 +182,12 @@ describe('Client Auth Module', () => {
       expect(result.error).toBe('Profile not found');
     });
 
-    it('should fail when subscription is not active', async () => {
+    it('fails when subscription is inactive', async () => {
       mockAuth.signInWithPassword.mockResolvedValue({
-        data: { user: mockUser },
+        data: { user: mockUser, session: { access_token: 'supabase-access-token' } },
         error: null,
       });
-
-      const inactiveProfile = { ...mockProfile, subscription_status: 'cancelled' };
-      const profileChain = createMockChain(inactiveProfile);
-
-      mockFrom.mockReturnValue(profileChain);
+      mockFrom.mockReturnValue(createMockChain({ ...mockProfile, subscription_status: 'cancelled' }));
 
       const result = await clientLogin('client@test.com', 'password123');
 
@@ -195,17 +195,16 @@ describe('Client Auth Module', () => {
       expect(result.error).toBe('Account is suspended or expired');
     });
 
-    it('should fail when subscription is expired', async () => {
+    it('fails when subscription is expired', async () => {
       mockAuth.signInWithPassword.mockResolvedValue({
-        data: { user: mockUser },
+        data: { user: mockUser, session: { access_token: 'supabase-access-token' } },
         error: null,
       });
 
-      const expiredProfile = {
+      const profileChain = createMockChain({
         ...mockProfile,
         subscription_end_date: '2020-01-01T00:00:00Z',
-      };
-      const profileChain = createMockChain(expiredProfile);
+      });
       const updateChain = {
         update: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -223,19 +222,16 @@ describe('Client Auth Module', () => {
       expect(result.error).toBe('Subscription has expired');
     });
 
-    it('should fail when wedding not found', async () => {
+    it('fails when wedding is missing', async () => {
       mockAuth.signInWithPassword.mockResolvedValue({
-        data: { user: mockUser },
+        data: { user: mockUser, session: { access_token: 'supabase-access-token' } },
         error: null,
       });
 
-      const profileChain = createMockChain(mockProfile);
-      const weddingChain = createMockChain(null, new Error('Not found'));
-
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'profiles') return profileChain;
-        if (table === 'weddings') return weddingChain;
-        return profileChain;
+        if (table === 'profiles') return createMockChain(mockProfile);
+        if (table === 'weddings') return createMockChain(null, new Error('Not found'));
+        return createMockChain(null);
       });
 
       const result = await clientLogin('client@test.com', 'password123');
@@ -244,50 +240,37 @@ describe('Client Auth Module', () => {
       expect(result.error).toBe('Wedding not found');
     });
 
-    it('should handle unexpected errors', async () => {
-      mockAuth.signInWithPassword.mockRejectedValue(new Error('Network error'));
+    it('signs out when server session creation fails', async () => {
+      mockAuth.signInWithPassword.mockResolvedValue({
+        data: { user: mockUser, session: { access_token: 'supabase-access-token' } },
+        error: null,
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'profiles') return createMockChain(mockProfile);
+        if (table === 'weddings') return createMockChain(mockWedding);
+        return createMockChain(null);
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ message: 'Failed to create session' }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
 
       const result = await clientLogin('client@test.com', 'password123');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('An unexpected error occurred');
+      expect(result.error).toBe('Failed to create session');
+      expect(mockAuth.signOut).toHaveBeenCalledTimes(1);
     });
   });
 
-  // ==========================================
-  // guestLogin Tests
-  // ==========================================
   describe('guestLogin', () => {
-    const mockWedding = {
-      id: 'wedding-id',
-      owner_id: 'user-id-123',
-      slug: 'marie-thomas',
-      bride_name: 'Marie',
-      groom_name: 'Thomas',
-      wedding_date: '2026-06-20',
-      name: null,
-      pin_code: 'ABC123',
-      magic_token: 'ADMIN99',
-      config: {
-        theme: { name: 'classic' },
-        features: { gallery: true, guestbook: true },
-      },
-    };
-
-    const mockProfile = {
-      id: 'user-id-123',
-      email: 'client@test.com',
-      subscription_status: 'active',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      subscription_end_date: null,
-    };
-
-    it('should successfully login with guest PIN code', async () => {
+    it('stores only guest session metadata for guest access', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
-          session_token: 'test-session-token',
           wedding_id: mockWedding.id,
           wedding_slug: mockWedding.slug,
           access_type: 'guest',
@@ -300,17 +283,15 @@ describe('Client Auth Module', () => {
 
       expect(result.success).toBe(true);
       expect(result.accessType).toBe('guest');
-      expect(result.token).toBe('test-session-token');
-      expect(localStorage.getItem('reflets_guest_token')).toBe('test-session-token');
-
-      vi.unstubAllGlobals();
+      expect(result.weddingSlug).toBe('marie-thomas');
+      expect(localStorage.getItem('reflets_guest_token')).toBeNull();
+      expect(localStorage.getItem('reflets_guest_session')).toContain('"guest_name":"John"');
     });
 
-    it('should successfully login with admin magic token', async () => {
+    it('stores admin access as guest-session metadata', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
-          session_token: 'test-admin-token',
           wedding_id: mockWedding.id,
           wedding_slug: mockWedding.slug,
           access_type: 'admin',
@@ -323,17 +304,13 @@ describe('Client Auth Module', () => {
 
       expect(result.success).toBe(true);
       expect(result.accessType).toBe('admin');
-
-      vi.unstubAllGlobals();
+      expect(result.weddingSlug).toBe('marie-thomas');
     });
 
-    it('should fail with invalid access code', async () => {
+    it('returns API errors for invalid codes', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({
-          error: 'Invalid code',
-          message: 'Invalid access code.',
-        }),
+        json: () => Promise.resolve({ message: 'Invalid access code.' }),
       });
       vi.stubGlobal('fetch', mockFetch);
 
@@ -341,402 +318,156 @@ describe('Client Auth Module', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Invalid access code.');
-
-      vi.unstubAllGlobals();
     });
 
-    it('should fail when wedding space is not available', async () => {
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: false,
-        json: () => Promise.resolve({
-          error: 'Unavailable',
-          message: 'This wedding space is not available.',
-        }),
-      });
-      vi.stubGlobal('fetch', mockFetch);
-
-      const result = await guestLogin('ABC123');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('This wedding space is not available.');
-
-      vi.unstubAllGlobals();
-    });
-
-    it('should handle errors gracefully', async () => {
-      const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'));
-      vi.stubGlobal('fetch', mockFetch);
+    it('handles network errors gracefully', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
 
       const result = await guestLogin('ABC123');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('An unexpected error occurred');
-
-      vi.unstubAllGlobals();
     });
   });
 
-  // ==========================================
-  // verifyClientSession Tests
-  // ==========================================
   describe('verifyClientSession', () => {
-    const mockSession = {
-      id: 'session-id',
-      user_id: 'user-id-123',
-      user_type: 'client',
-      token: 'test-token',
-      expires_at: new Date(Date.now() + 86400000).toISOString(),
-    };
-
-    const mockProfile = {
-      id: 'user-id-123',
-      email: 'client@test.com',
-      subscription_status: 'active',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      subscription_end_date: null,
-    };
-
-    const mockWedding = {
-      id: 'wedding-id',
-      owner_id: 'user-id-123',
-      slug: 'marie-thomas',
-      bride_name: 'Marie',
-      groom_name: 'Thomas',
-      name: null,
-      config: {
-        theme: { name: 'classic' },
-        features: { gallery: true, guestbook: true },
-      },
-    };
-
-    it('should return valid for valid session', async () => {
-      localStorage.setItem('reflets_client_token', 'test-token');
-      localStorage.setItem('reflets_client_session', JSON.stringify({
-        client_id: 'user-id-123',
-        wedding_name: 'Test Wedding',
-        couple_names: 'Marie & Thomas',
-        wedding_slug: 'marie-thomas',
-        is_admin: true,
-      }));
-
-      const sessionChain = createMockChain(mockSession);
-      const profileChain = createMockChain(mockProfile);
-      const weddingChain = createMockChain(mockWedding);
-      const updateChain = {
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    it('hydrates session metadata from the server cookie-backed session', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          valid: true,
+          session: {
+            client_id: mockProfile.id,
+            wedding_name: 'Mariage de Marie & Thomas',
+            couple_names: 'Marie & Thomas',
+            wedding_slug: mockWedding.slug,
+            is_admin: true,
+          },
         }),
-      };
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'auth_sessions') return { ...sessionChain, ...updateChain };
-        if (table === 'profiles') return profileChain;
-        if (table === 'weddings') return weddingChain;
-        return sessionChain;
-      });
+      }));
 
       const result = await verifyClientSession();
 
       expect(result.valid).toBe(true);
-      expect(result.client).toBeDefined();
+      expect(result.session?.wedding_slug).toBe('marie-thomas');
+      expect(localStorage.getItem('reflets_client_session')).toContain('"client_id":"user-id-123"');
     });
 
-    it('should return invalid when no token in storage', async () => {
-      const result = await verifyClientSession();
-
-      expect(result.valid).toBe(false);
-    });
-
-    it('should return invalid for expired/invalid session', async () => {
-      localStorage.setItem('reflets_client_token', 'expired-token');
-
-      const sessionChain = createMockChain(null, new Error('Not found'));
-      mockFrom.mockReturnValue(sessionChain);
+    it('clears legacy and cached storage when session is invalid', async () => {
+      localStorage.setItem('reflets_client_token', 'legacy-token');
+      localStorage.setItem('reflets_client_session', JSON.stringify({ client_id: 'cached' }));
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ valid: false }),
+      }));
 
       const result = await verifyClientSession();
 
       expect(result.valid).toBe(false);
       expect(localStorage.getItem('reflets_client_token')).toBeNull();
-    });
-
-    it('should handle errors gracefully', async () => {
-      localStorage.setItem('reflets_client_token', 'test-token');
-
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
-
-      const result = await verifyClientSession();
-
-      expect(result.valid).toBe(false);
+      expect(localStorage.getItem('reflets_client_session')).toBeNull();
     });
   });
 
-  // ==========================================
-  // verifyGuestSession Tests
-  // ==========================================
   describe('verifyGuestSession', () => {
-    const mockGuestSession = {
-      id: 'session-id',
-      wedding_id: 'wedding-id',
-      session_token: 'guest-token',
-      expires_at: new Date(Date.now() + 86400000).toISOString(),
-    };
-
-    const mockWedding = {
-      id: 'wedding-id',
-      owner_id: 'user-id-123',
-      slug: 'marie-thomas',
-      bride_name: 'Marie',
-      groom_name: 'Thomas',
-      name: null,
-      config: {
-        theme: { name: 'classic' },
-        features: { gallery: true, guestbook: true },
-      },
-    };
-
-    const mockProfile = {
-      id: 'user-id-123',
-      email: 'client@test.com',
-      subscription_status: 'active',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      subscription_end_date: null,
-    };
-
-    it('should return valid for valid guest session', async () => {
-      localStorage.setItem('reflets_guest_token', 'guest-token');
-      localStorage.setItem('reflets_guest_session', JSON.stringify({
-        client_id: 'user-id-123',
-        wedding_slug: 'marie-thomas',
-        access_type: 'guest',
-        guest_name: 'John',
-      }));
-
-      const sessionChain = createMockChain(mockGuestSession);
-      const weddingChain = createMockChain(mockWedding);
-      const profileChain = createMockChain(mockProfile);
-      const updateChain = {
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    it('hydrates guest session metadata from the server cookie-backed session', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          valid: true,
+          session: {
+            client_id: mockWedding.id,
+            wedding_slug: mockWedding.slug,
+            access_type: 'guest',
+            guest_name: 'John',
+          },
         }),
-      };
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'guest_sessions') return { ...sessionChain, ...updateChain };
-        if (table === 'weddings') return weddingChain;
-        if (table === 'profiles') return profileChain;
-        return sessionChain;
-      });
+      }));
 
       const result = await verifyGuestSession();
 
       expect(result.valid).toBe(true);
       expect(result.session?.guest_name).toBe('John');
+      expect(localStorage.getItem('reflets_guest_session')).toContain('"guest_name":"John"');
     });
 
-    it('should return invalid when no token in storage', async () => {
-      const result = await verifyGuestSession();
-
-      expect(result.valid).toBe(false);
-    });
-
-    it('should return invalid for expired session', async () => {
-      localStorage.setItem('reflets_guest_token', 'expired-token');
-
-      const sessionChain = createMockChain(null, new Error('Not found'));
-      mockFrom.mockReturnValue(sessionChain);
-
-      const result = await verifyGuestSession();
-
-      expect(result.valid).toBe(false);
-      expect(localStorage.getItem('reflets_guest_token')).toBeNull();
-    });
-
-    it('should handle errors gracefully', async () => {
-      localStorage.setItem('reflets_guest_token', 'guest-token');
-
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
+    it('clears legacy and cached guest storage when session is invalid', async () => {
+      localStorage.setItem('reflets_guest_token', 'legacy-token');
+      localStorage.setItem('reflets_guest_session', JSON.stringify({ client_id: 'cached' }));
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ valid: false }),
+      }));
 
       const result = await verifyGuestSession();
 
       expect(result.valid).toBe(false);
-    });
-  });
-
-  // ==========================================
-  // refreshClientToken Tests
-  // ==========================================
-  describe('refreshClientToken', () => {
-    const mockSession = {
-      id: 'session-id',
-      user_id: 'user-id-123',
-      user_type: 'client',
-      refresh_token: 'refresh-token',
-      refresh_expires_at: new Date(Date.now() + 86400000 * 30).toISOString(),
-    };
-
-    it('should refresh token successfully', async () => {
-      const sessionChain = createMockChain(mockSession);
-      const updateChain = {
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }),
-      };
-
-      mockFrom.mockImplementation(() => {
-        return { ...sessionChain, ...updateChain };
-      });
-
-      const result = await refreshClientToken('refresh-token');
-
-      expect(result.success).toBe(true);
-      expect(result.token).toBeDefined();
-    });
-
-    it('should fail with invalid refresh token', async () => {
-      const sessionChain = createMockChain(null, new Error('Not found'));
-      mockFrom.mockReturnValue(sessionChain);
-
-      const result = await refreshClientToken('invalid-refresh-token');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid refresh token');
-    });
-
-    it('should handle errors gracefully', async () => {
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
-
-      const result = await refreshClientToken('refresh-token');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('An unexpected error occurred');
-    });
-  });
-
-  // ==========================================
-  // clientLogout Tests
-  // ==========================================
-  describe('clientLogout', () => {
-    it('should clear session and storage', async () => {
-      localStorage.setItem('reflets_client_token', 'test-token');
-      localStorage.setItem('reflets_client_session', JSON.stringify({ id: '123' }));
-
-      const updateChain = {
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }),
-      };
-      mockFrom.mockReturnValue(updateChain);
-
-      await clientLogout();
-
-      expect(localStorage.getItem('reflets_client_token')).toBeNull();
-      expect(localStorage.getItem('reflets_client_session')).toBeNull();
-    });
-
-    it('should handle logout when no token exists', async () => {
-      await clientLogout();
-
-      expect(localStorage.getItem('reflets_client_token')).toBeNull();
-    });
-
-    it('should handle errors gracefully', async () => {
-      localStorage.setItem('reflets_client_token', 'test-token');
-
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
-
-      await expect(clientLogout()).resolves.not.toThrow();
-    });
-  });
-
-  // ==========================================
-  // guestLogout Tests
-  // ==========================================
-  describe('guestLogout', () => {
-    it('should clear session and storage', async () => {
-      localStorage.setItem('reflets_guest_token', 'guest-token');
-      localStorage.setItem('reflets_guest_session', JSON.stringify({ id: '123' }));
-
-      const deleteChain = {
-        delete: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }),
-      };
-      mockFrom.mockReturnValue(deleteChain);
-
-      await guestLogout();
-
       expect(localStorage.getItem('reflets_guest_token')).toBeNull();
       expect(localStorage.getItem('reflets_guest_session')).toBeNull();
     });
+  });
 
-    it('should handle logout when no token exists', async () => {
+  describe('refreshClientToken', () => {
+    it('returns the migration error message', async () => {
+      const result = await refreshClientToken('refresh-token');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Refresh token flow has been replaced by HttpOnly session cookies.');
+    });
+  });
+
+  describe('clientLogout', () => {
+    it('clears cached state and calls the cookie session revoke endpoint', async () => {
+      localStorage.setItem('reflets_client_token', 'legacy-token');
+      localStorage.setItem('reflets_client_session', JSON.stringify({ client_id: '123' }));
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+
+      await clientLogout();
+
+      expect(fetch).toHaveBeenCalledWith('/api/auth/client-session', { method: 'DELETE' });
+      expect(mockAuth.signOut).toHaveBeenCalledTimes(1);
+      expect(localStorage.getItem('reflets_client_token')).toBeNull();
+      expect(localStorage.getItem('reflets_client_session')).toBeNull();
+    });
+  });
+
+  describe('guestLogout', () => {
+    it('clears cached state and calls the guest session revoke endpoint', async () => {
+      localStorage.setItem('reflets_guest_token', 'legacy-token');
+      localStorage.setItem('reflets_guest_session', JSON.stringify({ client_id: '123' }));
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+
       await guestLogout();
 
+      expect(fetch).toHaveBeenCalledWith('/api/auth/guest-session', { method: 'DELETE' });
       expect(localStorage.getItem('reflets_guest_token')).toBeNull();
-    });
-
-    it('should handle errors gracefully', async () => {
-      localStorage.setItem('reflets_guest_token', 'guest-token');
-
-      mockFrom.mockImplementation(() => {
-        throw new Error('Network error');
-      });
-
-      await expect(guestLogout()).resolves.not.toThrow();
+      expect(localStorage.getItem('reflets_guest_session')).toBeNull();
     });
   });
 
-  // ==========================================
-  // getCurrentSessionType Tests
-  // ==========================================
   describe('getCurrentSessionType', () => {
-    it('should return "client" when client token exists', () => {
-      localStorage.setItem('reflets_client_token', 'client-token');
+    it('returns client when a client session is cached', () => {
+      localStorage.setItem('reflets_client_session', JSON.stringify({ client_id: 'client-id' }));
 
-      const result = getCurrentSessionType();
-
-      expect(result).toBe('client');
+      expect(getCurrentSessionType()).toBe('client');
     });
 
-    it('should return "guest" when only guest token exists', () => {
-      localStorage.setItem('reflets_guest_token', 'guest-token');
+    it('returns guest when only a guest session is cached', () => {
+      localStorage.setItem('reflets_guest_session', JSON.stringify({ client_id: 'guest-id' }));
 
-      const result = getCurrentSessionType();
-
-      expect(result).toBe('guest');
+      expect(getCurrentSessionType()).toBe('guest');
     });
 
-    it('should return null when no tokens exist', () => {
-      const result = getCurrentSessionType();
+    it('prioritizes client sessions over guest sessions', () => {
+      localStorage.setItem('reflets_client_session', JSON.stringify({ client_id: 'client-id' }));
+      localStorage.setItem('reflets_guest_session', JSON.stringify({ client_id: 'guest-id' }));
 
-      expect(result).toBeNull();
-    });
-
-    it('should prioritize client over guest', () => {
-      localStorage.setItem('reflets_client_token', 'client-token');
-      localStorage.setItem('reflets_guest_token', 'guest-token');
-
-      const result = getCurrentSessionType();
-
-      expect(result).toBe('client');
+      expect(getCurrentSessionType()).toBe('client');
     });
   });
 
-  // ==========================================
-  // getCurrentSession Tests
-  // ==========================================
   describe('getCurrentSession', () => {
-    it('should return client session when available', () => {
+    it('returns the cached client session', () => {
       const clientSession = {
         client_id: 'user-id',
         wedding_name: 'Test Wedding',
@@ -746,50 +477,19 @@ describe('Client Auth Module', () => {
       };
       localStorage.setItem('reflets_client_session', JSON.stringify(clientSession));
 
-      const result = getCurrentSession();
-
-      expect(result).toEqual(clientSession);
+      expect(getCurrentSession()).toEqual(clientSession);
     });
 
-    it('should return guest session when no client session', () => {
+    it('falls back to the cached guest session', () => {
       const guestSession = {
-        client_id: 'user-id',
+        client_id: 'wedding-id',
         wedding_slug: 'marie-thomas',
         access_type: 'guest',
         guest_name: 'John',
       };
       localStorage.setItem('reflets_guest_session', JSON.stringify(guestSession));
 
-      const result = getCurrentSession();
-
-      expect(result).toEqual(guestSession);
-    });
-
-    it('should return null when no sessions exist', () => {
-      const result = getCurrentSession();
-
-      expect(result).toBeNull();
-    });
-
-    it('should prioritize client over guest session', () => {
-      const clientSession = {
-        client_id: 'user-id',
-        wedding_name: 'Test Wedding',
-        couple_names: 'Marie & Thomas',
-        wedding_slug: 'marie-thomas',
-        is_admin: true,
-      };
-      const guestSession = {
-        client_id: 'user-id',
-        wedding_slug: 'marie-thomas',
-        access_type: 'guest',
-      };
-      localStorage.setItem('reflets_client_session', JSON.stringify(clientSession));
-      localStorage.setItem('reflets_guest_session', JSON.stringify(guestSession));
-
-      const result = getCurrentSession();
-
-      expect(result).toEqual(clientSession);
+      expect(getCurrentSession()).toEqual(guestSession);
     });
   });
 });

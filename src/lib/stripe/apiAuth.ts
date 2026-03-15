@@ -5,6 +5,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../supabase/types';
+import { AUTH_SESSION_COOKIE, getCookieValueFromRequest } from '../supabase/server';
 
 // Storage key constants (must match clientAuth.ts)
 const CLIENT_TOKEN_HEADER = 'x-client-token';
@@ -25,7 +26,8 @@ export async function verifyProfileOwnership(
   adminClient: SupabaseClient<Database>
 ): Promise<AuthResult> {
   // Get token from header
-  const token = request.headers.get(CLIENT_TOKEN_HEADER);
+  const token = request.headers.get(CLIENT_TOKEN_HEADER) ||
+    getCookieValueFromRequest(request, AUTH_SESSION_COOKIE);
 
   if (!token) {
     return { authorized: false, error: 'Missing authentication token' };

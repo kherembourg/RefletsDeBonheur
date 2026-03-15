@@ -23,7 +23,12 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { generatePresignedUploadUrl } from '../../../lib/r2';
-import { getSupabaseAdminClient, isSupabaseServiceRoleConfigured } from '../../../lib/supabase/server';
+import {
+  GUEST_SESSION_COOKIE,
+  getCookieValueFromRequest,
+  getSupabaseAdminClient,
+  isSupabaseServiceRoleConfigured,
+} from '../../../lib/supabase/server';
 import { isSupabaseConfigured, supabase } from '../../../lib/supabase/client';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
@@ -67,11 +72,13 @@ async function validateUploadAuthorization(
   }
 
   // Method 2: Check guest session token
-  if (guestIdentifier) {
+  const guestToken = guestIdentifier || getCookieValueFromRequest(request, GUEST_SESSION_COOKIE) || undefined;
+
+  if (guestToken) {
     const { data: guestSession, error } = await adminClient
       .from('guest_sessions')
       .select('id, wedding_id')
-      .eq('session_token', guestIdentifier)
+      .eq('session_token', guestToken)
       .eq('wedding_id', weddingId)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();

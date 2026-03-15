@@ -19,7 +19,9 @@ vi.mock('../../../lib/supabase/client', () => ({
 }));
 
 vi.mock('../../../lib/supabase/server', () => ({
+  GUEST_SESSION_COOKIE: 'reflets_guest_session_token',
   getSupabaseAdminClient: vi.fn(),
+  getCookieValueFromRequest: vi.fn().mockReturnValue(undefined),
   isSupabaseServiceRoleConfigured: vi.fn().mockReturnValue(true),
 }));
 

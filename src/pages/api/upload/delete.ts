@@ -22,7 +22,11 @@
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import {
+  GUEST_SESSION_COOKIE,
+  getCookieValueFromRequest,
+  getSupabaseAdminClient,
+} from '../../../lib/supabase/server';
 import { checkRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { validateBody } from '../../../lib/api/validation';
@@ -63,7 +67,10 @@ async function validateDeleteAuthorization(
 
   // Method 2: Check guest session token from body
   // Guests can only delete their own uploads
-  const guestIdentifier = request.headers.get('X-Guest-Identifier');
+  const guestIdentifier =
+    request.headers.get('X-Guest-Identifier') ||
+    getCookieValueFromRequest(request, GUEST_SESSION_COOKIE);
+
   if (guestIdentifier && mediaGuestIdentifier) {
     const { data: guestSession } = await adminClient
       .from('guest_sessions')

@@ -3,7 +3,9 @@ import { verifyProfileOwnership, validateSameOrigin, errorResponse } from '../..
 
 // Mock the modules
 vi.mock('../../../lib/supabase/server', () => ({
+  AUTH_SESSION_COOKIE: 'reflets_auth_session_token',
   getSupabaseAdminClient: vi.fn(),
+  getCookieValueFromRequest: vi.fn().mockReturnValue(undefined),
   isSupabaseServiceRoleConfigured: vi.fn().mockReturnValue(true),
 }));
 

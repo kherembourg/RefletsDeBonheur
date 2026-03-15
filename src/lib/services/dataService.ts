@@ -222,11 +222,8 @@ export class DataService {
   private getOrCreateGuestIdentifier(): string {
     if (typeof window === 'undefined') return 'server';
 
-    // Prefer session_token from guest login (used by presign endpoint for auth)
-    const sessionToken = localStorage.getItem('reflets_guest_token');
-    if (sessionToken) return sessionToken;
-
-    // Fallback to browser UUID for demo mode / unauthenticated browsing
+    // Use a browser-local identifier for guestbook, reactions and favorites.
+    // Upload authorization now relies on an HttpOnly guest session cookie.
     const key = 'reflets_guest_id';
     let id = localStorage.getItem(key);
     if (!id) {
@@ -234,6 +231,11 @@ export class DataService {
       localStorage.setItem(key, id);
     }
     return id;
+  }
+
+  private hasAuthenticatedGuestSession(): boolean {
+    if (typeof window === 'undefined') return false;
+    return Boolean(localStorage.getItem('reflets_guest_session'));
   }
 
   // ============================================
@@ -317,7 +319,7 @@ export class DataService {
     };
 
     // Pass guest identifier for authorization
-    if (this.guestIdentifier && this.guestIdentifier !== 'server') {
+    if (!this.hasAuthenticatedGuestSession() && this.guestIdentifier && this.guestIdentifier !== 'server') {
       headers['X-Guest-Identifier'] = this.guestIdentifier;
     }
 
@@ -373,7 +375,7 @@ export class DataService {
         file,
         caption: options.caption,
         guestName: options.author,
-        guestIdentifier: this.guestIdentifier,
+        guestIdentifier: this.hasAuthenticatedGuestSession() ? undefined : this.guestIdentifier,
         onProgress: options.onProgress,
       });
     } catch (error) {
@@ -431,7 +433,7 @@ export class DataService {
         weddingId: this.weddingId,
         files,
         guestName: options.author,
-        guestIdentifier: this.guestIdentifier,
+        guestIdentifier: this.hasAuthenticatedGuestSession() ? undefined : this.guestIdentifier,
         onFileProgress: options.onFileProgress,
         onOverallProgress: options.onOverallProgress,
         abortSignal: options.abortSignal,

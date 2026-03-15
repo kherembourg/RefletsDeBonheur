@@ -13,46 +13,6 @@ const CLIENT_SESSION_KEY = 'reflets_client_session';
 const GUEST_TOKEN_KEY = 'reflets_guest_token';
 const GUEST_SESSION_KEY = 'reflets_guest_session';
 
-// Token expiration times
-const CLIENT_SESSION_HOURS = 24 * 7; // 7 days
-const GUEST_SESSION_HOURS = 24; // 1 day
-const REFRESH_TOKEN_DAYS = 30;
-
-// Cookie name for server-side auth verification.
-// Must match AUTH_SESSION_COOKIE in src/lib/supabase/server.ts.
-const SESSION_COOKIE_NAME = 'reflets_session_token';
-
-/**
- * Set the session token as an HTTP cookie for server-side verification.
- * Uses SameSite=Lax for CSRF protection.
- *
- * NOTE: This cookie is NOT HttpOnly because it's set from client-side JS.
- * The token is already in localStorage (same XSS exposure). Moving to
- * HttpOnly would require server-set Set-Cookie headers from login endpoints.
- */
-function setSessionCookie(token: string, maxAgeHours: number): void {
-  if (typeof document === 'undefined') return;
-  const maxAge = maxAgeHours * 60 * 60;
-  document.cookie = `${SESSION_COOKIE_NAME}=${token}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
-}
-
-/**
- * Clear the session cookie.
- */
-function clearSessionCookie(): void {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${SESSION_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
-}
-
-/**
- * Generate a secure random token
- */
-function generateToken(length: number = 64): string {
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
 export interface ClientSession {
   client_id: string;
   wedding_name: string;
@@ -99,6 +59,12 @@ export interface GuestSession {
   guest_name?: string;
 }
 
+function clearLegacyTokenStorage(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(CLIENT_TOKEN_KEY);
+  localStorage.removeItem(GUEST_TOKEN_KEY);
+}
+
 /**
  * Client Login (username/password)
  */
@@ -106,8 +72,6 @@ export async function clientLogin(username: string, password: string): Promise<{
   success: boolean;
   error?: string;
   client?: Client;
-  token?: string;
-  refreshToken?: string;
 }> {
   try {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -156,53 +120,35 @@ export async function clientLogin(username: string, password: string): Promise<{
 
     const client = profileToClient(profile, wedding);
 
-    // Generate tokens
-    const token = generateToken();
-    const refreshToken = generateToken();
-
-    const tokenExpiresAt = new Date();
-    tokenExpiresAt.setHours(tokenExpiresAt.getHours() + CLIENT_SESSION_HOURS);
-
-    const refreshExpiresAt = new Date();
-    refreshExpiresAt.setDate(refreshExpiresAt.getDate() + REFRESH_TOKEN_DAYS);
-
-    // Create session
-    const { error: sessionError } = await supabase
-      .from('auth_sessions')
-      .insert({
-        user_id: userId,
-        user_type: 'client',
-        token,
-        refresh_token: refreshToken,
-        expires_at: tokenExpiresAt.toISOString(),
-        refresh_expires_at: refreshExpiresAt.toISOString(),
-      });
-
-    if (sessionError) {
-      console.error('Failed to create session:', sessionError);
+    const accessToken = authData.session?.access_token;
+    if (!accessToken) {
       return { success: false, error: 'Failed to create session' };
     }
 
-    await logAuditEvent('client_login_success', 'client', userId, { username });
+    const sessionResponse = await fetch('/api/auth/client-session', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username }),
+    });
+
+    const sessionData = await sessionResponse.json();
+    if (!sessionResponse.ok || !sessionData.session) {
+      console.error('Failed to create session:', sessionData);
+      await supabase.auth.signOut().catch(() => undefined);
+      return { success: false, error: sessionData.message || sessionData.error || 'Failed to create session' };
+    }
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(CLIENT_TOKEN_KEY, token);
-      localStorage.setItem(CLIENT_SESSION_KEY, JSON.stringify({
-        client_id: userId,
-        wedding_name: client.wedding_name,
-        couple_names: client.couple_names,
-        wedding_slug: client.wedding_slug,
-        is_admin: true,
-      } as ClientSession));
-      // Also set cookie for server-side auth verification
-      setSessionCookie(token, CLIENT_SESSION_HOURS);
+      clearLegacyTokenStorage();
+      localStorage.setItem(CLIENT_SESSION_KEY, JSON.stringify(sessionData.session as ClientSession));
     }
 
     return {
       success: true,
       client,
-      token,
-      refreshToken,
     };
   } catch (error) {
     console.error('Client login error:', error);
@@ -216,9 +162,8 @@ export async function clientLogin(username: string, password: string): Promise<{
 export async function guestLogin(code: string, guestName?: string): Promise<{
   success: boolean;
   error?: string;
-  client?: Client;
   accessType?: 'guest' | 'admin';
-  token?: string;
+  weddingSlug?: string;
 }> {
   try {
     const response = await fetch('/api/auth/guest-login', {
@@ -233,10 +178,10 @@ export async function guestLogin(code: string, guestName?: string): Promise<{
       return { success: false, error: data.message || 'Invalid access code' };
     }
 
-    const { session_token, wedding_id, wedding_slug, access_type, guest_name } = data;
+    const { wedding_id, wedding_slug, access_type, guest_name } = data;
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(GUEST_TOKEN_KEY, session_token);
+      clearLegacyTokenStorage();
       localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify({
         client_id: wedding_id,
         wedding_slug,
@@ -248,7 +193,7 @@ export async function guestLogin(code: string, guestName?: string): Promise<{
     return {
       success: true,
       accessType: access_type,
-      token: session_token,
+      weddingSlug: wedding_slug,
     };
   } catch (error) {
     console.error('Guest login error:', error);
@@ -269,67 +214,21 @@ export async function verifyClientSession(): Promise<{
       return { valid: false };
     }
 
-    const token = localStorage.getItem(CLIENT_TOKEN_KEY);
-    if (!token) {
-      return { valid: false };
-    }
+    const response = await fetch('/api/auth/client-session');
+    const data = await response.json().catch(() => null);
 
-    // Verify token
-    const { data: session, error } = await supabase
-      .from('auth_sessions')
-      .select('*')
-      .eq('token', token)
-      .eq('user_type', 'client')
-      .is('revoked_at', null)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (error || !session) {
-      localStorage.removeItem(CLIENT_TOKEN_KEY);
+    if (!response.ok || !data?.session) {
+      clearLegacyTokenStorage();
       localStorage.removeItem(CLIENT_SESSION_KEY);
       return { valid: false };
     }
 
-    // Fetch the client separately
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user_id)
-      .single();
-
-    if (profileError || !profile) {
-      localStorage.removeItem(CLIENT_TOKEN_KEY);
-      localStorage.removeItem(CLIENT_SESSION_KEY);
-      return { valid: false };
-    }
-
-    const { data: wedding, error: weddingError } = await supabase
-      .from('weddings')
-      .select('*')
-      .eq('owner_id', session.user_id)
-      .single();
-
-    if (weddingError || !wedding) {
-      localStorage.removeItem(CLIENT_TOKEN_KEY);
-      localStorage.removeItem(CLIENT_SESSION_KEY);
-      return { valid: false };
-    }
-
-    const client = profileToClient(profile, wedding);
-
-    // Update last used
-    await supabase
-      .from('auth_sessions')
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('id', session.id);
-
-    const storedSession = localStorage.getItem(CLIENT_SESSION_KEY);
-    const clientSession = storedSession ? JSON.parse(storedSession) as ClientSession : null;
+    const clientSession = data.session as ClientSession;
+    localStorage.setItem(CLIENT_SESSION_KEY, JSON.stringify(clientSession));
 
     return {
       valid: true,
-      session: clientSession || undefined,
-      client,
+      session: clientSession,
     };
   } catch (error) {
     console.error('Client session verification error:', error);
@@ -350,62 +249,21 @@ export async function verifyGuestSession(): Promise<{
       return { valid: false };
     }
 
-    const token = localStorage.getItem(GUEST_TOKEN_KEY);
-    if (!token) {
-      return { valid: false };
-    }
+    const response = await fetch('/api/auth/guest-session');
+    const data = await response.json().catch(() => null);
 
-    const { data: session, error } = await supabase
-      .from('guest_sessions')
-      .select('*')
-      .eq('session_token', token)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (error || !session) {
-      localStorage.removeItem(GUEST_TOKEN_KEY);
+    if (!response.ok || !data?.session) {
+      clearLegacyTokenStorage();
       localStorage.removeItem(GUEST_SESSION_KEY);
       return { valid: false };
     }
 
-    const { data: wedding, error: weddingError } = await supabase
-      .from('weddings')
-      .select('*')
-      .eq('id', session.wedding_id)
-      .single();
-
-    if (weddingError || !wedding) {
-      localStorage.removeItem(GUEST_TOKEN_KEY);
-      localStorage.removeItem(GUEST_SESSION_KEY);
-      return { valid: false };
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', wedding.owner_id)
-      .single();
-
-    if (profileError || !profile) {
-      localStorage.removeItem(GUEST_TOKEN_KEY);
-      localStorage.removeItem(GUEST_SESSION_KEY);
-      return { valid: false };
-    }
-
-    const client = profileToClient(profile, wedding);
-
-    await supabase
-      .from('guest_sessions')
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('id', session.id);
-
-    const storedSession = localStorage.getItem(GUEST_SESSION_KEY);
-    const guestSession = storedSession ? JSON.parse(storedSession) as GuestSession : null;
+    const guestSession = data.session as GuestSession;
+    localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(guestSession));
 
     return {
       valid: true,
-      session: guestSession || undefined,
-      client,
+      session: guestSession,
     };
   } catch (error) {
     console.error('Guest session verification error:', error);
@@ -421,51 +279,11 @@ export async function refreshClientToken(refreshToken: string): Promise<{
   token?: string;
   error?: string;
 }> {
-  try {
-    // Find session by refresh token
-    const { data: session, error: fetchError } = await supabase
-      .from('auth_sessions')
-      .select('*')
-      .eq('refresh_token', refreshToken)
-      .eq('user_type', 'client')
-      .is('revoked_at', null)
-      .gt('refresh_expires_at', new Date().toISOString())
-      .single();
-
-    if (fetchError || !session) {
-      return { success: false, error: 'Invalid refresh token' };
-    }
-
-    // Generate new token
-    const newToken = generateToken();
-    const newExpiresAt = new Date();
-    newExpiresAt.setHours(newExpiresAt.getHours() + CLIENT_SESSION_HOURS);
-
-    // Update session
-    const { error: updateError } = await supabase
-      .from('auth_sessions')
-      .update({
-        token: newToken,
-        expires_at: newExpiresAt.toISOString(),
-        last_used_at: new Date().toISOString(),
-      })
-      .eq('id', session.id);
-
-    if (updateError) {
-      return { success: false, error: 'Failed to refresh token' };
-    }
-
-    // Update localStorage and cookie
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(CLIENT_TOKEN_KEY, newToken);
-      setSessionCookie(newToken, CLIENT_SESSION_HOURS);
-    }
-
-    return { success: true, token: newToken };
-  } catch (error) {
-    console.error('Token refresh error:', error);
-    return { success: false, error: 'An unexpected error occurred' };
-  }
+  void refreshToken;
+  return {
+    success: false,
+    error: 'Refresh token flow has been replaced by HttpOnly session cookies.',
+  };
 }
 
 /**
@@ -475,20 +293,10 @@ export async function clientLogout(): Promise<void> {
   try {
     if (typeof window === 'undefined') return;
 
-    const token = localStorage.getItem(CLIENT_TOKEN_KEY);
-    if (token) {
-      await supabase
-        .from('auth_sessions')
-        .update({
-          revoked_at: new Date().toISOString(),
-          revoked_reason: 'logout',
-        })
-        .eq('token', token);
-    }
-
-    localStorage.removeItem(CLIENT_TOKEN_KEY);
+    await fetch('/api/auth/client-session', { method: 'DELETE' }).catch(() => undefined);
+    await supabase.auth.signOut().catch(() => undefined);
+    clearLegacyTokenStorage();
     localStorage.removeItem(CLIENT_SESSION_KEY);
-    clearSessionCookie();
   } catch (error) {
     console.error('Client logout error:', error);
   }
@@ -501,15 +309,8 @@ export async function guestLogout(): Promise<void> {
   try {
     if (typeof window === 'undefined') return;
 
-    const token = localStorage.getItem(GUEST_TOKEN_KEY);
-    if (token) {
-      await supabase
-        .from('guest_sessions')
-        .delete()
-        .eq('session_token', token);
-    }
-
-    localStorage.removeItem(GUEST_TOKEN_KEY);
+    await fetch('/api/auth/guest-session', { method: 'DELETE' }).catch(() => undefined);
+    clearLegacyTokenStorage();
     localStorage.removeItem(GUEST_SESSION_KEY);
   } catch (error) {
     console.error('Guest logout error:', error);
@@ -522,10 +323,10 @@ export async function guestLogout(): Promise<void> {
 export function getCurrentSessionType(): 'client' | 'guest' | null {
   if (typeof window === 'undefined') return null;
 
-  if (localStorage.getItem(CLIENT_TOKEN_KEY)) {
+  if (localStorage.getItem(CLIENT_SESSION_KEY)) {
     return 'client';
   }
-  if (localStorage.getItem(GUEST_TOKEN_KEY)) {
+  if (localStorage.getItem(GUEST_SESSION_KEY)) {
     return 'guest';
   }
   return null;

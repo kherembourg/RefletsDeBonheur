@@ -26,7 +26,11 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { supabase } from '../../../lib/supabase/client';
-import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import {
+  GUEST_SESSION_COOKIE,
+  getCookieValueFromRequest,
+  getSupabaseAdminClient,
+} from '../../../lib/supabase/server';
 import { checkRateLimit, checkWeddingRateLimit, getClientIP, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rateLimit';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { validateBody } from '../../../lib/api/validation';
@@ -181,11 +185,13 @@ async function validateUploadAuthorization(
   }
 
   // Method 2: Check guest session token
-  if (guestIdentifier) {
+  const guestToken = guestIdentifier || getCookieValueFromRequest(request, GUEST_SESSION_COOKIE) || undefined;
+
+  if (guestToken) {
     const { data: guestSession, error } = await adminClient
       .from('guest_sessions')
       .select('id, wedding_id')
-      .eq('session_token', guestIdentifier)
+      .eq('session_token', guestToken)
       .eq('wedding_id', weddingId)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
@@ -223,6 +229,7 @@ export const POST: APIRoute = async ({ request }) => {
     const validation = validateBody(bodySchema, body);
     if ('error' in validation) return validation.error;
     const { weddingId, key, publicUrl, contentType, caption, guestName, guestIdentifier } = validation.data;
+    const guestToken = guestIdentifier || getCookieValueFromRequest(request, GUEST_SESSION_COOKIE) || undefined;
 
     // Per-wedding rate limit check - 50 uploads per wedding per minute
     // Protects against distributed abuse across multiple IPs
@@ -264,7 +271,7 @@ export const POST: APIRoute = async ({ request }) => {
     const authResult = await validateUploadAuthorization(
       request,
       weddingId,
-      guestIdentifier,
+      guestToken,
       adminClient
     );
 
@@ -360,7 +367,7 @@ export const POST: APIRoute = async ({ request }) => {
         thumbnail_url: null, // Initially null, updated by background process
         caption: caption || null,
         guest_name: guestName || null,
-        guest_identifier: guestIdentifier || null,
+        guest_identifier: guestToken || null,
         status: type === 'image' ? 'processing' : 'ready', // Images start as 'processing'
         moderation_status: 'approved', // Auto-approve for now
       })
