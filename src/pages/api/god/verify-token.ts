@@ -107,8 +107,9 @@ export const POST: APIRoute = async ({ request }) => {
       wedding_slug: wedding.slug,
       username: profile.email,
       email: profile.email,
-      guest_code: wedding.pin_code || '',
-      admin_code: wedding.magic_token,
+      // Do not expose reusable wedding access codes to the browser during impersonation.
+      guest_code: '',
+      admin_code: '',
       allow_uploads: wedding.config?.features?.gallery ?? true,
       allow_guestbook: wedding.config?.features?.guestbook ?? true,
       theme: wedding.config?.theme?.name ?? 'classic',

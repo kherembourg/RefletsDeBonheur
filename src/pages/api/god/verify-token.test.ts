@@ -149,6 +149,8 @@ describe('God Mode Verify Token Endpoint', () => {
       expect(data.client.id).toBe('user-123');
       expect(data.client.email).toBe('test@example.com');
       expect(data.client.wedding_slug).toBe('alice-bob');
+      expect(data.client.guest_code).toBe('');
+      expect(data.client.admin_code).toBe('');
     });
 
     it('should increment token usage counter', async () => {
