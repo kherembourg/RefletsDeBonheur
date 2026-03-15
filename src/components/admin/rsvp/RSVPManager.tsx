@@ -20,6 +20,7 @@ import {
   AdminBadge,
   cn,
 } from '../ui';
+import { useToast } from '../../ui/Toast';
 import { RSVPQuestionBuilder } from './RSVPQuestionBuilder';
 import { RSVPResponsesViewer } from './RSVPResponsesViewer';
 import type { RSVPConfig, RSVPStatistics, RSVPQuestion } from '../../../lib/rsvp/types';
@@ -54,6 +55,7 @@ export function RSVPManager({ weddingId, weddingSlug, demoMode = false }: RSVPMa
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const { showToast, ToastContainer } = useToast();
 
   const serviceRef = useRef<RSVPService | null>(null);
   if (!serviceRef.current) {
@@ -91,9 +93,10 @@ export function RSVPManager({ weddingId, weddingSlug, demoMode = false }: RSVPMa
     try {
       await rsvpService.saveConfig(config);
       setHasChanges(false);
+      showToast('success', 'Configuration RSVP enregistrée.');
     } catch (error) {
       console.error('Failed to save config:', error);
-      alert('Erreur lors de la sauvegarde');
+      showToast('error', 'Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -129,7 +132,9 @@ export function RSVPManager({ weddingId, weddingSlug, demoMode = false }: RSVPMa
   const previewUrl = weddingSlug ? `/${weddingSlug}/rsvp` : '/rsvp';
 
   return (
-    <div className="space-y-8">
+    <>
+      <ToastContainer />
+      <div className="space-y-8">
       {/* Desktop layout */}
       <div className="hidden md:block space-y-6">
         <div className="flex items-start justify-between gap-6">
@@ -437,6 +442,7 @@ export function RSVPManager({ weddingId, weddingSlug, demoMode = false }: RSVPMa
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

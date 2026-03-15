@@ -169,9 +169,10 @@ export function AdminPanel({
       await dataService.updateSettings({ allowUploads: enabled });
       // Update local settings state
       setSettingsState(prev => ({ ...prev, allowUploads: enabled }));
+      showToast('success', enabled ? t(lang, 'admin.uploadsEnabled') : t(lang, 'admin.uploadsDisabled'));
     } catch (error) {
       console.error('Settings update failed:', error);
-      alert(t(lang, 'admin.settingsUpdateError'));
+      showToast('error', t(lang, 'admin.settingsUpdateError'));
     } finally {
       setSettingsLoading(false);
     }

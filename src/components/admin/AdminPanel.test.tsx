@@ -368,9 +368,7 @@ describe('AdminPanel Component', () => {
       fireEvent.click(screen.getByTestId('settings-toggle'));
 
       await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith(
-          'Erreur lors de la mise à jour des paramètres.'
-        );
+        expect(screen.getByRole('alert')).toHaveTextContent('Erreur lors de la mise à jour des paramètres.');
       });
     });
   });

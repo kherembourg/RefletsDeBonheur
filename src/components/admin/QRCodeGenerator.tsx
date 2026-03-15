@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { QrCode, Download, Printer, Share2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useToast } from '../ui/Toast';
 
 interface QRCodeGeneratorProps {
   weddingSlug?: string;
@@ -20,6 +21,7 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
   const [size, setSize] = useState(300);
   const [includeCode, setIncludeCode] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { showToast, ToastContainer } = useToast();
 
   const galleryUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/${weddingSlug ? `${weddingSlug}/photos?pin=${accessCode}` : 'demo_gallery'}`
@@ -58,9 +60,9 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
       img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
     } catch (error) {
       console.error('Download failed:', error);
-      alert('Erreur lors du téléchargement.');
+      showToast('error', 'Erreur lors du téléchargement.');
     }
-  }, [size, getSvgElement]);
+  }, [size, getSvgElement, showToast]);
 
   const handlePrint = useCallback(() => {
     const svg = getSvgElement();
@@ -166,12 +168,14 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
 
   const handleCopyUrl = useCallback(() => {
     navigator.clipboard.writeText(galleryUrl);
-    alert('URL copiée dans le presse-papiers !');
-  }, [galleryUrl]);
+    showToast('success', 'URL copiée dans le presse-papiers.');
+  }, [galleryUrl, showToast]);
 
   return (
-    <div className="bg-ivory rounded-xl border border-silver-mist p-6 shadow-xs">
-      <div className="flex items-center gap-3 mb-6">
+    <>
+      <ToastContainer />
+      <div className="bg-ivory rounded-xl border border-silver-mist p-6 shadow-xs">
+        <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-burgundy-old/20 rounded-lg">
           <QrCode className="text-burgundy-old" size={24} />
         </div>
@@ -183,11 +187,11 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
             Facilitez l'accès à vos invités
           </p>
         </div>
-      </div>
+        </div>
 
       {/* QR Code Preview */}
-      <div className="bg-white rounded-xl p-6 mb-6 border-2 border-burgundy-old/30 text-center">
-        <div ref={containerRef} className="mx-auto rounded-lg shadow-md inline-block" style={{ width: size, height: size }}>
+        <div className="bg-white rounded-xl p-6 mb-6 border-2 border-burgundy-old/30 text-center">
+          <div ref={containerRef} className="mx-auto rounded-lg shadow-md inline-block" style={{ width: size, height: size }}>
           <QRCodeSVG
             value={galleryUrl}
             size={size}
@@ -195,17 +199,17 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
             fgColor="#2D2D2D"
             level="M"
           />
+          </div>
+          <p className="text-warm-taupe text-sm mt-4">
+            Scannez pour accéder à la galerie
+          </p>
+          <p className="text-silver-mist text-xs mt-1">
+            {galleryUrl}
+          </p>
         </div>
-        <p className="text-warm-taupe text-sm mt-4">
-          Scannez pour accéder à la galerie
-        </p>
-        <p className="text-silver-mist text-xs mt-1">
-          {galleryUrl}
-        </p>
-      </div>
 
       {/* Settings */}
-      <div className="space-y-4 mb-6">
+        <div className="space-y-4 mb-6">
         {/* Size Selector */}
         <div>
           <label className="block text-sm font-medium text-deep-charcoal mb-2">
@@ -256,10 +260,10 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
             />
           </div>
         )}
-      </div>
+        </div>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button
           onClick={handleDownload}
           className="flex items-center justify-center gap-2 bg-burgundy-old hover:bg-[#c92a38] text-white px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
@@ -296,7 +300,8 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
           <li>Incluez-le dans le programme de la cérémonie</li>
           <li>Partagez-le sur les réseaux sociaux avant l'événement</li>
         </ul>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

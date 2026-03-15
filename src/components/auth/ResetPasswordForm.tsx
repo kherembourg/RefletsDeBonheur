@@ -23,7 +23,7 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
     let mounted = true;
 
     if (!isSupabaseConfigured()) {
-      setError('La réinitialisation de mot de passe n’est pas disponible en mode démo.');
+      setError(t(lang, 'resetPassword.unavailable'));
       return;
     }
 
@@ -68,7 +68,7 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
 
     try {
       if (!isSupabaseConfigured()) {
-        setError('La réinitialisation de mot de passe n’est pas disponible en mode démo.');
+        setError(t(lang, 'resetPassword.unavailable'));
         setLoading(false);
         return;
       }
@@ -96,15 +96,15 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
           <CheckCircle2 className="h-7 w-7" />
         </div>
-        <h1 className="font-serif text-3xl text-charcoal">Mot de passe mis à jour</h1>
+        <h1 className="font-serif text-3xl text-charcoal">{t(lang, 'resetPassword.successTitle')}</h1>
         <p className="mt-3 text-sm leading-relaxed text-charcoal/65">
-          Votre mot de passe a bien été défini. Vous pouvez maintenant vous connecter à votre espace client.
+          {t(lang, 'resetPassword.successMessage')}
         </p>
         <a
           href="/connexion?mode=client"
           className="mt-6 inline-flex items-center justify-center rounded-lg bg-burgundy-old px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-burgundy-dark"
         >
-          Aller à la connexion
+          {t(lang, 'resetPassword.loginCta')}
         </a>
       </div>
     );
@@ -113,15 +113,15 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
   return (
     <div className="rounded-3xl border border-charcoal/5 bg-white p-8 shadow-sm">
       <div className="text-center">
-        <h1 className="font-serif text-3xl text-charcoal">Définissez votre nouveau mot de passe</h1>
+        <h1 className="font-serif text-3xl text-charcoal">{t(lang, 'resetPassword.title')}</h1>
         <p className="mt-3 text-sm leading-relaxed text-charcoal/65">
-          Choisissez un mot de passe solide pour sécuriser l’accès à votre espace mariage.
+          {t(lang, 'resetPassword.subtitle')}
         </p>
       </div>
 
       {!ready && (
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Ouvrez cette page depuis le lien reçu par email pour finaliser votre mot de passe.
+          {t(lang, 'resetPassword.openFromEmail')}
         </div>
       )}
 
@@ -135,7 +135,7 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
       <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-charcoal/70" htmlFor="new-password">
-            Nouveau mot de passe
+            {t(lang, 'resetPassword.newPassword')}
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/35" />
@@ -145,7 +145,7 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-charcoal/10 px-10 py-3 pr-12 text-sm text-charcoal outline-hidden transition-colors focus:border-burgundy-old"
-              placeholder="Au moins 8 caractères"
+              placeholder={t(lang, 'resetPassword.passwordPlaceholder')}
               autoComplete="new-password"
             />
             <button
@@ -160,7 +160,7 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
 
         <div>
           <label className="mb-1.5 block text-sm font-medium text-charcoal/70" htmlFor="confirm-password">
-            Confirmer le mot de passe
+            {t(lang, 'resetPassword.confirmPassword')}
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/35" />
@@ -170,7 +170,7 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full rounded-lg border border-charcoal/10 px-10 py-3 pr-12 text-sm text-charcoal outline-hidden transition-colors focus:border-burgundy-old"
-              placeholder="Retapez votre mot de passe"
+              placeholder={t(lang, 'resetPassword.confirmPlaceholder')}
               autoComplete="new-password"
             />
             <button
@@ -188,7 +188,7 @@ export function ResetPasswordForm({ lang = 'fr' }: ResetPasswordFormProps) {
           disabled={!ready || loading}
           className="inline-flex w-full items-center justify-center rounded-lg bg-burgundy-old px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-burgundy-dark disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? 'Mise à jour…' : 'Mettre à jour mon mot de passe'}
+          {loading ? t(lang, 'resetPassword.updating') : t(lang, 'resetPassword.submit')}
         </button>
       </form>
     </div>

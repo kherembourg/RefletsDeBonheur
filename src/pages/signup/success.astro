@@ -46,15 +46,15 @@ if (!sessionId) {
             </svg>
           </div>
 
-          <h1 class="font-serif text-2xl text-charcoal mb-2 text-center">Payment verification failed</h1>
+          <h1 class="font-serif text-2xl text-charcoal mb-2 text-center">{t(lang, 'signup.paymentStatus.verificationFailed')}</h1>
           <p id="error-message" class="text-charcoal/60 text-sm text-center mb-6"></p>
 
           <div class="flex gap-4">
             <a
-                href="/pricing"
+              href="/pricing"
               class="flex-1 px-6 py-3 bg-burgundy-old hover:bg-burgundy-dark text-white rounded-lg transition-colors text-center font-medium"
             >
-              Try Again
+              {t(lang, 'signup.paymentStatus.tryAgain')}
             </a>
           </div>
         </div>
@@ -82,7 +82,7 @@ if (!sessionId) {
           if (loadingState) loadingState.classList.add('hidden');
           if (errorState) errorState.classList.remove('hidden');
           if (errorMessage) {
-              errorMessage.textContent = result.message || 'An error occurred while confirming your payment. Please contact support if the problem continues.';
+            errorMessage.textContent = result.message || t(lang, 'signup.paymentStatus.genericError');
           }
           return;
         }
@@ -109,7 +109,7 @@ if (!sessionId) {
         if (loadingState) loadingState.classList.add('hidden');
         if (errorState) errorState.classList.remove('hidden');
         if (errorMessage) {
-          errorMessage.textContent = 'Network error. Please check your connection and try again.';
+          errorMessage.textContent = t(lang, 'signup.paymentStatus.networkError');
         }
       }
     }

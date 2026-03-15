@@ -8,10 +8,12 @@ import { Camera, User, Lock, Eye, EyeOff, AlertCircle, Sparkles } from 'lucide-r
 import { authenticate } from '../../lib/auth';
 import { clientLogin, guestLogin } from '../../lib/auth/clientAuth';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase/client';
+import { t } from '../../i18n/utils';
 
 type LoginMode = 'code' | 'client';
 
 export function EnhancedLoginForm() {
+  const lang = 'fr';
   const [mode, setMode] = useState<LoginMode>('code');
 
   // Code login state
@@ -53,10 +55,10 @@ export function EnhancedLoginForm() {
 
     if (message === 'account_created') {
       setMode('client');
-      setInfoMessage('Votre compte est prêt. Connectez-vous pour accéder à votre espace mariage.');
+      setInfoMessage(t(lang, 'login.accountReady'));
     } else if (message === 'account_created_email_failed') {
       setMode('client');
-      setInfoMessage('Votre compte a bien été créé. Si vous n’avez pas reçu d’email, utilisez la récupération de mot de passe.');
+      setInfoMessage(t(lang, 'login.accountCreatedEmailFailed'));
     }
   }, []);
 
@@ -148,13 +150,13 @@ export function EnhancedLoginForm() {
     setError('');
 
     if (!username.trim()) {
-      setError('Entrez votre email pour recevoir un lien de réinitialisation.');
+      setError(t(lang, 'login.resetNeedEmail'));
       setMode('client');
       return;
     }
 
     if (!isSupabaseConfigured()) {
-      setInfoMessage('La réinitialisation de mot de passe est indisponible en mode démo.');
+      setInfoMessage(t(lang, 'login.resetUnavailable'));
       return;
     }
 
@@ -168,11 +170,11 @@ export function EnhancedLoginForm() {
       if (resetError) {
         setError(resetError.message);
       } else {
-        setInfoMessage('Un email de réinitialisation vient d’être envoyé.');
+        setInfoMessage(t(lang, 'login.resetSent'));
       }
     } catch (err) {
       console.error('Reset password error:', err);
-      setError('Impossible d’envoyer l’email de réinitialisation.');
+      setError(t(lang, 'login.resetSendFailed'));
     } finally {
       setLoading(false);
     }
@@ -452,8 +454,7 @@ export function EnhancedLoginForm() {
               <div className="flex items-start gap-2 text-xs text-warm-taupe">
                 <Sparkles className="shrink-0 mt-0.5" size={14} aria-hidden="true" />
                 <p>
-                  L'espace client est réservé aux mariés. Si vous êtes invité,
-                  utilisez le code d'accès fourni par les mariés.
+                  {t(lang, 'login.clientOnly')}
                 </p>
               </div>
             </div>

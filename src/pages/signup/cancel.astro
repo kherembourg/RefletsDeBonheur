@@ -10,7 +10,7 @@ const lang = (Astro.url.pathname.startsWith('/fr/') ? 'fr' :
               'en') as Language;
 ---
 
-<MainLayout title="Payment Cancelled" lang={lang}>
+<MainLayout title={t(lang, 'signup.paymentStatus.cancelledTitle')} lang={lang}>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-cream to-white p-4">
     <div class="w-full max-w-md">
       <div class="bg-white rounded-xl shadow-sm border border-charcoal/5 p-8">
@@ -23,35 +23,35 @@ const lang = (Astro.url.pathname.startsWith('/fr/') ? 'fr' :
 
         {/* Title */}
         <h1 class="font-serif text-2xl text-charcoal mb-2 text-center">
-          Payment Cancelled
+          {t(lang, 'signup.paymentStatus.cancelledTitle')}
         </h1>
 
         {/* Message */}
         <p class="text-charcoal/60 text-sm text-center mb-6">
-          Your payment was cancelled. Your wedding details are still reserved for a short time, so you can come back and finish checkout without starting over.
+          {t(lang, 'signup.paymentStatus.cancelledMessage')}
         </p>
 
         {/* What's saved */}
         <div class="bg-cream/50 rounded-lg p-4 mb-6">
-          <p class="text-xs text-charcoal/60 mb-2 font-medium">What stays ready for you:</p>
+          <p class="text-xs text-charcoal/60 mb-2 font-medium">{t(lang, 'signup.paymentStatus.savedTitle')}:</p>
           <ul class="space-y-1 text-sm text-charcoal/80">
             <li class="flex items-start gap-2">
               <svg class="w-4 h-4 text-sage flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
-              <span>Your account details</span>
+              <span>{t(lang, 'signup.paymentStatus.savedAccount')}</span>
             </li>
             <li class="flex items-start gap-2">
               <svg class="w-4 h-4 text-sage flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
-              <span>Your wedding information</span>
+              <span>{t(lang, 'signup.paymentStatus.savedWedding')}</span>
             </li>
             <li class="flex items-start gap-2">
               <svg class="w-4 h-4 text-sage flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
-              <span>Your chosen theme</span>
+              <span>{t(lang, 'signup.paymentStatus.savedTheme')}</span>
             </li>
           </ul>
         </div>
@@ -62,19 +62,19 @@ const lang = (Astro.url.pathname.startsWith('/fr/') ? 'fr' :
             href="/signup"
             class="block w-full px-6 py-3 bg-burgundy-old hover:bg-burgundy-dark text-white rounded-lg transition-colors text-center font-medium"
           >
-            Return to signup
+            {t(lang, 'signup.paymentStatus.returnToSignup')}
           </a>
           <a
             href="/"
             class="block w-full px-6 py-3 border border-charcoal/10 hover:border-charcoal/20 text-charcoal rounded-lg transition-colors text-center font-medium"
           >
-            Back to home
+            {t(lang, 'signup.paymentStatus.backHome')}
           </a>
         </div>
 
         {/* Help text */}
         <p class="text-xs text-charcoal/50 text-center mt-6">
-          Questions? Contact us at{' '}
+          {t(lang, 'signup.paymentStatus.supportLabel')}{' '}
           <a href="mailto:support@reflets-bonheur.fr" class="text-burgundy-old hover:underline">
             support@reflets-bonheur.fr
           </a>
