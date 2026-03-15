@@ -3,6 +3,7 @@
 export const prerender = false;
 
 import MainLayout from '../../layouts/MainLayout.astro';
+import AdminAccessGuard from '../../components/admin/AdminAccessGuard.astro';
 import { AdminPanel } from '../../components/admin/AdminPanel';
 import { getWeddingBySlugAsync, shouldUseDemoWeddingMode } from '../../lib/weddingData';
 import { isSupabaseServiceRoleConfigured, verifyServerSession, verifyWeddingOwnership } from '../../lib/supabase/server';
@@ -49,45 +50,5 @@ if (isSupabaseServiceRoleConfigured() && !demoMode) {
     profileId={wedding.ownerId}
     initialView="dashboard"
   />
+  <AdminAccessGuard clearStaleClientSession={true} />
 </MainLayout>
-
-<script>
-  // Check authentication on client side
-  if (typeof window !== 'undefined') {
-    const clientSession = localStorage.getItem('reflets_client_session');
-    const godImpersonation = localStorage.getItem('reflets_god_impersonation');
-    const guestSession = localStorage.getItem('reflets_guest_session');
-
-    // Allow access if:
-    // 1. Client is logged in
-    // 2. God admin is impersonating
-    // 3. Guest has admin code access
-    let hasAccess = false;
-
-    if (clientSession) {
-      hasAccess = true;
-    } else if (godImpersonation) {
-      hasAccess = true;
-    } else if (guestSession) {
-      try {
-        const session = JSON.parse(guestSession);
-        if (session.access_type === 'admin') {
-          hasAccess = true;
-        }
-      } catch (e) {}
-    }
-
-    // Also check old demo auth
-    const isAdmin = localStorage.getItem('reflets_is_admin');
-    if (isAdmin === 'true') {
-      hasAccess = true;
-    }
-
-    if (!hasAccess) {
-      // Clear stale tokens to prevent redirect loop, then redirect to login
-      localStorage.removeItem('reflets_client_token');
-      localStorage.removeItem('reflets_client_session');
-      window.location.href = '/connexion';
-    }
-  }
-</script>
