@@ -13,7 +13,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Add security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'SAMEORIGIN'); // Allow same-origin embedding (for website editor preview)
-  response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   // Content Security Policy - allow inline scripts/styles for Astro islands
@@ -22,11 +21,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
     [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'",
+      "script-src-attr 'none'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "style-src-attr 'unsafe-inline'",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.supabase.co https://images.unsplash.com",
       "media-src 'self' blob: https://*.r2.cloudflarestorage.com https://commondatastorage.googleapis.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com",
+      "object-src 'none'",
+      "frame-src 'self'",
+      "worker-src 'self' blob:",
       "frame-ancestors 'self'", // Allow same-origin embedding (for website editor preview)
       "form-action 'self'",
       "base-uri 'self'",
