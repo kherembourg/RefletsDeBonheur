@@ -212,6 +212,14 @@ export function getWeddingById(id: string): Wedding | undefined {
   return MOCK_WEDDINGS.find(w => w.id === id);
 }
 
+export function isMockWedding(wedding: Pick<Wedding, 'id'> | undefined | null): boolean {
+  return Boolean(wedding?.id?.startsWith('w-'));
+}
+
+export function shouldUseDemoWeddingMode(wedding: Pick<Wedding, 'id'> | undefined | null): boolean {
+  return !isSupabaseConfigured() || isMockWedding(wedding);
+}
+
 /**
  * Convert Supabase client record to Wedding format
  */

@@ -14,6 +14,8 @@ import {
   getWeddingBySlugAsync,
   getWeddingBySlug,
   getWeddingById,
+  isMockWedding,
+  shouldUseDemoWeddingMode,
   validatePinCode,
   validateMagicToken,
   getRSVPsByWeddingId,
@@ -52,6 +54,29 @@ describe('weddingData.ts', () => {
     it('returns undefined when id does not exist', () => {
       const wedding = getWeddingById('nonexistent-id');
       expect(wedding).toBeUndefined();
+    });
+  });
+
+  describe('demo helpers', () => {
+    it('identifies mock weddings from their id prefix', () => {
+      expect(isMockWedding(MOCK_WEDDINGS[0])).toBe(true);
+      expect(isMockWedding({ id: 'real-wedding-id' } as any)).toBe(false);
+      expect(isMockWedding(undefined)).toBe(false);
+    });
+
+    it('uses demo mode when Supabase is not configured', () => {
+      vi.mocked(isSupabaseConfigured).mockReturnValue(false);
+      expect(shouldUseDemoWeddingMode({ id: 'real-wedding-id' } as any)).toBe(true);
+    });
+
+    it('uses demo mode for mock weddings even when Supabase is configured', () => {
+      vi.mocked(isSupabaseConfigured).mockReturnValue(true);
+      expect(shouldUseDemoWeddingMode(MOCK_WEDDINGS[0])).toBe(true);
+    });
+
+    it('does not use demo mode for real weddings when Supabase is configured', () => {
+      vi.mocked(isSupabaseConfigured).mockReturnValue(true);
+      expect(shouldUseDemoWeddingMode({ id: 'real-wedding-id' } as any)).toBe(false);
     });
   });
 

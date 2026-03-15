@@ -4,7 +4,7 @@ export const prerender = false;
 
 import MainLayout from '../../layouts/MainLayout.astro';
 import { AdminPanel } from '../../components/admin/AdminPanel';
-import { getWeddingBySlugAsync, MOCK_WEDDINGS } from '../../lib/weddingData';
+import { getWeddingBySlugAsync, shouldUseDemoWeddingMode } from '../../lib/weddingData';
 import { isSupabaseServiceRoleConfigured, verifyServerSession, verifyWeddingOwnership } from '../../lib/supabase/server';
 
 const { slug } = Astro.params;
@@ -16,9 +16,9 @@ if (!wedding) {
 
 // Server-side auth check: verify the user owns this wedding
 // Only enforce when Supabase is configured (skip for demo/mock data mode)
-const isDemoWedding = MOCK_WEDDINGS.some(w => w.slug === slug);
+const demoMode = shouldUseDemoWeddingMode(wedding);
 
-if (isSupabaseServiceRoleConfigured() && !isDemoWedding) {
+if (isSupabaseServiceRoleConfigured() && !demoMode) {
   const session = await verifyServerSession(Astro.cookies);
 
   if (!session) {
@@ -54,7 +54,6 @@ if (isSupabaseServiceRoleConfigured() && !isDemoWedding) {
 <script>
   // Check authentication on client side
   if (typeof window !== 'undefined') {
-    const clientToken = localStorage.getItem('reflets_client_token');
     const clientSession = localStorage.getItem('reflets_client_session');
     const godImpersonation = localStorage.getItem('reflets_god_impersonation');
     const guestSession = localStorage.getItem('reflets_guest_session');
@@ -65,7 +64,7 @@ if (isSupabaseServiceRoleConfigured() && !isDemoWedding) {
     // 3. Guest has admin code access
     let hasAccess = false;
 
-    if (clientToken && clientSession) {
+    if (clientSession) {
       hasAccess = true;
     } else if (godImpersonation) {
       hasAccess = true;

@@ -3,8 +3,7 @@
 export const prerender = false;
 
 import { WebsiteEditor } from '../../../components/admin/WebsiteEditor';
-import { getWeddingBySlugAsync } from '../../../lib/weddingData';
-import { isSupabaseConfigured } from '../../../lib/supabase/client';
+import { getWeddingBySlugAsync, shouldUseDemoWeddingMode } from '../../../lib/weddingData';
 import '../../../styles/global.css';
 
 const { slug } = Astro.params;
@@ -15,12 +14,7 @@ if (!wedding) {
   return Astro.redirect('/404');
 }
 
-// Check if we're in demo mode
-// Demo mode is active if:
-// 1. Supabase is not configured, OR
-// 2. The wedding is mock data (IDs starting with 'w-' are mock)
-const isMockWedding = wedding.id.startsWith('w-');
-const demoMode = !isSupabaseConfigured() || isMockWedding;
+const demoMode = shouldUseDemoWeddingMode(wedding);
 
 // In production, fetch existing customization from API
 // const response = await fetch(`${Astro.url.origin}/api/customization/get?weddingId=${wedding.id}`);
@@ -48,7 +42,6 @@ const demoMode = !isSupabaseConfigured() || isMockWedding;
 <script>
   // Check authentication on client side
   if (typeof window !== 'undefined') {
-    const clientToken = localStorage.getItem('reflets_client_token');
     const clientSession = localStorage.getItem('reflets_client_session');
     const godImpersonation = localStorage.getItem('reflets_god_impersonation');
     const guestSession = localStorage.getItem('reflets_guest_session');
@@ -59,7 +52,7 @@ const demoMode = !isSupabaseConfigured() || isMockWedding;
     // 3. Guest has admin code access
     let hasAccess = false;
 
-    if (clientToken && clientSession) {
+    if (clientSession) {
       hasAccess = true;
     } else if (godImpersonation) {
       hasAccess = true;
