@@ -176,29 +176,29 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
       <ToastContainer />
       <div className="bg-ivory rounded-xl border border-silver-mist p-6 shadow-xs">
         <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-burgundy-old/20 rounded-lg">
-          <QrCode className="text-burgundy-old" size={24} />
-        </div>
-        <div>
-          <h3 className="font-serif font-bold text-deep-charcoal text-lg">
-            QR Code Galerie
-          </h3>
-          <p className="text-warm-taupe text-sm">
-            Facilitez l'accès à vos invités
-          </p>
-        </div>
+          <div className="p-3 bg-burgundy-old/20 rounded-lg">
+            <QrCode className="text-burgundy-old" size={24} />
+          </div>
+          <div>
+            <h3 className="font-serif font-bold text-deep-charcoal text-lg">
+              QR Code Galerie
+            </h3>
+            <p className="text-warm-taupe text-sm">
+              Facilitez l'accès à vos invités
+            </p>
+          </div>
         </div>
 
-      {/* QR Code Preview */}
+        {/* QR Code Preview */}
         <div className="bg-white rounded-xl p-6 mb-6 border-2 border-burgundy-old/30 text-center">
           <div ref={containerRef} className="mx-auto rounded-lg shadow-md inline-block" style={{ width: size, height: size }}>
-          <QRCodeSVG
-            value={galleryUrl}
-            size={size}
-            bgColor="#FFFFF0"
-            fgColor="#2D2D2D"
-            level="M"
-          />
+            <QRCodeSVG
+              value={galleryUrl}
+              size={size}
+              bgColor="#FFFFF0"
+              fgColor="#2D2D2D"
+              level="M"
+            />
           </div>
           <p className="text-warm-taupe text-sm mt-4">
             Scannez pour accéder à la galerie
@@ -208,98 +208,98 @@ export function QRCodeGenerator({ weddingSlug }: QRCodeGeneratorProps) {
           </p>
         </div>
 
-      {/* Settings */}
+        {/* Settings */}
         <div className="space-y-4 mb-6">
-        {/* Size Selector */}
-        <div>
-          <label className="block text-sm font-medium text-deep-charcoal mb-2">
-            Taille du QR Code
-          </label>
-          <select
-            value={size}
-            onChange={(e) => setSize(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors"
-          >
-            <option value={200}>Petit (200x200)</option>
-            <option value={300}>Moyen (300x300)</option>
-            <option value={400}>Grand (400x400)</option>
-            <option value={500}>Très grand (500x500)</option>
-          </select>
+          {/* Size Selector */}
+          <div>
+            <label className="block text-sm font-medium text-deep-charcoal mb-2">
+              Taille du QR Code
+            </label>
+            <select
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors"
+            >
+              <option value={200}>Petit (200x200)</option>
+              <option value={300}>Moyen (300x300)</option>
+              <option value={400}>Grand (400x400)</option>
+              <option value={500}>Très grand (500x500)</option>
+            </select>
+          </div>
+
+          {/* Access Code Toggle */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-deep-charcoal">
+              Inclure le code d'accès sur l'impression
+            </label>
+            <button
+              onClick={() => setIncludeCode(!includeCode)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                includeCode ? 'bg-burgundy-old' : 'bg-silver-mist'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-ivory transition-transform ${
+                  includeCode ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {includeCode && (
+            <div>
+              <label className="block text-sm font-medium text-deep-charcoal mb-2">
+                Code d'accès actuel
+              </label>
+              <input
+                type="text"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors font-mono"
+                placeholder="MARIAGE2026"
+              />
+            </div>
+          )}
         </div>
 
-        {/* Access Code Toggle */}
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-deep-charcoal">
-            Inclure le code d'accès sur l'impression
-          </label>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
-            onClick={() => setIncludeCode(!includeCode)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              includeCode ? 'bg-burgundy-old' : 'bg-silver-mist'
-            }`}
+            onClick={handleDownload}
+            className="flex items-center justify-center gap-2 bg-burgundy-old hover:bg-[#c92a38] text-white px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
           >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-ivory transition-transform ${
-                includeCode ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
+            <Download size={18} />
+            Télécharger
+          </button>
+
+          <button
+            onClick={handlePrint}
+            className="flex items-center justify-center gap-2 bg-deep-charcoal hover:bg-deep-charcoal/90 text-ivory px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
+          >
+            <Printer size={18} />
+            Imprimer
+          </button>
+
+          <button
+            onClick={handleCopyUrl}
+            className="flex items-center justify-center gap-2 bg-ivory hover:bg-silver-mist/30 text-deep-charcoal border border-silver-mist px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
+          >
+            <Share2 size={18} />
+            Copier URL
           </button>
         </div>
 
-        {includeCode && (
-          <div>
-            <label className="block text-sm font-medium text-deep-charcoal mb-2">
-              Code d'accès actuel
-            </label>
-            <input
-              type="text"
-              value={accessCode}
-              onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 border border-silver-mist rounded-lg focus:ring-2 focus:ring-burgundy-old focus:border-burgundy-old transition-colors font-mono"
-              placeholder="MARIAGE2026"
-            />
-          </div>
-        )}
-        </div>
-
-      {/* Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <button
-          onClick={handleDownload}
-          className="flex items-center justify-center gap-2 bg-burgundy-old hover:bg-[#c92a38] text-white px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
-        >
-          <Download size={18} />
-          Télécharger
-        </button>
-
-        <button
-          onClick={handlePrint}
-          className="flex items-center justify-center gap-2 bg-deep-charcoal hover:bg-deep-charcoal/90 text-ivory px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
-        >
-          <Printer size={18} />
-          Imprimer
-        </button>
-
-        <button
-          onClick={handleCopyUrl}
-          className="flex items-center justify-center gap-2 bg-ivory hover:bg-silver-mist/30 text-deep-charcoal border border-silver-mist px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105 shadow-xs"
-        >
-          <Share2 size={18} />
-          Copier URL
-        </button>
-      </div>
-
-      {/* Usage Tips */}
-      <div className="mt-6 p-4 bg-soft-blush/30 rounded-lg border border-soft-blush/50">
-        <h4 className="font-semibold text-deep-charcoal text-sm mb-2">
-          Conseils d'utilisation
-        </h4>
-        <ul className="text-warm-taupe text-xs space-y-1">
-          <li>Imprimez le QR code sur les cartons de table</li>
-          <li>Placez-le à l'entrée de la réception</li>
-          <li>Incluez-le dans le programme de la cérémonie</li>
-          <li>Partagez-le sur les réseaux sociaux avant l'événement</li>
-        </ul>
+        {/* Usage Tips */}
+        <div className="mt-6 p-4 bg-soft-blush/30 rounded-lg border border-soft-blush/50">
+          <h4 className="font-semibold text-deep-charcoal text-sm mb-2">
+            Conseils d'utilisation
+          </h4>
+          <ul className="text-warm-taupe text-xs space-y-1">
+            <li>Imprimez le QR code sur les cartons de table</li>
+            <li>Placez-le à l'entrée de la réception</li>
+            <li>Incluez-le dans le programme de la cérémonie</li>
+            <li>Partagez-le sur les réseaux sociaux avant l'événement</li>
+          </ul>
         </div>
       </div>
     </>

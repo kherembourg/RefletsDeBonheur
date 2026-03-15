@@ -167,7 +167,7 @@ describe('AlbumManager Component', () => {
       });
     });
 
-    it('should show alert when name is empty', async () => {
+    it('should show toast when name is empty', async () => {
       render(<AlbumManager dataService={mockDataService as any} />);
 
       await waitFor(() => {
@@ -176,7 +176,7 @@ describe('AlbumManager Component', () => {
 
       fireEvent.click(screen.getByText('Créer'));
 
-      expect(window.alert).toHaveBeenCalledWith("Le nom de l'album est requis");
+      expect(await screen.findByRole('alert')).toHaveTextContent("Le nom de l'album est requis");
     });
 
     it('should close modal when cancel is clicked', async () => {
@@ -346,7 +346,7 @@ describe('AlbumManager Component', () => {
   });
 
   describe('Error Handling', () => {
-    it('should show alert on create error', async () => {
+    it('should show toast on create error', async () => {
       mockDataService.createAlbum.mockRejectedValue(new Error('Create failed'));
 
       render(<AlbumManager dataService={mockDataService as any} />);
@@ -361,9 +361,7 @@ describe('AlbumManager Component', () => {
       fireEvent.click(screen.getByText('Créer'));
 
       await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith(
-          "Erreur lors de la création de l'album"
-        );
+        expect(screen.getByRole('alert')).toHaveTextContent("Erreur lors de la création de l'album");
       });
     });
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Image, Upload, X, Check, AlertCircle, Link as LinkIcon, Info } from 'lucide-react';
 import type { CustomImages } from '../../lib/customization';
+import { useToast } from '../ui/Toast';
 
 interface ImageManagerProps {
   customImages?: CustomImages;
@@ -63,6 +64,7 @@ const IMAGE_FIELDS: ImageField[] = [
 ];
 
 export function ImageManager({ customImages, onChange, onUpload, uploadProgress }: ImageManagerProps) {
+  const { showToast, ToastContainer } = useToast();
   const [editingImages, setEditingImages] = useState<CustomImages>(customImages || {});
   const [uploadingKey, setUploadingKey] = useState<keyof CustomImages | null>(null);
   const [urlInputMode, setUrlInputMode] = useState<keyof CustomImages | null>(null);
@@ -95,7 +97,7 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
   // Handle file upload
   const handleFileUpload = async (key: keyof CustomImages, file: File) => {
     if (!onUpload) {
-      alert('La fonctionnalité d\'upload n\'est pas disponible');
+      showToast('error', 'La fonctionnalité d\'upload n\'est pas disponible');
       return;
     }
 
@@ -175,7 +177,9 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
   const hasCustomImages = Object.keys(editingImages).length > 0;
 
   return (
-    <div className="space-y-4">
+    <>
+      <ToastContainer />
+      <div className="space-y-4">
       {/* Header */}
       <div>
         <div className="flex items-center justify-between mb-1">
@@ -371,6 +375,7 @@ export function ImageManager({ customImages, onChange, onUpload, uploadProgress 
           );
         })}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

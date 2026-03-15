@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FolderOpen, Plus, Edit, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { DataService, type Album } from '../../lib/services/dataService';
+import { useToast } from '../ui/Toast';
 
 interface AlbumManagerProps {
   dataService: DataService;
@@ -8,6 +9,7 @@ interface AlbumManagerProps {
 }
 
 export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) {
+  const { showToast, ToastContainer } = useToast();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,7 +39,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
 
   const handleCreate = async () => {
     if (!formData.name.trim()) {
-      alert('Le nom de l\'album est requis');
+      showToast('error', 'Le nom de l\'album est requis');
       return;
     }
 
@@ -51,9 +53,10 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
       await loadAlbums();
       setShowCreateModal(false);
       resetForm();
+      showToast('success', 'Album créé avec succès.');
     } catch (error) {
       console.error('Failed to create album:', error);
-      alert('Erreur lors de la création de l\'album');
+      showToast('error', 'Erreur lors de la création de l\'album');
     } finally {
       setSaving(false);
     }
@@ -63,7 +66,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
     if (!selectedAlbum) return;
 
     if (!formData.name.trim()) {
-      alert('Le nom de l\'album est requis');
+      showToast('error', 'Le nom de l\'album est requis');
       return;
     }
 
@@ -78,9 +81,10 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
       setShowEditModal(false);
       setSelectedAlbum(null);
       resetForm();
+      showToast('success', 'Album mis à jour.');
     } catch (error) {
       console.error('Failed to update album:', error);
-      alert('Erreur lors de la mise à jour de l\'album');
+      showToast('error', 'Erreur lors de la mise à jour de l\'album');
     } finally {
       setSaving(false);
     }
@@ -94,9 +98,10 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
     try {
       await dataService.deleteAlbum(albumId);
       await loadAlbums();
+      showToast('success', 'Album supprimé.');
     } catch (error) {
       console.error('Failed to delete album:', error);
-      alert('Erreur lors de la suppression de l\'album');
+      showToast('error', 'Erreur lors de la suppression de l\'album');
     }
   };
 
@@ -140,7 +145,9 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
   }
 
   return (
-    <div className="space-y-4">
+    <>
+      <ToastContainer />
+      <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -426,6 +433,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
