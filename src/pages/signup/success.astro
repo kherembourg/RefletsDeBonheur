@@ -46,12 +46,12 @@ if (!sessionId) {
             </svg>
           </div>
 
-          <h1 class="font-serif text-2xl text-charcoal mb-2 text-center">Payment Verification Failed</h1>
+          <h1 class="font-serif text-2xl text-charcoal mb-2 text-center">Payment verification failed</h1>
           <p id="error-message" class="text-charcoal/60 text-sm text-center mb-6"></p>
 
           <div class="flex gap-4">
             <a
-              href="/signup"
+                href="/pricing"
               class="flex-1 px-6 py-3 bg-burgundy-old hover:bg-burgundy-dark text-white rounded-lg transition-colors text-center font-medium"
             >
               Try Again
@@ -82,7 +82,7 @@ if (!sessionId) {
           if (loadingState) loadingState.classList.add('hidden');
           if (errorState) errorState.classList.remove('hidden');
           if (errorMessage) {
-            errorMessage.textContent = result.message || 'An error occurred. Please contact support.';
+              errorMessage.textContent = result.message || 'An error occurred while confirming your payment. Please contact support if the problem continues.';
           }
           return;
         }
@@ -102,7 +102,7 @@ if (!sessionId) {
         // Small delay to show success state
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Redirect to admin dashboard
+        // Redirect to the next step returned by the API
         window.location.href = result.redirect || `/${result.slug}/admin`;
       } catch (err) {
         console.error('[Success Page] Error:', err);

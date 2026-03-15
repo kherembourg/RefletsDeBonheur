@@ -24,6 +24,7 @@ import { QRCodeGenerator } from './QRCodeGenerator';
 import { AlbumManager } from './AlbumManager';
 import { ThemeSelector } from './ThemeSelector';
 import { SubscriptionStatus } from './SubscriptionStatus';
+import { OnboardingChecklist } from './OnboardingChecklist';
 import { RSVPManager } from './rsvp';
 import { GalleryGrid } from '../gallery/GalleryGrid';
 import { AdminSection, AdminCard, AdminButton } from './ui';
@@ -78,7 +79,7 @@ export function AdminPanel({
   const [enhancedStats, setEnhancedStats] = useState<ReturnType<typeof calculateEnhancedStatistics> | null>(null);
   const [settings, setSettingsState] = useState<GallerySettings>(dataService.getSettings());
   const [loading, setLoading] = useState(true);
-  const exporting = false; // Backup export not yet implemented
+  const [exporting, setExporting] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('classic');
   const [subscriptionRefreshKey, setSubscriptionRefreshKey] = useState(0);
   const { showToast, ToastContainer } = useToast();
@@ -177,10 +178,44 @@ export function AdminPanel({
   };
 
   const handleBackup = async () => {
-    // Real export requires server-side ZIP generation from R2 storage
-    // This is not yet implemented
-    console.warn('[TODO] Real export not implemented yet');
-    showToast('info', t(lang, 'admin.exportComingSoon'));
+    setExporting(true);
+    try {
+      const [media, messages, albums] = await Promise.all([
+        dataService.getMedia(),
+        dataService.getMessages(),
+        dataService.getAlbums(),
+      ]);
+
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        weddingSlug: weddingSlug || null,
+        settings,
+        statistics: stats,
+        media,
+        messages,
+        albums,
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: 'application/json;charset=utf-8',
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${weddingSlug || 'reflets'}-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      showToast('success', t(lang, 'admin.exportReady'));
+    } catch (error) {
+      console.error('Backup export failed:', error);
+      showToast('error', t(lang, 'admin.exportError'));
+    } finally {
+      setExporting(false);
+    }
   };
 
   const profileLabel = settings.coupleName || weddingSlug || t(lang, 'admin.profile');
@@ -237,11 +272,79 @@ export function AdminPanel({
   const handleCopyGalleryUrl = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      alert(t(lang, "admin.urlCopied"));
+      showToast('success', t(lang, "admin.urlCopied"));
     } catch (copyErr) {
       console.error("Copy failed", copyErr);
-      alert(t(lang, "admin.urlCopyError"));
+      showToast('error', t(lang, "admin.urlCopyError"));
     }
+  };
+
+  const qrCodeElementId = `gallery-qr-${weddingSlug || 'demo'}`;
+
+  const handleDownloadQr = async () => {
+    const qrNode = document.getElementById(qrCodeElementId);
+    if (!qrNode) {
+      showToast('error', t(lang, 'admin.qrUnavailable'));
+      return;
+    }
+
+    try {
+      const svgMarkup = qrNode.outerHTML;
+      const blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${weddingSlug || 'reflets'}-gallery-qr.svg`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('success', t(lang, 'admin.qrDownloadSuccess'));
+    } catch (error) {
+      console.error('QR download failed', error);
+      showToast('error', t(lang, 'admin.qrDownloadError'));
+    }
+  };
+
+  const handlePrintQr = () => {
+    const qrNode = document.getElementById(qrCodeElementId);
+    if (!qrNode) {
+      showToast('error', t(lang, 'admin.qrUnavailable'));
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=720,height=960');
+    if (!printWindow) {
+      showToast('error', t(lang, 'admin.qrPrintError'));
+      return;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${t(lang, 'admin.qrPrintTitle')}</title>
+          <style>
+            body { font-family: Georgia, serif; padding: 32px; text-align: center; color: #2d2d2d; }
+            .card { max-width: 420px; margin: 0 auto; border: 1px solid #e6d5d5; border-radius: 24px; padding: 32px; }
+            .label { letter-spacing: 0.2em; text-transform: uppercase; font-size: 12px; color: #8c6868; margin-bottom: 12px; }
+            .title { font-size: 32px; margin: 0 0 12px; }
+            .url { margin-top: 20px; font-size: 14px; word-break: break-all; color: #5f5a57; }
+            svg { width: 220px; height: 220px; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="label">${t(lang, 'admin.qrPrintLabel')}</div>
+            <h1 class="title">${profileLabel}</h1>
+            ${qrNode.outerHTML}
+            <div class="url">${shareUrl}</div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   const handleOpenAlbums = () => {
@@ -254,6 +357,17 @@ export function AdminPanel({
       <header>
         <h1 className="font-serif text-3xl sm:text-4xl text-charcoal">{t(lang, 'admin.welcomeBack')}</h1>
       </header>
+
+      <OnboardingChecklist
+        weddingSlug={weddingSlug}
+        shareUrl={shareUrl}
+        mediaCount={stats.mediaCount}
+        messageCount={stats.messageCount}
+        albumCount={stats.albumCount}
+        hasWeddingDetails={Boolean(settings.coupleName || settings.weddingDate)}
+        lang={lang}
+        onCopyShareUrl={handleCopyGalleryUrl}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8 space-y-8">
@@ -319,7 +433,7 @@ export function AdminPanel({
 
           <section>
             <h2 className="font-serif text-xl text-charcoal mb-4">{t(lang, 'admin.albums')}</h2>
-            <div className="bg-white rounded-xl border border-charcoal/5 shadow-xs p-6">
+            <div id="albums" className="bg-white rounded-xl border border-charcoal/5 shadow-xs p-6">
               <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <div className="relative w-full sm:w-auto">
                   <label className="block text-xs font-semibold text-charcoal mb-1 ml-1">{t(lang, 'admin.search')}</label>
@@ -391,6 +505,7 @@ export function AdminPanel({
             </span>
             <div className="w-40 h-40 mb-6 rounded-xl bg-white border border-charcoal/5 flex items-center justify-center">
               <QRCodeSVG
+                id={qrCodeElementId}
                 value={shareUrl}
                 size={160}
                 bgColor="#FFFFFF"
@@ -415,11 +530,13 @@ export function AdminPanel({
 
             <div className="w-full space-y-3">
               <button
+                onClick={handleDownloadQr}
                 className="w-full bg-[#b08b8b] hover:bg-[#967272] text-white text-xs font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
                 <DownloadCloud className="w-4 h-4" /> {t(lang, 'admin.downloadQr')}
               </button>
               <button
+                onClick={handlePrintQr}
                 className="w-full border border-charcoal/10 text-charcoal/70 hover:bg-charcoal/5 text-xs font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors bg-transparent"
               >
                 <Printer className="w-4 h-4" /> {t(lang, 'admin.printQr')}

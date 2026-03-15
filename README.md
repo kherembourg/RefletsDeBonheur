@@ -44,10 +44,10 @@ Visiter `http://localhost:4321`
 | **UI Library** | React 18 | Actif |
 | **Styling** | TailwindCSS 3.4 | Actif |
 | **Icons** | Lucide React | Actif |
-| **Backend** | Supabase (PostgreSQL + Auth + Realtime) | Planifié |
-| **Stockage** | Cloudflare R2 | Planifié |
-| **Transcodage** | Google Cloud Run + FFmpeg | Planifié |
-| **Paiement** | Stripe | Planifié |
+| **Backend** | Supabase (PostgreSQL + Auth + API) | Implémenté |
+| **Stockage** | Cloudflare R2 | Implémenté |
+| **Transcodage** | Google Cloud Run + FFmpeg | À venir |
+| **Paiement** | Stripe | Implémenté |
 
 ---
 
@@ -75,6 +75,15 @@ Visiter `http://localhost:4321`
 - **Démo fonctionnelle** - Upload et livre d'or persistants (localStorage)
 - **Design luxe** - Décorations florales SVG, typographie script, dividers élégants
 - **i18n** - Support multilingue (FR/EN/ES) pour le marketing
+- **Onboarding admin guidé** - Checklist de démarrage dans le dashboard
+
+### Backend & Opérations déjà en place
+- Authentification Supabase pour mariés, invités et god admin
+- API Stripe checkout, portal et webhook
+- Upload R2 avec URLs présignées
+- Génération asynchrone de thumbnails images
+- Endpoints GDPR export / suppression
+- Tests unitaires et d'intégration étendus
 
 ---
 
@@ -137,6 +146,8 @@ reflets-de-bonheur/
 | Document | Description |
 |----------|-------------|
 | [ROADMAP.md](./ROADMAP.md) | Fonctionnalités à implémenter |
+| [docs/audits/2026-03-14-project-audit.md](./docs/audits/2026-03-14-project-audit.md) | Audit produit / technique / exécution |
+| [docs/plans/2026-03-14-30-day-execution-plan.md](./docs/plans/2026-03-14-30-day-execution-plan.md) | Plan d'action sur 30 jours |
 | [USER-GUIDE.md](./USER-GUIDE.md) | Guide utilisateur invité |
 | [ADMIN-GUIDE.md](./ADMIN-GUIDE.md) | Guide administrateur |
 | [DEPLOYMENT-GUIDE.md](./DEPLOYMENT-GUIDE.md) | Guide de déploiement |
@@ -162,5 +173,16 @@ npx astro check    # Vérification TypeScript
 Propriétaire - Tous droits réservés
 
 ---
+
+## État du Projet
+
+Le produit n'est plus au stade “frontend mock only”. Le dépôt contient déjà:
+
+- un socle backend Supabase / R2 / Stripe
+- des routes API sécurisées
+- des mécanismes d'intégrité de données et de rate limiting
+- une suite de tests importante
+
+Les principaux chantiers restants concernent surtout le polissage de lancement, la simplification de la couche démo/production et la finalisation de quelques parcours business et opérationnels.
 
 **Reflets de Bonheur** - 2026

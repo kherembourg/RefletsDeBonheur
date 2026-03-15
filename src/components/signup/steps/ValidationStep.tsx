@@ -68,7 +68,7 @@ export function ValidationStep({ data, onBack, onSuccess, lang }: ValidationStep
       }
 
       // Redirect to wedding admin dashboard
-      window.location.href = `/${result.slug}/admin`;
+      window.location.href = `/${result.slug}/admin?onboarding=1`;
     } catch (err) {
       console.error('[ValidationStep] Account creation error:', err);
       setError(t(lang, 'signup.validation.error'));

@@ -3,10 +3,11 @@
  * Supports both guest code access and client username/password login
  */
 
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { Camera, User, Lock, Eye, EyeOff, AlertCircle, Sparkles } from 'lucide-react';
 import { authenticate } from '../../lib/auth';
 import { clientLogin, guestLogin } from '../../lib/auth/clientAuth';
+import { isSupabaseConfigured, supabase } from '../../lib/supabase/client';
 
 type LoginMode = 'code' | 'client';
 
@@ -21,6 +22,7 @@ export function EnhancedLoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
 
   // Shared state
   const [error, setError] = useState('');
@@ -40,6 +42,21 @@ export function EnhancedLoginForm() {
     const paramMode = params.get('mode');
     if (paramMode === 'client' || paramMode === 'code') {
       setMode(paramMode);
+    }
+
+    const email = params.get('email');
+    const message = params.get('message');
+
+    if (email) {
+      setUsername(email);
+    }
+
+    if (message === 'account_created') {
+      setMode('client');
+      setInfoMessage('Votre compte est prêt. Connectez-vous pour accéder à votre espace mariage.');
+    } else if (message === 'account_created_email_failed') {
+      setMode('client');
+      setInfoMessage('Votre compte a bien été créé. Si vous n’avez pas reçu d’email, utilisez la récupération de mot de passe.');
     }
   }, []);
 
@@ -126,6 +143,41 @@ export function EnhancedLoginForm() {
     }
   };
 
+  const handleForgotPassword = async (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setError('');
+
+    if (!username.trim()) {
+      setError('Entrez votre email pour recevoir un lien de réinitialisation.');
+      setMode('client');
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      setInfoMessage('La réinitialisation de mot de passe est indisponible en mode démo.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(username.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (resetError) {
+        setError(resetError.message);
+      } else {
+        setInfoMessage('Un email de réinitialisation vient d’être envoyé.');
+      }
+    } catch (err) {
+      console.error('Reset password error:', err);
+      setError('Impossible d’envoyer l’email de réinitialisation.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
       <div className="bg-ivory p-8 rounded-2xl shadow-xl max-w-md w-full border border-silver-mist">
@@ -175,6 +227,12 @@ export function EnhancedLoginForm() {
             Espace client
           </button>
         </div>
+
+        {infoMessage && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {infoMessage}
+          </div>
+        )}
 
         {/* Code Login Form */}
         {mode === 'code' && (
@@ -383,10 +441,7 @@ export function EnhancedLoginForm() {
               <a
                 href="#"
                 className="text-sm text-burgundy-old hover:text-burgundy-old/80 transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert('La fonctionnalité de récupération de mot de passe sera bientôt disponible.');
-                }}
+                onClick={handleForgotPassword}
               >
                 Mot de passe oublié ?
               </a>

@@ -118,6 +118,10 @@ vi.mock('../../lib/services/dataService', () => ({
 describe('AdminPanel Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:mock'),
+      revokeObjectURL: vi.fn(),
+    } as any);
     // Reset mock implementations after each test
     mockGetStatistics.mockResolvedValue({
       mediaCount: 100,
@@ -169,6 +173,15 @@ describe('AdminPanel Component', () => {
   });
 
   describe('Statistics Display', () => {
+    it('should display onboarding checklist', async () => {
+      render(<AdminPanel demoMode={true} weddingSlug="julie-thomas" />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Lancez votre espace mariage')).toBeInTheDocument();
+        expect(screen.getByText('Progression')).toBeInTheDocument();
+      });
+    });
+
     it('should display statistics section', async () => {
       render(<AdminPanel demoMode={true} />);
 
@@ -256,7 +269,7 @@ describe('AdminPanel Component', () => {
       });
     });
 
-    it('should show "coming soon" toast when backup clicked', async () => {
+    it('should export a backup when backup clicked', async () => {
       render(<AdminPanel demoMode={true} initialView="settings" />);
 
       await waitFor(() => {
@@ -265,9 +278,8 @@ describe('AdminPanel Component', () => {
 
       fireEvent.click(screen.getByText('Télécharger la sauvegarde'));
 
-      // Should show a toast indicating the feature is not yet available
       await waitFor(() => {
-        expect(screen.getByText(/export bientôt disponible/i)).toBeInTheDocument();
+        expect(screen.getByText(/sauvegarde prête/i)).toBeInTheDocument();
       });
     });
   });

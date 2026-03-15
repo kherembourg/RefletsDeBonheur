@@ -100,6 +100,10 @@ src/
 - **Demo Mode Fix**: Editor saves to localStorage in demo mode instead of failing API calls
 - **Auto-save Implementation**: 2-second debounced auto-save with status indicators
 
+### March 2026
+- **Admin Onboarding Checklist**: New guided setup surface in the admin dashboard to improve activation after signup
+- **Status Documentation Refresh**: Repository docs now distinguish shipped backend capabilities from future work
+
 ---
 
 *Last updated: January 21, 2026*

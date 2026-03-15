@@ -33,18 +33,28 @@
 - [x] **Stockage Cloudflare R2** (presigned URLs)
 - [x] **Système RSVP fonctionnel** (custom questions, responses viewer)
 - [x] **Modération avec persistance** (admin can delete content)
-- [x] **Paiement Stripe** (checkout, webhook, security) - **⚠️ NOT wired into signup flow**
+- [x] **Paiement Stripe** (checkout, webhook, security)
 - [x] **Gestion multi-tenant** (profiles, weddings, god admin impersonation)
+- [x] **Checklist onboarding admin** (activation guidée post-signup)
 
 ### Non Implémenté (À venir)
 - [ ] Upload resumable (TUS/Uppy) - current: basic multipart upload
 - [ ] Transcodage vidéo (Cloud Run + FFmpeg) - current: direct video upload
 - [ ] Live Wall temps réel (Supabase Realtime) - current: manual refresh
 - [ ] Géo-fencing - planned feature
-- [ ] Email notifications (welcome, uploads) - **CRITICAL for launch**
-- [ ] Image thumbnails & optimization - **CRITICAL for performance**
+- [ ] Export admin complet (backup réel)
+- [ ] Tests manuels Stripe de bout en bout
+- [ ] Réduction de la dette demo/prod dans les composants centraux
 
 ---
+
+## Note de Statut
+
+Cette roadmap contient encore de l'historique. Le dépôt a déjà dépassé plusieurs points décrits plus bas comme “à créer”. Se référer également à:
+
+- [README.md](./README.md)
+- [docs/architecture/README.md](./docs/architecture/README.md)
+- [docs/audits/2026-03-14-project-audit.md](./docs/audits/2026-03-14-project-audit.md)
 
 ## Phase 1: Site Web de Mariage
 
