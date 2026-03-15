@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FolderOpen, Plus, Edit, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { DataService, type Album } from '../../lib/services/dataService';
 import { useToast } from '../ui/Toast';
+import { AdminModal } from './ui/AdminModal';
 
 interface AlbumManagerProps {
   dataService: DataService;
@@ -16,6 +17,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [albumPendingDelete, setAlbumPendingDelete] = useState<Album | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -90,14 +92,12 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
     }
   };
 
-  const handleDelete = async (albumId: string, albumName: string) => {
-    if (!confirm(`Supprimer l'album "${albumName}" ? Les photos resteront dans la galerie.`)) {
-      return;
-    }
-
+  const confirmDelete = async () => {
+    if (!albumPendingDelete) return;
     try {
-      await dataService.deleteAlbum(albumId);
+      await dataService.deleteAlbum(albumPendingDelete.id);
       await loadAlbums();
+      setAlbumPendingDelete(null);
       showToast('success', 'Album supprimé.');
     } catch (error) {
       console.error('Failed to delete album:', error);
@@ -217,7 +217,7 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
                       <Edit size={16} className="text-burgundy-old" />
                     </button>
                     <button
-                      onClick={() => handleDelete(album.id, album.name)}
+                      onClick={() => setAlbumPendingDelete(album)}
                       className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-sm transition-colors"
                       title="Supprimer"
                     >
@@ -434,6 +434,34 @@ export function AlbumManager({ dataService, onAlbumSelect }: AlbumManagerProps) 
         </div>
       )}
       </div>
+      <AdminModal
+        isOpen={albumPendingDelete !== null}
+        onClose={() => setAlbumPendingDelete(null)}
+        title="Supprimer l’album"
+        size="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setAlbumPendingDelete(null)}
+              className="rounded-lg border border-charcoal/10 px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={confirmDelete}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            >
+              Supprimer
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-charcoal/70">
+          Supprimer l’album "{albumPendingDelete?.name}" ? Les photos resteront dans la galerie.
+        </p>
+      </AdminModal>
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { AlbumManager } from './AlbumManager';
 import { DataService, type Album } from '../../lib/services/dataService';
 
@@ -251,7 +251,7 @@ describe('AlbumManager Component', () => {
   });
 
   describe('Delete Album', () => {
-    it('should confirm before deleting', async () => {
+    it('should open a confirmation modal before deleting', async () => {
       render(<AlbumManager dataService={mockDataService as any} />);
 
       await waitFor(() => {
@@ -261,14 +261,12 @@ describe('AlbumManager Component', () => {
       const deleteButtons = screen.getAllByTitle('Supprimer');
       fireEvent.click(deleteButtons[0]);
 
-      expect(window.confirm).toHaveBeenCalledWith(
-        expect.stringContaining('Supprimer l\'album "Cérémonie"')
-      );
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText('Supprimer l’album')).toBeInTheDocument();
+      expect(screen.getByText(/Supprimer l’album "Cérémonie"/)).toBeInTheDocument();
     });
 
     it('should delete album when confirmed', async () => {
-      vi.mocked(window.confirm).mockReturnValue(true);
-
       render(<AlbumManager dataService={mockDataService as any} />);
 
       await waitFor(() => {
@@ -277,15 +275,15 @@ describe('AlbumManager Component', () => {
 
       const deleteButtons = screen.getAllByTitle('Supprimer');
       fireEvent.click(deleteButtons[0]);
+      const dialog = screen.getByRole('dialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Supprimer' }));
 
       await waitFor(() => {
         expect(mockDataService.deleteAlbum).toHaveBeenCalledWith('album-1');
       });
     });
 
-    it('should not delete album when cancelled', async () => {
-      vi.mocked(window.confirm).mockReturnValue(false);
-
+    it('should not delete album when modal is cancelled', async () => {
       render(<AlbumManager dataService={mockDataService as any} />);
 
       await waitFor(() => {
@@ -294,6 +292,7 @@ describe('AlbumManager Component', () => {
 
       const deleteButtons = screen.getAllByTitle('Supprimer');
       fireEvent.click(deleteButtons[0]);
+      fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
 
       expect(mockDataService.deleteAlbum).not.toHaveBeenCalled();
     });
