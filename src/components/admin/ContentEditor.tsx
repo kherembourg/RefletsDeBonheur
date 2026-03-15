@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, memo } from 'react';
 import { Type, RotateCcw, Check, Info } from 'lucide-react';
 import type { CustomContent } from '../../lib/customization';
+import { AdminModal } from './ui/AdminModal';
 
 interface ContentEditorProps {
   customContent?: CustomContent;
@@ -292,6 +293,7 @@ export function ContentEditor({
     customContent || {}
   );
   const [activeSection, setActiveSection] = useState<string>('hero');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Sync with prop changes (e.g., when parent resets)
   useEffect(() => {
@@ -324,10 +326,17 @@ export function ContentEditor({
 
   // Reset to defaults
   const handleReset = useCallback(() => {
-    if (confirm('Réinitialiser tout le contenu personnalisé ?')) {
-      setEditingContent({});
-      onChange(undefined);
-    }
+    setShowResetConfirm(true);
+  }, [onChange]);
+
+  const closeResetConfirm = useCallback(() => {
+    setShowResetConfirm(false);
+  }, []);
+
+  const confirmReset = useCallback(() => {
+    setEditingContent({});
+    onChange(undefined);
+    setShowResetConfirm(false);
   }, [onChange]);
 
   // Handle section click - memoized for SectionTab
@@ -348,68 +357,98 @@ export function ContentEditor({
   const hasCustomContent = Object.keys(editingContent).length > 0;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-semibold text-charcoal flex items-center gap-2">
-            <Type className="w-4 h-4 text-burgundy" />
-            Contenu textuel
-          </h3>
-          {hasCustomContent && (
+    <>
+      <div className="space-y-4">
+        {/* Header */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-charcoal flex items-center gap-2">
+              <Type className="w-4 h-4 text-burgundy" />
+              Contenu textuel
+            </h3>
+            {hasCustomContent && (
+              <button
+                onClick={handleReset}
+                className="text-xs text-charcoal/50 hover:text-burgundy transition-colors flex items-center gap-1"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-charcoal/50">
+            Personnalisez les textes de votre site
+          </p>
+        </div>
+
+        {/* Info Tip */}
+        <div className="flex items-start gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+          <Info className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-purple-700">
+            Les champs vides utiliseront les textes par défaut.
+          </p>
+        </div>
+
+        {/* Section Tabs - Scrollable */}
+        <div className="relative">
+          <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide">
+            {SECTIONS.map((section) => {
+              const fields = getFieldsBySection(section.id);
+              const customizedCount = fields.filter((f) => isCustomized(f.key)).length;
+
+              return (
+                <SectionTab
+                  key={section.id}
+                  section={section}
+                  isActive={activeSection === section.id}
+                  customizedCount={customizedCount}
+                  onClick={handleSectionClick}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Fields for Active Section */}
+        <div className="space-y-3">
+          {getFieldsBySection(activeSection).map((field) => (
+            <FieldEditor
+              key={field.key}
+              field={field}
+              value={editingContent[field.key] || ''}
+              onChange={handleContentChange}
+            />
+          ))}
+        </div>
+      </div>
+      <AdminModal
+        isOpen={showResetConfirm}
+        onClose={closeResetConfirm}
+        title="Réinitialiser le contenu"
+        size="sm"
+        footer={
+          <>
             <button
-              onClick={handleReset}
-              className="text-xs text-charcoal/50 hover:text-burgundy transition-colors flex items-center gap-1"
+              type="button"
+              onClick={closeResetConfirm}
+              className="rounded-lg border border-charcoal/10 px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5"
             >
-              <RotateCcw className="w-3 h-3" />
-              Reset
+              Annuler
             </button>
-          )}
-        </div>
-        <p className="text-xs text-charcoal/50">
-          Personnalisez les textes de votre site
+            <button
+              type="button"
+              onClick={confirmReset}
+              className="rounded-lg bg-burgundy-old px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-burgundy-dark"
+            >
+              Réinitialiser
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-charcoal/70">
+          Tout le contenu personnalisé sera supprimé et les textes par défaut seront réappliqués.
         </p>
-      </div>
-
-      {/* Info Tip */}
-      <div className="flex items-start gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
-        <Info className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-purple-700">
-          Les champs vides utiliseront les textes par défaut.
-        </p>
-      </div>
-
-      {/* Section Tabs - Scrollable */}
-      <div className="relative">
-        <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide">
-          {SECTIONS.map((section) => {
-            const fields = getFieldsBySection(section.id);
-            const customizedCount = fields.filter((f) => isCustomized(f.key)).length;
-
-            return (
-              <SectionTab
-                key={section.id}
-                section={section}
-                isActive={activeSection === section.id}
-                customizedCount={customizedCount}
-                onClick={handleSectionClick}
-              />
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Fields for Active Section */}
-      <div className="space-y-3">
-        {getFieldsBySection(activeSection).map((field) => (
-          <FieldEditor
-            key={field.key}
-            field={field}
-            value={editingContent[field.key] || ''}
-            onChange={handleContentChange}
-          />
-        ))}
-      </div>
-    </div>
+      </AdminModal>
+    </>
   );
 }
