@@ -166,6 +166,14 @@ See `.env.example`. Key variables:
 2. **Email Notifications** - Welcome emails after payment (4-6h)
 3. **Image Thumbnails** - Generate 400px thumbnails for gallery (6-8h)
 
+**Security Follow-up:**
+- Continue CSP hardening for inline styles.
+- PR `#60` removed inline-script dependency and dropped the legacy Stripe auth header fallback.
+- PR `#61` reduced inline styles on marketing pages only.
+- The repository still needs follow-up work before `style-src 'unsafe-inline'` can be removed globally.
+- Prioritize remaining inline `style=` attributes and inline `<style>` blocks on dynamic wedding pages, admin/editor surfaces, and shared Astro layouts/components.
+- Use a dedicated git worktree and a separate PR for each continuation slice to avoid colliding with other agents.
+
 **Pre-Launch:**
 - Increase test coverage to 70%+ overall
 
