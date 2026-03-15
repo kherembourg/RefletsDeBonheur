@@ -3,7 +3,7 @@
  * Tests the main gallery grid display
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 // Define mock data (hoisted)
 const mockMedia = [
@@ -41,6 +41,7 @@ const mockGetAlbums = vi.fn();
 const mockGetFavorites = vi.fn();
 const mockGetSettings = vi.fn();
 const mockInitializeDemoStorage = vi.fn();
+const mockAddMediaBatchToAlbum = vi.fn();
 
 // Mock the auth module
 vi.mock('../../lib/auth', () => ({
@@ -64,6 +65,7 @@ vi.mock('../../lib/services/dataService', () => ({
     getFavorites = mockGetFavorites;
     getSettings = mockGetSettings;
     initializeDemoStorage = mockInitializeDemoStorage;
+    addMediaBatchToAlbum = mockAddMediaBatchToAlbum;
     toggleFavorite = vi.fn().mockResolvedValue(true);
     addMedia = vi.fn().mockResolvedValue({});
     deleteMedia = vi.fn().mockResolvedValue(undefined);
@@ -90,6 +92,7 @@ describe('GalleryGrid Component', () => {
     mockGetAlbums.mockResolvedValue(mockAlbums);
     mockGetFavorites.mockResolvedValue(new Set());
     mockGetSettings.mockReturnValue({ allowUploads: true });
+    mockAddMediaBatchToAlbum.mockResolvedValue(1);
   });
 
   describe('Rendering', () => {
@@ -165,6 +168,27 @@ describe('GalleryGrid Component', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Sélection multiple')).toBeInTheDocument();
+      });
+    });
+
+    it('should add selected media to an album', async () => {
+      render(<GalleryGrid demoMode={true} variant="admin" />);
+
+      await screen.findByText('Sélection multiple');
+
+      fireEvent.click(screen.getByText('Sélection multiple'));
+      fireEvent.click(screen.getByLabelText('Wedding dance'));
+      fireEvent.click(screen.getByText('Ajouter à un album'));
+
+      expect(screen.getByText('Ajouter la sélection à un album')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText('Album cible'), {
+        target: { value: 'album-1' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
+
+      await waitFor(() => {
+        expect(mockAddMediaBatchToAlbum).toHaveBeenCalledWith(['img-2'], 'album-1');
       });
     });
   });

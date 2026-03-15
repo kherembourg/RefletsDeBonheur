@@ -39,6 +39,7 @@ vi.mock('../supabase/api', () => ({
   },
   albumsApi: {
     getByWeddingId: vi.fn().mockResolvedValue([]),
+    getMediaIds: vi.fn().mockResolvedValue([]),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),

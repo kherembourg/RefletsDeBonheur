@@ -4,6 +4,7 @@ import { MediaCard } from './MediaCard';
 import { UploadModal } from './UploadModal';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { AdminModal } from '../admin/ui/AdminModal';
+import { useToast } from '../ui/Toast';
 
 // Lazy load heavy components that are conditionally rendered
 const Lightbox = lazy(() => import('./Lightbox').then(m => ({ default: m.Lightbox })));
@@ -96,6 +97,9 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [showAddToAlbumModal, setShowAddToAlbumModal] = useState(false);
+  const [targetAlbumId, setTargetAlbumId] = useState('');
+  const { showToast, ToastContainer } = useToast();
 
   // PIN modal state
   const [showPinModal, setShowPinModal] = useState(false);
@@ -234,12 +238,33 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
     setSelectionMode(false);
   }, []);
 
+  const refreshAlbums = useCallback(async () => {
+    const data = await dataService.getAlbums();
+    setAlbums(data);
+  }, [dataService]);
+
   const handleBulkDelete = useCallback(async () => {
     if (selectedItems.size === 0) return;
     await Promise.all([...selectedItems].map(id => dataService.deleteMedia(id)));
     await refresh();
     clearSelection();
   }, [selectedItems, dataService, refresh, clearSelection]);
+
+  const handleAddSelectionToAlbum = useCallback(async () => {
+    if (selectedItems.size === 0 || !targetAlbumId) return;
+
+    const addedCount = await dataService.addMediaBatchToAlbum([...selectedItems], targetAlbumId);
+    await Promise.all([refresh(), refreshAlbums()]);
+    clearSelection();
+    setTargetAlbumId('');
+    setShowAddToAlbumModal(false);
+
+    if (addedCount > 0) {
+      showToast('success', `${addedCount} souvenir${addedCount > 1 ? 's ajoutés' : ' ajouté'} à l'album.`);
+    } else {
+      showToast('info', 'Les souvenirs sélectionnés sont déjà dans cet album.');
+    }
+  }, [selectedItems, targetAlbumId, dataService, refresh, refreshAlbums, clearSelection, showToast]);
 
   // Memoized click handler for lightbox - looks up index from id
   const handleMediaClick = useCallback((id: string) => {
@@ -256,6 +281,7 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
   return (
     <ErrorBoundary>
     <div className="space-y-6">
+      <ToastContainer />
       {/* Accessibility-only header */}
       <h2 className="sr-only">{t(lang, 'gallery.title')}</h2>
 
@@ -315,9 +341,10 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
               {t(lang, 'common.delete')}
             </button>
             <button
-              disabled
-              className="px-4 py-2 rounded-full border border-charcoal/10 text-sm text-charcoal/50 cursor-not-allowed"
-              title={t(lang, 'gallery.comingSoon')}
+              onClick={() => setShowAddToAlbumModal(true)}
+              disabled={!selectionMode || selectedItems.size === 0 || albums.length === 0}
+              className="px-4 py-2 rounded-full border border-charcoal/10 text-sm text-charcoal/70 hover:text-charcoal disabled:opacity-40 disabled:cursor-not-allowed"
+              title={albums.length === 0 ? 'Créez un album dans l’admin pour classer ces souvenirs.' : undefined}
             >
               <FolderPlus size={16} className="inline-block mr-2" />
               {t(lang, 'gallery.addToAlbum')}
@@ -535,6 +562,59 @@ export function GalleryGrid({ weddingId, weddingSlug, demoMode = false, variant 
           {t(lang, 'gallery.deleteConfirm')} {selectedItems.size}{' '}
           {selectedItems.size > 1 ? t(lang, 'gallery.deleteConfirmCountPlural') : t(lang, 'gallery.deleteConfirmCount')} ?
         </p>
+      </AdminModal>
+      <AdminModal
+        isOpen={showAddToAlbumModal}
+        onClose={() => {
+          setShowAddToAlbumModal(false);
+          setTargetAlbumId('');
+        }}
+        title="Ajouter la sélection à un album"
+        size="sm"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setShowAddToAlbumModal(false);
+                setTargetAlbumId('');
+              }}
+              className="px-4 py-2 text-sm font-medium text-charcoal/70 hover:text-charcoal"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={async () => {
+                await handleAddSelectionToAlbum();
+              }}
+              disabled={!targetAlbumId}
+              className="px-4 py-2 rounded-lg bg-burgundy-old text-white text-sm font-medium hover:bg-[#c92a38] transition-colors disabled:opacity-50"
+            >
+              Ajouter
+            </button>
+          </>
+        }
+      >
+        {albums.length === 0 ? (
+          <p className="text-sm text-charcoal/70">
+            Aucun album disponible pour le moment.
+          </p>
+        ) : (
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-charcoal">Album cible</span>
+            <select
+              value={targetAlbumId}
+              onChange={(event) => setTargetAlbumId(event.target.value)}
+              className="w-full rounded-lg border border-charcoal/10 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-burgundy-old/20"
+            >
+              <option value="">Choisir un album</option>
+              {albums.map((album) => (
+                <option key={album.id} value={album.id}>
+                  {album.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </AdminModal>
     </div>
     </ErrorBoundary>

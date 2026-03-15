@@ -18,6 +18,7 @@ import {
   createAlbum as createMockAlbum,
   updateAlbum as updateMockAlbum,
   deleteAlbum as deleteMockAlbum,
+  addMediaToAlbum as addMockMediaToAlbum,
   toggleReaction as toggleMockReaction,
   getUserReaction as getMockUserReaction,
   getReactions as getMockReactions,
@@ -283,14 +284,31 @@ export class DataService {
       return [];
     }
 
-    const media = await mediaApi.getByWeddingId(this.weddingId, {
-      status: 'all',
-      moderation: 'approved',
-      limit: options?.limit,
-      offset: options?.offset,
+    const [media, albums] = await Promise.all([
+      mediaApi.getByWeddingId(this.weddingId, {
+        status: 'all',
+        moderation: 'approved',
+        limit: options?.limit,
+        offset: options?.offset,
+      }),
+      albumsApi.getByWeddingId(this.weddingId),
+    ]);
+
+    const albumEntries = await Promise.all(
+      albums.map(async (album) => [album.id, await albumsApi.getMediaIds(album.id)] as const)
+    );
+
+    const mediaAlbumMap = new Map<string, string[]>();
+    albumEntries.forEach(([albumId, mediaIds]) => {
+      mediaIds.forEach((mediaId) => {
+        mediaAlbumMap.set(mediaId, [...(mediaAlbumMap.get(mediaId) || []), albumId]);
+      });
     });
 
-    return media.map(mediaToItem);
+    return media.map((entry) => ({
+      ...mediaToItem(entry),
+      albumIds: mediaAlbumMap.get(entry.id) || [],
+    }));
   }
 
   async addMedia(item: {
@@ -701,7 +719,33 @@ export class DataService {
     }
 
     const albums = await albumsApi.getByWeddingId(this.weddingId);
-    return albums.map(supabaseAlbumToAlbum);
+    const mediaCounts = await Promise.all(albums.map(async (album) => ({
+      albumId: album.id,
+      mediaIds: await albumsApi.getMediaIds(album.id),
+    })));
+
+    const countsByAlbum = new Map(mediaCounts.map(({ albumId, mediaIds }) => [albumId, mediaIds.length]));
+
+    return albums.map((album) => ({
+      ...supabaseAlbumToAlbum(album),
+      photoCount: countsByAlbum.get(album.id) || 0,
+    }));
+  }
+
+  async addMediaToAlbum(mediaId: string, albumId: string): Promise<boolean> {
+    if (this.demoMode) {
+      return addMockMediaToAlbum(mediaId, albumId);
+    }
+
+    await albumsApi.addMedia(albumId, mediaId);
+    return true;
+  }
+
+  async addMediaBatchToAlbum(mediaIds: string[], albumId: string): Promise<number> {
+    if (mediaIds.length === 0) return 0;
+
+    const results = await Promise.all(mediaIds.map((mediaId) => this.addMediaToAlbum(mediaId, albumId)));
+    return results.filter(Boolean).length;
   }
 
   async createAlbum(album: {

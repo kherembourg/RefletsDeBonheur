@@ -399,6 +399,7 @@ vi.mock('../supabase/api', () => ({
   },
   albumsApi: {
     getByWeddingId: vi.fn().mockResolvedValue([]),
+    getMediaIds: vi.fn().mockResolvedValue([]),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
@@ -437,6 +438,7 @@ describe('DataService - Production Mode', () => {
     vi.mocked(reactionsApi.getByMediaId).mockResolvedValue([]);
     vi.mocked(favoritesApi.getByUser).mockResolvedValue([]);
     vi.mocked(albumsApi.getByWeddingId).mockResolvedValue([]);
+    vi.mocked(albumsApi.getMediaIds).mockResolvedValue([]);
   });
 
   describe('Production Mode Initialization', () => {
@@ -1262,6 +1264,9 @@ describe('DataService - Production Mode', () => {
       ];
       
       vi.mocked(albumsApi.getByWeddingId).mockResolvedValue(mockAlbums);
+      vi.mocked(albumsApi.getMediaIds)
+        .mockResolvedValueOnce(['media-cover-1', 'media-2'])
+        .mockResolvedValueOnce([]);
       
       const service = new DataService({ weddingId: 'wedding-123' });
       const albums = await service.getAlbums();
