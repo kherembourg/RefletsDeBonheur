@@ -119,8 +119,7 @@ import '../../styles/global.css';
             timestamp: Date.now(),
           }));
 
-          // Also set up a client-like session for the interface
-          localStorage.setItem('reflets_client_token', 'god_impersonation_' + token);
+          // Set up only client session metadata for the interface
           localStorage.setItem('reflets_client_session', JSON.stringify({
             client_id: result.client.id,
             wedding_name: result.client.wedding_name,

@@ -72,12 +72,12 @@ export function EnhancedLoginForm() {
       // First try the new Supabase-based guest login
       const result = await guestLogin(code.toUpperCase(), guestName || undefined);
 
-      if (result.success && result.client) {
+      if (result.success && result.weddingSlug) {
         // Redirect based on access type
         if (result.accessType === 'admin') {
-          window.location.href = `/${result.client.wedding_slug}/admin`;
+          window.location.href = `/${result.weddingSlug}/admin`;
         } else {
-          window.location.href = `/${result.client.wedding_slug}`;
+          window.location.href = `/${result.weddingSlug}`;
         }
         return;
       }

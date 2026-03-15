@@ -19,7 +19,12 @@ vi.mock('../../../lib/supabase/client', () => ({
 }));
 
 vi.mock('../../../lib/supabase/server', () => ({
+  AUTH_SESSION_COOKIE: 'reflets_auth_session_token',
   getSupabaseAdminClient: vi.fn(),
+  getCookieValueFromRequest: vi.fn((request: Request) => {
+    const cookieHeader = request.headers.get('cookie');
+    return cookieHeader?.match(/reflets_auth_session_token=([^;]+)/)?.[1];
+  }),
   isSupabaseServiceRoleConfigured: vi.fn().mockReturnValue(true),
 }));
 
@@ -87,7 +92,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -161,7 +166,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -235,7 +240,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -306,7 +311,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -373,7 +378,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -447,7 +452,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -492,7 +497,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'expired-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -518,7 +523,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -582,7 +587,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -640,7 +645,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -664,7 +669,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -686,7 +691,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -760,7 +765,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 
@@ -828,7 +833,7 @@ describe('Stripe Subscription Status Endpoint', () => {
       const request = new Request(url, {
         method: 'GET',
         headers: {
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
       });
 

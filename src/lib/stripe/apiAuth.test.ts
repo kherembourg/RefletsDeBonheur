@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { verifyProfileOwnership, validateSameOrigin, errorResponse, jsonResponse } from './apiAuth';
 
+vi.mock('../supabase/server', () => ({
+  AUTH_SESSION_COOKIE: 'reflets_auth_session_token',
+  getCookieValueFromRequest: vi.fn((request: Request) => {
+    const cookieHeader = request.headers.get('cookie');
+    return cookieHeader?.match(/reflets_auth_session_token=([^;]+)/)?.[1];
+  }),
+}));
+
 // Mock Supabase client with proper chaining
 const createMockSupabaseClient = (singleResult: { data: any; error: any }) => {
   const chainMock = {
@@ -37,7 +45,7 @@ describe('apiAuth', () => {
     it('returns unauthorized when token is invalid', async () => {
       const request = new Request('http://localhost:4321/api/test', {
         method: 'POST',
-        headers: { 'x-client-token': 'invalid-token' },
+        headers: { cookie: 'reflets_auth_session_token=invalid-token' },
       });
 
       const mockClient = createMockSupabaseClient({ data: null, error: { message: 'Not found' } }) as any;
@@ -50,7 +58,7 @@ describe('apiAuth', () => {
     it('returns unauthorized when user does not own the profile', async () => {
       const request = new Request('http://localhost:4321/api/test', {
         method: 'POST',
-        headers: { 'x-client-token': 'valid-token' },
+        headers: { cookie: 'reflets_auth_session_token=valid-token' },
       });
 
       const mockClient = createMockSupabaseClient({
@@ -66,7 +74,7 @@ describe('apiAuth', () => {
     it('returns authorized when user owns the profile', async () => {
       const request = new Request('http://localhost:4321/api/test', {
         method: 'POST',
-        headers: { 'x-client-token': 'valid-token' },
+        headers: { cookie: 'reflets_auth_session_token=valid-token' },
       });
 
       const mockClient = createMockSupabaseClient({

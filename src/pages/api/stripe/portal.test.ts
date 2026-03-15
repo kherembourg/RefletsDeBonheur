@@ -17,7 +17,12 @@ vi.mock('../../../lib/supabase/client', () => ({
 }));
 
 vi.mock('../../../lib/supabase/server', () => ({
+  AUTH_SESSION_COOKIE: 'reflets_auth_session_token',
   getSupabaseAdminClient: vi.fn(),
+  getCookieValueFromRequest: vi.fn((request: Request) => {
+    const cookieHeader = request.headers.get('cookie');
+    return cookieHeader?.match(/reflets_auth_session_token=([^;]+)/)?.[1];
+  }),
   isSupabaseServiceRoleConfigured: vi.fn().mockReturnValue(true),
 }));
 
@@ -99,7 +104,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -183,7 +188,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123', // Trying to access someone else's profile
@@ -232,7 +237,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'expired-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -262,7 +267,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           // Missing profileId
@@ -289,7 +294,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -339,7 +344,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -408,7 +413,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -473,7 +478,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -549,7 +554,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -577,7 +582,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',
@@ -610,7 +615,7 @@ describe('Stripe Customer Portal Endpoint', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-client-token': 'valid-token-123',
+          'Cookie': 'reflets_auth_session_token=valid-token-123',
         },
         body: JSON.stringify({
           profileId: 'profile-123',

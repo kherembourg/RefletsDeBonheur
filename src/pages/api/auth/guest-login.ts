@@ -1,6 +1,10 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import {
+  GUEST_SESSION_COOKIE,
+  createSessionCookie,
+  getSupabaseAdminClient,
+} from '../../../lib/supabase/server';
 import { apiGuards, apiResponse } from '../../../lib/api/middleware';
 import { validateBody } from '../../../lib/api/validation';
 
@@ -107,13 +111,19 @@ export const POST: APIRoute = async ({ request }) => {
       return apiResponse.error('Session error', 'Failed to create session.', 500);
     }
 
-    return apiResponse.success({
-      session_token: sessionToken,
+    const response = apiResponse.success({
       wedding_id: wedding.id,
       wedding_slug: wedding.slug,
       access_type: isAdminCode ? 'admin' : 'guest',
       guest_name: guestName || null,
     });
+
+    response.headers.append(
+      'Set-Cookie',
+      createSessionCookie(request, GUEST_SESSION_COOKIE, sessionToken, 24 * 60 * 60)
+    );
+
+    return response;
   } catch (error) {
     console.error('[API] Guest login error:', error);
     return apiResponse.error(

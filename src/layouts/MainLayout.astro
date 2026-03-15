@@ -81,7 +81,7 @@ const htmlLang = getHtmlLang(currentLang);
     <InstallPrompt client:load />
 
     <!-- Service Worker Registration -->
-    <script is:inline>
+    <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker
