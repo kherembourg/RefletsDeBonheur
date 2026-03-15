@@ -164,20 +164,16 @@ const features = [
         </h2>
       </div>
 
-      {features.length > 0 ? (
-        <div class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-4">
-          {features.map(feature => (
-            <div class="flex items-center gap-3 p-3 bg-white dark:bg-[#1b1b1b] border border-white/10">
-              <div class="w-5 h-5 flex items-center justify-center shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
-                <Check class="w-3 h-3" aria-hidden="true" />
-              </div>
-              <span class="text-charcoal dark:text-cream font-light text-sm break-words min-w-0">{feature}</span>
+      <div class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-4">
+        {features.map(feature => (
+          <div class="flex items-center gap-3 p-3 bg-white dark:bg-[#1b1b1b] border border-white/10">
+            <div class="w-5 h-5 flex items-center justify-center shrink-0" style="border: 1px solid #ae1725; color: #ae1725;">
+              <Check class="w-3 h-3" aria-hidden="true" />
             </div>
-          ))}
-        </div>
-      ) : (
-        <p class="text-center text-charcoal-light dark:text-cream/70">Features will be listed here soon.</p>
-      )}
+            <span class="text-charcoal dark:text-cream font-light text-sm break-words min-w-0">{feature}</span>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 

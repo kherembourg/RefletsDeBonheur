@@ -548,27 +548,23 @@ const faqs = [
         </h2>
       </div>
 
-      {faqs.length > 0 ? (
-        <div class="max-w-3xl mx-auto space-y-4">
-          {faqs.map((faq) => (
-            <div class="bg-cream dark:bg-[#1b1b1b] rounded-xl p-6 hover:shadow-md transition-shadow border border-white/10">
-              <div class="flex items-start gap-4">
-                <HelpCircle class="w-6 h-6 shrink-0 text-burgundy mt-0.5" aria-hidden="true" />
-                <div class="min-w-0">
-                  <h3 class="font-semibold text-charcoal dark:text-cream mb-2 break-words">
-                    {faq.question}
-                  </h3>
-                  <p class="text-charcoal-light dark:text-cream/70 text-sm leading-relaxed break-words">
-                    {faq.answer}
-                  </p>
-                </div>
+      <div class="max-w-3xl mx-auto space-y-4">
+        {faqs.map((faq) => (
+          <div class="bg-cream dark:bg-[#1b1b1b] rounded-xl p-6 hover:shadow-md transition-shadow border border-white/10">
+            <div class="flex items-start gap-4">
+              <HelpCircle class="w-6 h-6 shrink-0 text-burgundy mt-0.5" aria-hidden="true" />
+              <div class="min-w-0">
+                <h3 class="font-semibold text-charcoal dark:text-cream mb-2 break-words">
+                  {faq.question}
+                </h3>
+                <p class="text-charcoal-light dark:text-cream/70 text-sm leading-relaxed break-words">
+                  {faq.answer}
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <p class="text-center text-charcoal-light dark:text-cream/70">No FAQs yet. Check back soon.</p>
-      )}
+          </div>
+        ))}
+      </div>
 
       <!-- Link to full FAQ -->
       <div class="text-center mt-8">

@@ -14,185 +14,20 @@ import '../../styles/global.css';
   <meta name="robots" content="noindex, nofollow" />
   <title>Accès client - God Admin</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-    }
-    .container {
-      text-align: center;
-      padding: 2rem;
-    }
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 3px solid #374151;
-      border-top-color: #f59e0b;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1.5rem;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .title {
-      color: #f9fafb;
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-    .subtitle {
-      color: #9ca3af;
-      font-size: 0.875rem;
-    }
-    .error {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      max-width: 400px;
-    }
-    .error-title {
-      color: #fca5a5;
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-    .error-message {
-      color: #fca5a5;
-      opacity: 0.8;
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
-    }
-    .back-link {
-      display: inline-block;
-      color: #f59e0b;
-      text-decoration: none;
-      font-size: 0.875rem;
-    }
-    .back-link:hover {
-      text-decoration: underline;
-    }
-  </style>
 </head>
-<body>
-  <div class="container" id="status-container">
-    <div class="spinner"></div>
-    <p class="title">Vérification de l'accès...</p>
-    <p class="subtitle">Veuillez patienter</p>
+<body class="min-h-screen m-0 flex items-center justify-center bg-linear-to-br from-gray-800 to-gray-950 font-sans">
+  <div
+    id="status-container"
+    class="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl backdrop-blur-sm"
+  >
+    <div class="mx-auto mb-6 h-12 w-12 rounded-full border-[3px] border-gray-700 border-t-amber-500 animate-spin"></div>
+    <p class="mb-2 text-xl font-semibold text-gray-50">Vérification de l&apos;accès...</p>
+    <p class="text-sm text-gray-400">Veuillez patienter</p>
   </div>
 
-  <script>
-    import { verifyImpersonationToken } from '../../lib/auth/godAuth';
-
-    async function handleImpersonation() {
-      const container = document.getElementById('status-container');
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-
-      if (!token) {
-        showError('Token manquant', 'Aucun token d\'accès fourni.');
-        return;
-      }
-
-      try {
-        const result = await verifyImpersonationToken(token);
-
-        if (result.valid && result.client) {
-          // Store impersonation session in localStorage
-          localStorage.setItem('reflets_god_impersonation', JSON.stringify({
-            client_id: result.client.id,
-            wedding_name: result.client.wedding_name,
-            couple_names: result.client.couple_names,
-            wedding_slug: result.client.wedding_slug,
-            is_god_access: true,
-            timestamp: Date.now(),
-          }));
-
-          // Set up a client-like session for the interface without persisting the
-          // impersonation token as a pseudo client token.
-          localStorage.setItem('reflets_client_session', JSON.stringify({
-            client_id: result.client.id,
-            wedding_name: result.client.wedding_name,
-            couple_names: result.client.couple_names,
-            wedding_slug: result.client.wedding_slug,
-            is_admin: true,
-          }));
-
-          // Update status using safe DOM manipulation (prevent XSS)
-          if (container) {
-            container.innerHTML = '';
-
-            const spinner = document.createElement('div');
-            spinner.className = 'spinner';
-
-            const title = document.createElement('p');
-            title.className = 'title';
-            title.textContent = 'Accès autorisé';
-
-            const subtitle = document.createElement('p');
-            subtitle.className = 'subtitle';
-            subtitle.textContent = `Redirection vers ${result.client.wedding_name}...`;
-
-            container.appendChild(spinner);
-            container.appendChild(title);
-            container.appendChild(subtitle);
-          }
-
-          // Redirect to client admin interface
-          setTimeout(() => {
-            window.location.href = `/${result.client.wedding_slug}/admin`;
-          }, 1000);
-        } else {
-          showError('Accès refusé', result.error || 'Token invalide ou expiré.');
-        }
-      } catch (error) {
-        console.error('Impersonation error:', error);
-        showError('Erreur', 'Une erreur inattendue s\'est produite.');
-      }
-    }
-
-    function showError(errorTitle: string, errorMessage: string) {
-      const container = document.getElementById('status-container');
-      if (container) {
-        // Use safe DOM manipulation to prevent XSS
-        container.innerHTML = '';
-
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error';
-
-        const titleEl = document.createElement('p');
-        titleEl.className = 'error-title';
-        titleEl.textContent = errorTitle;
-
-        const messageEl = document.createElement('p');
-        messageEl.className = 'error-message';
-        messageEl.textContent = errorMessage;
-
-        const backLink = document.createElement('a');
-        backLink.href = '/god';
-        backLink.className = 'back-link';
-        backLink.textContent = '← Retour au tableau de bord';
-
-        errorDiv.appendChild(titleEl);
-        errorDiv.appendChild(messageEl);
-        errorDiv.appendChild(backLink);
-        container.appendChild(errorDiv);
-      }
-    }
-
-    // Run on page load
-    handleImpersonation();
-  </script>
+  <script type="module" src="/scripts/god-impersonate.js"></script>
 </body>
 </html>
